@@ -32,4 +32,12 @@ $messageproviders = [
         ],
         'capability'  => 'tool/dataprivacy:managedatarequests'
     ],
+
+    // Notify user about the processing results of their data request.
+    'datarequestprocessingresults' => [
+        'defaults' => [
+            'popup' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_LOGGEDIN + MESSAGE_DEFAULT_LOGGEDOFF,
+            'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_LOGGEDIN + MESSAGE_DEFAULT_LOGGEDOFF,
+        ]
+    ],
 ];

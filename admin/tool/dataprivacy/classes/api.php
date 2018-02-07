@@ -32,6 +32,7 @@ use core_user;
 use dml_exception;
 use moodle_exception;
 use moodle_url;
+use required_capability_exception;
 use stdClass;
 use tool_dataprivacy\task\initiate_data_request_task;
 use tool_dataprivacy\task\process_data_request_task;
@@ -86,7 +87,22 @@ class api {
      * @throws dml_exception
      */
     public static function can_contact_dpo() {
-        return get_config('tool_dataprivacy', 'contactdataprotectionofficer');
+        return get_config('tool_dataprivacy', 'contactdataprotectionofficer') == 1;
+    }
+
+    /**
+     * Check's whether the current user has the capability to manage data requests.
+     *
+     * @param int $userid The user ID.
+     * @return bool
+     * @throws coding_exception
+     * @throws dml_exception
+     */
+    public static function can_manage_data_requests($userid) {
+        $context = context_system::instance();
+
+        // A user can manage data requests if he/she has the site DPO role and has the capability to manage data requests.
+        return self::is_site_dpo($userid) && has_capability('tool/dataprivacy:managedatarequests', $context, $userid);
     }
 
     /**
@@ -101,6 +117,9 @@ class api {
         $dpos = [];
         $context = context_system::instance();
         foreach ($dporoles as $roleid) {
+            if (empty($roleid)) {
+                continue;
+            }
             // Fetch users that can manage data requests.
             $dpos += get_role_users($roleid, $context, false, 'u.*');
         }
@@ -113,15 +132,28 @@ class api {
     }
 
     /**
+     * Checks whether a given user is a site DPO.
+     *
+     * @param int $userid The user ID.
+     * @return bool
+     * @throws dml_exception
+     */
+    public static function is_site_dpo($userid) {
+        $dpos = api::get_site_dpos();
+        return array_key_exists($userid, $dpos);
+    }
+
+    /**
      * Lodges a data request and sends the request details to the site Data Protection Officer(s).
      *
      * @param int $foruser The user whom the request is being made for.
      * @param int $type The request type.
      * @param string $comments Request comments.
+     * @return data_request
      * @throws invalid_persistent_exception
      * @throws coding_exception
      */
-    public static function create_data_request($foruser, $type, $comments) {
+    public static function create_data_request($foruser, $type, $comments = '') {
         global $USER;
 
         $datarequest = new data_request();
@@ -143,6 +175,8 @@ class api {
         $task = new initiate_data_request_task();
         $task->set_custom_data(['requestid' => $datarequest->get('id')]);
         manager::queue_adhoc_task($task, true);
+
+        return $datarequest;
     }
 
     /**
@@ -163,8 +197,7 @@ class api {
             $results = data_request::get_records(['userid' => $userid], 'status');
         } else {
             // If the current user is one of the site's Data Protection Officers, then fetch all data requests.
-            $dpoids = self::get_site_dpos();
-            if (array_key_exists($USER->id, $dpoids)) {
+            if (self::is_site_dpo($USER->id)) {
                 $results = data_request::get_records(null, 'status');
             }
         }
@@ -226,10 +259,13 @@ class api {
      * @throws invalid_persistent_exception
      * @throws coding_exception
      */
-    public static function update_request_status($requestid, $status) {
+    public static function update_request_status($requestid, $status, $dpoid = 0) {
         // Update the request.
         $datarequest = new data_request($requestid);
         $datarequest->set('status', $status);
+        if ($dpoid) {
+            $datarequest->set('dpo', $dpoid);
+        }
         return $datarequest->update();
     }
 
@@ -241,6 +277,72 @@ class api {
      */
     public static function get_request($requestid) {
         return new data_request($requestid);
+    }
+
+    /**
+     * Approves a data request based on the request ID.
+     *
+     * @param int $requestid The request identifier
+     * @return bool
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws invalid_persistent_exception
+     * @throws required_capability_exception
+     * @throws moodle_exception
+     */
+    public static function approve_data_request($requestid) {
+        global $USER;
+
+        // Check first whether the user can manage data requests.
+        if (!self::can_manage_data_requests($USER->id)) {
+            $context = context_system::instance();
+            throw new required_capability_exception($context, 'tool/dataprivacy:managedatarequests', 'nopermissions', '');
+        }
+
+        // Check if request is already awaiting for approval.
+        $request = new data_request($requestid);
+        if ($request->get('status') != self::DATAREQUEST_STATUS_AWAITING_APPROVAL) {
+            throw new moodle_exception('errorrequestnotwaitingforapproval', 'tool_dataprivacy');
+        }
+
+        // Update the status and the DPO.
+        $result = self::update_request_status($requestid, api::DATAREQUEST_STATUS_APPROVED, $USER->id);
+
+        // Fire an ad hoc task to initiate the data request process.
+        $task = new process_data_request_task();
+        $task->set_custom_data(['requestid' => $requestid]);
+        manager::queue_adhoc_task($task, true);
+
+        return $result;
+    }
+
+    /**
+     * Rejects a data request based on the request ID.
+     *
+     * @param int $requestid The request identifier
+     * @return bool
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws invalid_persistent_exception
+     * @throws required_capability_exception
+     * @throws moodle_exception
+     */
+    public static function deny_data_request($requestid) {
+        global $USER;
+
+        if (!self::can_manage_data_requests($USER->id)) {
+            $context = context_system::instance();
+            throw new required_capability_exception($context, 'tool/dataprivacy:managedatarequests', 'nopermissions', '');
+        }
+
+        // Check if request is already awaiting for approval.
+        $request = new data_request($requestid);
+        if ($request->get('status') != self::DATAREQUEST_STATUS_AWAITING_APPROVAL) {
+            throw new moodle_exception('errorrequestnotwaitingforapproval', 'tool_dataprivacy');
+        }
+
+        // Update the status and the DPO.
+        return self::update_request_status($requestid, api::DATAREQUEST_STATUS_REJECTED, $USER->id);
     }
 
     /**
@@ -266,7 +368,7 @@ class api {
                 $typetext = get_string('requesttypedelete', 'tool_dataprivacy');
                 break;
             case api::DATAREQUEST_TYPE_OTHERS:
-                $typetext = get_string('requesttypedelete', 'tool_dataprivacy');
+                $typetext = get_string('requesttypeothers', 'tool_dataprivacy');
                 break;
             default:
                 throw new moodle_exception('errorinvalidrequesttype', 'tool_dataprivacy');

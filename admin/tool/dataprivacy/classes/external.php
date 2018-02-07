@@ -23,6 +23,8 @@
 namespace tool_dataprivacy;
 defined('MOODLE_INTERNAL') || die();
 
+require_once("$CFG->libdir/externallib.php");
+
 use coding_exception;
 use context_system;
 use context_user;
@@ -90,6 +92,7 @@ class external extends external_api {
 
         $result = false;
         if ($requestexists) {
+            // TODO: Do we want a request to be non-cancellable past a certain point? E.g. When it's already approved/processing.
             $result = api::update_request_status($requestid, api::DATAREQUEST_STATUS_CANCELLED);
         } else {
             $warnings[] = [
@@ -199,6 +202,197 @@ class external extends external_api {
      * @return external_description
      */
     public static function contact_dpo_returns() {
+        return new external_single_structure([
+            'result' => new external_value(PARAM_BOOL, 'The processing result'),
+            'warnings' => new external_warnings()
+        ]);
+    }
+
+    /**
+     * Parameter description for get_data_request().
+     *
+     * @return external_function_parameters
+     */
+    public static function get_data_request_parameters() {
+        return new external_function_parameters([
+            'requestid' => new external_value(PARAM_INT, 'The request ID', VALUE_REQUIRED)
+        ]);
+    }
+
+    /**
+     * Fetch the details of a user's data request.
+     *
+     * @param int $requestid The request ID.
+     * @return array
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws invalid_parameter_exception
+     * @throws restricted_context_exception
+     * @throws moodle_exception
+     */
+    public static function get_data_request($requestid) {
+        global $PAGE;
+
+        $warnings = [];
+        $params = external_api::validate_parameters(self::get_data_request_parameters(), [
+            'requestid' => $requestid
+        ]);
+        $requestid = $params['requestid'];
+
+        // Validate context.
+        $context = context_system::instance();
+        self::validate_context($context);
+        require_capability('tool/dataprivacy:managedatarequests', $context);
+
+        $requestpersistent = new data_request($requestid);
+        $exporter = new data_request_exporter($requestpersistent, ['context' => $context]);
+        $renderer = $PAGE->get_renderer('tool_dataprivacy');
+        $result = $exporter->export($renderer);
+
+        return [
+            'result' => $result,
+            'warnings' => $warnings
+        ];
+    }
+
+    /**
+     * Parameter description for get_data_request().
+     *
+     * @return external_description
+     */
+    public static function get_data_request_returns() {
+        return new external_single_structure([
+            'result' => data_request_exporter::get_read_structure(),
+            'warnings' => new external_warnings()
+        ]);
+    }
+
+    /**
+     * Parameter description for approve_data_request().
+     *
+     * @return external_function_parameters
+     */
+    public static function approve_data_request_parameters() {
+        return new external_function_parameters([
+            'requestid' => new external_value(PARAM_INT, 'The request ID', VALUE_REQUIRED)
+        ]);
+    }
+
+    /**
+     * Approve a data request.
+     *
+     * @param int $requestid The request ID.
+     * @return array
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws invalid_parameter_exception
+     * @throws restricted_context_exception
+     * @throws moodle_exception
+     */
+    public static function approve_data_request($requestid) {
+        $warnings = [];
+        $params = external_api::validate_parameters(self::approve_data_request_parameters(), [
+            'requestid' => $requestid
+        ]);
+        $requestid = $params['requestid'];
+
+        // Validate context.
+        $context = context_system::instance();
+        self::validate_context($context);
+        require_capability('tool/dataprivacy:managedatarequests', $context);
+
+        // Ensure the request exists.
+        $requestexists = data_request::record_exists($requestid);
+
+        $result = false;
+        if ($requestexists) {
+            $result = api::approve_data_request($requestid);
+        } else {
+            $warnings[] = [
+                'item' => $requestid,
+                'warningcode' => 'errorrequestnotfound',
+                'message' => get_string('errorrequestnotfound', 'tool_dataprivacy')
+            ];
+        }
+
+        return [
+            'result' => $result,
+            'warnings' => $warnings
+        ];
+    }
+
+    /**
+     * Parameter description for approve_data_request().
+     *
+     * @return external_description
+     */
+    public static function approve_data_request_returns() {
+        return new external_single_structure([
+            'result' => new external_value(PARAM_BOOL, 'The processing result'),
+            'warnings' => new external_warnings()
+        ]);
+    }
+
+    /**
+     * Parameter description for deny_data_request().
+     *
+     * @return external_function_parameters
+     */
+    public static function deny_data_request_parameters() {
+        return new external_function_parameters([
+            'requestid' => new external_value(PARAM_INT, 'The request ID', VALUE_REQUIRED)
+        ]);
+    }
+
+    /**
+     * Deny a data request.
+     *
+     * @param int $requestid The request ID.
+     * @return array
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws invalid_parameter_exception
+     * @throws restricted_context_exception
+     * @throws moodle_exception
+     */
+    public static function deny_data_request($requestid) {
+        $warnings = [];
+        $params = external_api::validate_parameters(self::deny_data_request_parameters(), [
+            'requestid' => $requestid
+        ]);
+        $requestid = $params['requestid'];
+
+        // Validate context.
+        $context = context_system::instance();
+        self::validate_context($context);
+        require_capability('tool/dataprivacy:managedatarequests', $context);
+
+        // Ensure the request exists.
+        $requestexists = data_request::record_exists($requestid);
+
+        $result = false;
+        if ($requestexists) {
+            $result = api::deny_data_request($requestid);
+        } else {
+            $warnings[] = [
+                'item' => $requestid,
+                'warningcode' => 'errorrequestnotfound',
+                'message' => get_string('errorrequestnotfound', 'tool_dataprivacy')
+            ];
+        }
+
+        return [
+            'result' => $result,
+            'warnings' => $warnings
+        ];
+    }
+
+    /**
+     * Parameter description for deny_data_request().
+     *
+     * @return external_description
+     */
+    public static function deny_data_request_returns() {
         return new external_single_structure([
             'result' => new external_value(PARAM_BOOL, 'The processing result'),
             'warnings' => new external_warnings()

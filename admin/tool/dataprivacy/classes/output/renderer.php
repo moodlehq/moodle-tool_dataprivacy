@@ -67,4 +67,16 @@ class renderer extends plugin_renderer_base {
         ];
         return html_writer::link('#', get_string('contactdataprotectionofficer', 'tool_dataprivacy'), $params);
     }
+
+    /**
+     * Render the data requests page for the DPO.
+     *
+     * @param data_requests_page $page
+     * @return string html for the page
+     * @throws moodle_exception
+     */
+    public function render_data_requests_page(data_requests_page $page) {
+        $data = $page->export_for_template($this);
+        return parent::render_from_template('tool_dataprivacy/data_requests', $data);
+    }
 }

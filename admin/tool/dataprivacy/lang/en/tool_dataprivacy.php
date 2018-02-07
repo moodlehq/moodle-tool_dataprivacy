@@ -54,6 +54,7 @@ $string['errorinvalidrequeststatus'] = 'Invalid request status!';
 $string['errorinvalidrequesttype'] = 'Invalid request type!';
 $string['errorrequestalreadyexists'] = 'You already have an ongoing request.';
 $string['errorrequestnotfound'] = 'Request not found';
+$string['errorrequestnotwaitingforapproval'] = 'The request is not awaiting approval. Either it is not yet ready or it has already been processed.';
 $string['errorsendingmessagetodpo'] = 'An error was encountered while trying to send a message to {$a}.';
 $string['messageprovider:contactdataprotectionofficer'] = 'Data requests';
 $string['messageprovider:datarequestprocessingresults'] = 'Data request processing results';
