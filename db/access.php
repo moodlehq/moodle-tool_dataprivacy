@@ -34,6 +34,16 @@ $capabilities = [
         'archetypes' => []
     ],
 
+    // Capability for managing the data registry. Usually given to the site's Data Protection Officer.
+    'tool/dataprivacy:managedataregistry' => [
+        'riskbitmask' => RISK_SPAM | RISK_PERSONAL | RISK_XSS | RISK_DATALOSS,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => [
+            'manager' => CAP_ALLOW
+        ]
+    ],
+
     // Capability for parents/guardians to make data requests on behalf of their children.
     'tool/dataprivacy:makedatarequestsforchildren' => [
         'riskbitmask' => RISK_SPAM | RISK_PERSONAL,

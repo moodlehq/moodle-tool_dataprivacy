@@ -78,4 +78,17 @@ class renderer extends plugin_renderer_base {
         $data = $page->export_for_template($this);
         return parent::render_from_template('tool_dataprivacy/data_requests', $data);
     }
+
+    /**
+     * Render the data registry.
+     *
+     * @param data_registry_page $page
+     * @return string html for the page
+     * @throws moodle_exception
+     */
+    public function render_data_registry_page(data_registry_page $page) {
+        $data = $page->export_for_template($this);
+        return parent::render_from_template('tool_dataprivacy/data_registry', $data);
+    }
+
 }
