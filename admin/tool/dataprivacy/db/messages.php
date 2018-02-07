@@ -16,30 +16,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Capability definitions for this module.
+ * Defines message providers (types of messages being sent)
  *
  * @package   tool_dataprivacy
- * @copyright 2018 onwards Jun Pataleta
+ * @copyright 2018 onwards  Jun Pataleta
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$capabilities = [
-
-    // Capability for managing data requests. Usually given to the site's Data Protection Officer.
-    'tool/dataprivacy:managedatarequests' => [
-        'riskbitmask' => RISK_SPAM | RISK_PERSONAL | RISK_XSS | RISK_DATALOSS,
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => [
-            'manager' => CAP_ALLOW
-        ]
-    ],
-
-    // Capability for parents/guardians to make data requests on behalf of their children.
-    'tool/dataprivacy:makedatarequestsforchildren' => [
-        'riskbitmask' => RISK_SPAM | RISK_PERSONAL,
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_USER,
-        'archetypes' => []
+$messageproviders = [
+    // Notify Data Protection Officer about incoming data requests.
+    'contactdataprotectionofficer' => [
+        'defaults' => [
+            'popup' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_LOGGEDIN + MESSAGE_DEFAULT_LOGGEDOFF,
+            'email' => MESSAGE_PERMITTED + MESSAGE_DEFAULT_LOGGEDIN + MESSAGE_DEFAULT_LOGGEDOFF,
+        ],
+        'capability'  => 'tool/dataprivacy:managedatarequests'
     ],
 ];
