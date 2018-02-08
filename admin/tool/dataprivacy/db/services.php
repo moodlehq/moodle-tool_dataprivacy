@@ -33,4 +33,14 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
+    'tool_dataprivacy_contact_dpo' => [
+        'classname'     => 'tool_dataprivacy\external',
+        'methodname'    => 'contact_dpo',
+        'classpath'     => '',
+        'description'   => 'Contact the site Data Protection Officer(s)',
+        'type'          => 'write',
+        'capabilities'  => '',
+        'ajax'          => true,
+        'loginrequired' => true,
+    ],
 ];

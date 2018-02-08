@@ -46,7 +46,8 @@ class data_request extends persistent {
             'type' => [
                 'choices' => [
                     api::DATAREQUEST_TYPE_EXPORT,
-                    api::DATAREQUEST_TYPE_DELETE
+                    api::DATAREQUEST_TYPE_DELETE,
+                    api::DATAREQUEST_TYPE_OTHERS,
                 ],
                 'type' => PARAM_INT
             ],

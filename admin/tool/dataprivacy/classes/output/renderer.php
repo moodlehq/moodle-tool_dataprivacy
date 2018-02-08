@@ -27,6 +27,8 @@ namespace tool_dataprivacy\output;
 
 defined('MOODLE_INTERNAL') || die();
 
+use coding_exception;
+use html_writer;
 use moodle_exception;
 use plugin_renderer_base;
 
@@ -49,5 +51,20 @@ class renderer extends plugin_renderer_base {
     public function render_my_data_requests_page(my_data_requests_page $page) {
         $data = $page->export_for_template($this);
         return parent::render_from_template('tool_dataprivacy/my_data_requests', $data);
+    }
+
+    /**
+     * Render the contact DPO link.
+     *
+     * @param string $replytoemail The Reply-to email address
+     * @return string The HTML for the link.
+     * @throws coding_exception
+     */
+    public function render_contact_dpo_link($replytoemail) {
+        $params = [
+            'data-action' => 'contactdpo',
+            'data-replytoemail' => $replytoemail
+        ];
+        return html_writer::link('#', get_string('contactdataprotectionofficer', 'tool_dataprivacy'), $params);
     }
 }

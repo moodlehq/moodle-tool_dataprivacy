@@ -26,8 +26,13 @@ namespace tool_dataprivacy;
 use coding_exception;
 use context_system;
 use core\invalid_persistent_exception;
+use core\message\message;
 use core\task\manager;
+use core_user;
 use dml_exception;
+use moodle_exception;
+use moodle_url;
+use stdClass;
 use tool_dataprivacy\task\initiate_data_request_task;
 use tool_dataprivacy\task\process_data_request_task;
 
@@ -46,6 +51,9 @@ class api {
 
     /** Data deletion request type. */
     const DATAREQUEST_TYPE_DELETE = 2;
+
+    /** Other request type. Usually of enquiries to the DPO. */
+    const DATAREQUEST_TYPE_OTHERS = 3;
 
     /** Newly submitted and we haven't yet started finding out where they have data. */
     const DATAREQUEST_STATUS_PENDING = 0;
@@ -233,5 +241,77 @@ class api {
      */
     public static function get_request($requestid) {
         return new data_request($requestid);
+    }
+
+    /**
+     * Sends a message to the site's Data Protection Officer about a request.
+     *
+     * @param stdClass $dpo The DPO user record
+     * @param data_request $request The data request
+     * @return int|false
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws moodle_exception
+     */
+    public static function notify_dpo($dpo, data_request $request) {
+        global $OUTPUT, $SITE;
+
+        // Create message to send to the Data Protection Officer(s).
+        $typetext = null;
+        switch ($request->get('type')) {
+            case api::DATAREQUEST_TYPE_EXPORT:
+                $typetext = get_string('requesttypeexport', 'tool_dataprivacy');
+                break;
+            case api::DATAREQUEST_TYPE_DELETE:
+                $typetext = get_string('requesttypedelete', 'tool_dataprivacy');
+                break;
+            case api::DATAREQUEST_TYPE_OTHERS:
+                $typetext = get_string('requesttypedelete', 'tool_dataprivacy');
+                break;
+            default:
+                throw new moodle_exception('errorinvalidrequesttype', 'tool_dataprivacy');
+        }
+        $subject = get_string('datarequestemailsubject', 'tool_dataprivacy', $typetext);
+
+        $requestedby = core_user::get_user($request->get('requestedby'));
+        $datarequestsurl = new moodle_url('/admin/tool/dataprivacy/datarequests.php');
+        $message = new message();
+        $message->courseid          = $SITE->id;
+        $message->component         = 'tool_dataprivacy';
+        $message->name              = 'contactdataprotectionofficer';
+        $message->userfrom          = $requestedby;
+        $message->replyto           = $requestedby->email;
+        $message->replytoname       = fullname($requestedby->email);
+        $message->subject           = $subject;
+        $message->fullmessageformat = FORMAT_HTML;
+        $message->notification      = 1;
+        $message->contexturl        = $datarequestsurl;
+        $message->contexturlname    = get_string('datarequests', 'tool_dataprivacy');
+
+        // Prepare the context data for the email message body.
+        $messagetextdata = [
+            'requestedby' => fullname($requestedby),
+            'requesttype' => $typetext,
+            'requestdate' => userdate($request->get('timecreated')),
+            'requestcomments' => text_to_html($request->get('comments')),
+            'datarequestsurl' => $datarequestsurl
+        ];
+        $requestingfor = core_user::get_user($request->get('userid'));
+        if ($requestedby->id == $requestingfor->id) {
+            $messagetextdata['requestfor'] = $messagetextdata['requestedby'];
+        } else {
+            $messagetextdata['requestfor'] = fullname(core_user::get_user($requestingfor));
+        }
+
+        // Email the data request to the Data Protection Officer(s)/Admin(s).
+        $messagetextdata['dponame'] = fullname($dpo);
+        // Render message email body.
+        $messagehtml = $OUTPUT->render_from_template('tool_dataprivacy/data_request_email', $messagetextdata);
+        $message->userto = $dpo;
+        $message->fullmessage = html_to_text($messagehtml);
+        $message->fullmessagehtml = $messagehtml;
+
+        // Send message.
+        return message_send($message);
     }
 }

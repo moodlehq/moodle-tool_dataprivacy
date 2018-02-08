@@ -116,4 +116,92 @@ class external extends external_api {
             'warnings' => new external_warnings()
         ]);
     }
+
+    /**
+     * Parameter description for contact_dpo().
+     *
+     * @return external_function_parameters
+     */
+    public static function contact_dpo_parameters() {
+        return new external_function_parameters([
+            'message' => new external_value(PARAM_TEXT, 'The user\'s message to the Data Protection Officer(s)', VALUE_REQUIRED)
+        ]);
+    }
+
+    /**
+     * Deny a data request.
+     *
+     * @param $message
+     * @return array
+     * @throws coding_exception
+     * @throws invalid_parameter_exception
+     * @throws invalid_persistent_exception
+     * @throws restricted_context_exception
+     * @throws dml_exception
+     * @throws moodle_exception
+     */
+    public static function contact_dpo($message) {
+        global $USER;
+
+        $warnings = [];
+        $params = external_api::validate_parameters(self::contact_dpo_parameters(), [
+            'message' => $message
+        ]);
+        $message = $params['message'];
+
+        // Validate context.
+        $userid = $USER->id;
+        $context = context_user::instance($userid);
+        self::validate_context($context);
+
+        // Lodge the request.
+        $datarequest = new data_request();
+        // The user the request is being made for.
+        $datarequest->set('userid', $userid);
+        // The user making the request.
+        $datarequest->set('requestedby', $userid);
+        // Set status.
+        $datarequest->set('status', api::DATAREQUEST_STATUS_PENDING);
+        // Set request type.
+        $datarequest->set('type', api::DATAREQUEST_TYPE_OTHERS);
+        // Set request comments.
+        $datarequest->set('comments', $message);
+
+        // Store subject access request.
+        $datarequest->create();
+
+        // Get the list of the site Data Protection Officers.
+        $dpos = api::get_site_dpos();
+
+        // Email the data request to the Data Protection Officer(s)/Admin(s).
+        $result = true;
+        foreach ($dpos as $dpo) {
+            $sendresult = api::notify_dpo($dpo, $datarequest);
+            if (!$sendresult) {
+                $result = false;
+                $warnings[] = [
+                    'item' => $dpo->id,
+                    'warningcode' => 'errorsendingtodpo',
+                    'message' => get_string('errorsendingmessagetodpo', 'tool_dataprivacy')
+                ];
+            }
+        }
+
+        return [
+            'result' => $result,
+            'warnings' => $warnings
+        ];
+    }
+
+    /**
+     * Parameter description for deny_data_request().
+     *
+     * @return external_description
+     */
+    public static function contact_dpo_returns() {
+        return new external_single_structure([
+            'result' => new external_value(PARAM_BOOL, 'The processing result'),
+            'warnings' => new external_warnings()
+        ]);
+    }
 }

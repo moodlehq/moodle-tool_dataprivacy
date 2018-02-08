@@ -39,17 +39,19 @@ defined('MOODLE_INTERNAL') || die();
  * @throws moodle_exception
  */
 function tool_dataprivacy_myprofile_navigation(tree $tree, $user, $iscurrentuser, $course) {
+    global $PAGE, $USER;
 
     // Create a Privacy category.
     $categoryname = get_string('privacy', 'tool_dataprivacy');
-    $dataprivacycategory = new core_user\output\myprofile\category('dataprivacy', $categoryname, 'miscellaneous');
+    $dataprivacycategory = new core_user\output\myprofile\category('dataprivacy', $categoryname, 'contact');
 
     // Contact data protection officer link.
     if (\tool_dataprivacy\api::can_contact_dpo() && $iscurrentuser) {
-        $url = new moodle_url('/admin/tool/dataprivacy/createdatarequest.php');
-        $node = new core_user\output\myprofile\node('dataprivacy', 'contactdpo',
-            get_string('contactdataprotectionofficer', 'tool_dataprivacy'), null, $url);
+        $renderer = $PAGE->get_renderer('tool_dataprivacy');
+        $content = $renderer->render_contact_dpo_link($USER->email);
+        $node = new core_user\output\myprofile\node('dataprivacy', 'contactdpo', null, null, null, $content);
         $dataprivacycategory->add_node($node);
+        $PAGE->requires->js_call_amd('tool_dataprivacy/myrequestactions', 'init');
 
         $url = new moodle_url('/admin/tool/dataprivacy/mydatarequests.php');
         $node = new core_user\output\myprofile\node('dataprivacy', 'datarequests',

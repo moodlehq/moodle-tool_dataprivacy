@@ -125,9 +125,12 @@ class data_request_exporter extends persistent_exporter {
         if ($this->persistent->get('type') == api::DATAREQUEST_TYPE_EXPORT) {
             $values['typename'] = get_string('requesttypeexport', 'tool_dataprivacy');
             $values['typenameshort'] = get_string('requesttypeexportshort', 'tool_dataprivacy');
-        } else {
+        } else if ($this->persistent->get('type') == api::DATAREQUEST_TYPE_DELETE) {
             $values['typename'] = get_string('requesttypedelete', 'tool_dataprivacy');
             $values['typenameshort'] = get_string('requesttypedeleteshort', 'tool_dataprivacy');
+        } else {
+            $values['typename'] = get_string('requesttypeothers', 'tool_dataprivacy');
+            $values['typenameshort'] = get_string('requesttypeothersshort', 'tool_dataprivacy');
         }
 
         switch ($this->persistent->get('status')) {

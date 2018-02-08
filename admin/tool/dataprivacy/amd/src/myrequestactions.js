@@ -27,29 +27,32 @@ define([
     'core/notification',
     'core/str',
     'core/modal_factory',
-    'core/modal_events'],
-function($, Ajax, Notification, Str, ModalFactory, ModalEvents) {
+    'core/modal_events',
+    'core/templates'],
+function($, Ajax, Notification, Str, ModalFactory, ModalEvents, Templates) {
 
     /**
      * List of action selectors.
      *
      * @type {{CANCEL_REQUEST: string}}
+     * @type {{CONTACT_DPO: string}}
      */
     var ACTIONS = {
-        CANCEL_REQUEST: '[data-action="cancel"]'
+        CANCEL_REQUEST: '[data-action="cancel"]',
+        CONTACT_DPO: '[data-action="contactdpo"]',
     };
 
     /**
-     * RequestActions class.
+     * MyRequestActions class.
      */
-    var RequestActions = function() {
+    var MyRequestActions = function() {
         this.registerEvents();
     };
 
     /**
      * Register event listeners.
      */
-    RequestActions.prototype.registerEvents = function() {
+    MyRequestActions.prototype.registerEvents = function() {
         $(ACTIONS.CANCEL_REQUEST).click(function(e) {
             e.preventDefault();
 
@@ -113,7 +116,106 @@ function($, Ajax, Notification, Str, ModalFactory, ModalEvents) {
 
             }).fail(Notification.exception);
         });
+
+        $(ACTIONS.CONTACT_DPO).click(function(e) {
+            e.preventDefault();
+
+            var replyToEmail = $(this).data('replytoemail');
+
+            var keys = [
+                {
+                    key: 'contactdataprotectionofficer',
+                    component: 'tool_dataprivacy'
+                },
+                {
+                    key: 'send',
+                    component: 'tool_dataprivacy'
+                },
+            ];
+
+            var sendButtonText = '';
+            Str.get_strings(keys).then(function(langStrings) {
+                var modalTitle = langStrings[0];
+                sendButtonText = langStrings[1];
+                var context = {
+                    'replytoemail': replyToEmail
+                };
+                return ModalFactory.create({
+                    title: modalTitle,
+                    body: Templates.render('tool_dataprivacy/contact_dpo', context),
+                    type: ModalFactory.types.SAVE_CANCEL,
+                    large: true
+                });
+            }).done(function(modal) {
+                modal.setSaveButtonText(sendButtonText);
+
+                // Handle send event.
+                modal.getRoot().on(ModalEvents.save, function(e) {
+                    var message = $('#message').val().trim();
+                    if (message.length === 0) {
+                        e.preventDefault();
+                        // Show validation error when the message is empty.
+                        $('[data-region="messageinput"]').addClass('has-danger notifyproblem');
+                        $('#id_error_message').removeAttr('hidden');
+                    } else {
+                        // Send the message.
+                        sendMessageToDPO(message);
+                    }
+                });
+
+                // Handle hidden event.
+                modal.getRoot().on(ModalEvents.hidden, function() {
+                    // Destroy when hidden.
+                    modal.destroy();
+                });
+
+                // Show the modal!
+                modal.show();
+            }).fail(Notification.exception);
+        });
     };
 
-    return RequestActions;
+    /**
+     * Send message to the Data Protection Officer.
+     *
+     * @param {String} message The message to send.
+     */
+    function sendMessageToDPO(message) {
+        var request = {
+            methodname: 'tool_dataprivacy_contact_dpo',
+            args: {
+                message: message
+            }
+        };
+
+        var requestType = 'success';
+        Ajax.call([request])[0].then(function(data) {
+            if (data.result) {
+                return Str.get_string('requestsubmitted', 'tool_dataprivacy');
+            }
+            requestType = 'error';
+            return data.warnings.join('<br>');
+
+        }).done(function(message) {
+            Notification.addNotification({
+                message: message,
+                type: requestType
+            });
+
+        }).fail(Notification.exception);
+    }
+
+    return /** @alias module:tool_dataprivacy/myrequestactions */ {
+        // Public variables and functions.
+
+        /**
+         * Initialise the unified user filter.
+         *
+         * @method init
+         * @return {MyRequestActions}
+         */
+        'init': function() {
+            return new MyRequestActions();
+        }
+    };
 });

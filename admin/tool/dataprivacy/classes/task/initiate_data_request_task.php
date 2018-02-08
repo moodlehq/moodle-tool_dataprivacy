@@ -25,11 +25,8 @@
 namespace tool_dataprivacy\task;
 
 use coding_exception;
-use core\message\message;
 use core\task\adhoc_task;
-use core_user;
 use moodle_exception;
-use moodle_url;
 use tool_dataprivacy\api;
 use tool_dataprivacy\data_request;
 
@@ -54,7 +51,7 @@ class initiate_data_request_task extends adhoc_task {
      * @throws moodle_exception
      */
     public function execute() {
-        global $CFG, $OUTPUT, $SITE;
+        global $CFG;
 
         require_once($CFG->dirroot . '/admin/tool/dataprivacy/lib.php');
 
@@ -63,12 +60,12 @@ class initiate_data_request_task extends adhoc_task {
         }
         $requestid = $this->get_custom_data()->requestid;
 
-        $requestpersistent = new data_request($requestid);
-        $request = $requestpersistent->to_record();
+        $datarequest = new data_request($requestid);
 
         // Check if this request still needs to be processed. e.g. The user might have cancelled it before this task has run.
-        if (!api::is_active($request->status)) {
-            mtrace('Request ' . $request->id . ' with status ' . $request->status . ' doesn\'t need to be processed. Skipping...');
+        $status = $datarequest->get('status');
+        if (!api::is_active($status)) {
+            mtrace('Request ' . $requestid . ' with status ' . $status . ' doesn\'t need to be processed. Skipping...');
             return;
         }
 
@@ -82,64 +79,17 @@ class initiate_data_request_task extends adhoc_task {
         api::update_request_status($requestid, api::DATAREQUEST_STATUS_AWAITING_APPROVAL);
         mtrace('User metadata generation complete...');
 
-        // Create message to send to the Data Protection Officer(s).
-        $typetext = null;
-        switch ($request->type) {
-            case api::DATAREQUEST_TYPE_EXPORT:
-                $typetext = get_string('requesttypeexport', 'tool_dataprivacy');
-                break;
-            case api::DATAREQUEST_TYPE_DELETE:
-                $typetext = get_string('requesttypedelete', 'tool_dataprivacy');
-                break;
-            default:
-                throw new moodle_exception('errorinvalidrequesttype', 'tool_dataprivacy');
-        }
-        $subject = get_string('datarequestemailsubject', 'tool_dataprivacy', $typetext);
-
-        $requestedby = core_user::get_user($request->requestedby);
-        $datarequestsurl = new moodle_url('/admin/tool/dataprivacy/datarequests.php');
-        $message = new message();
-        $message->courseid          = $SITE->id;
-        $message->component         = 'tool_dataprivacy';
-        $message->name              = 'contactdataprotectionofficer';
-        $message->userfrom          = $requestedby;
-        $message->replyto           = $requestedby->email;
-        $message->replytoname       = fullname($requestedby->email);
-        $message->subject           = $subject;
-        $message->fullmessageformat = FORMAT_HTML;
-        $message->notification      = 1;
-        $message->contexturl        = $datarequestsurl;
-        $message->contexturlname    = get_string('datarequests', 'tool_dataprivacy');
-
-        // Prepare the context data for the email message body.
-        $messagetextdata = [
-            'requestedby' => fullname($requestedby),
-            'requesttype' => $typetext,
-            'requestdate' => userdate($request->timecreated),
-            'requestcomments' => text_to_html($request->comments),
-            'datarequestsurl' => $datarequestsurl
-        ];
-        $requestingfor = core_user::get_user($request->userid);
-        if ($requestedby->id == $requestingfor->id) {
-            $messagetextdata['requestfor'] = $messagetextdata['requestedby'];
-        } else {
-            $messagetextdata['requestfor'] = fullname(core_user::get_user($requestingfor));
-        }
-
         // Get the list of the site Data Protection Officers.
         $dpos = api::get_site_dpos();
 
         // Email the data request to the Data Protection Officer(s)/Admin(s).
         foreach ($dpos as $dpo) {
-            $messagetextdata['dponame'] = fullname($dpo);
-            // Render message email body.
-            $messagehtml = $OUTPUT->render_from_template('tool_dataprivacy/data_request_email', $messagetextdata);
-            $message->userto = $dpo;
-            $message->fullmessage = html_to_text($messagehtml);
-            $message->fullmessagehtml = $messagehtml;
-            // Send message.
-            message_send($message);
-            mtrace('Message sent to DPO: ' . $messagetextdata['dponame']);
+            $dponame = fullname($dpo);
+            if (api::notify_dpo($dpo, $datarequest)) {
+                mtrace('Message sent to DPO: ' . $dponame);
+            } else {
+                mtrace('A problem was encountered while sending the message to the DPO: ' . $dponame);
+            }
         }
     }
 }
