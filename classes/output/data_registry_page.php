@@ -48,13 +48,13 @@ class data_registry_page implements renderable, templatable {
         $data->actions = [];
 
         $editpurposes = new \single_button(
-            new \moodle_url('admin/tool/dataprivacy/editpurposes.php'),
+            new \moodle_url('/admin/tool/dataprivacy/purposes.php'),
             get_string('editpurposes', 'tool_dataprivacy'),
             'get'
         );
         $data->actions[] = $output->render($editpurposes);
         $editcategories = new \single_button(
-            new \moodle_url('admin/tool/dataprivacy/editcategories.php'),
+            new \moodle_url('/admin/tool/dataprivacy/categories.php'),
             get_string('editcategories', 'tool_dataprivacy'),
             'get'
         );

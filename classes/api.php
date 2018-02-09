@@ -423,4 +423,62 @@ class api {
         // Send message.
         return message_send($message);
     }
+
+    /**
+     * Creates a new data purpose.
+     *
+     * @param stdClass $record
+     * @return \tool_dataprivacy\purpose.
+     */
+    public static function create_purpose(stdClass $record) {
+
+        require_capability('tool/dataprivacy:managedataregistry', \context_system::instance());
+
+        $purpose = new \tool_dataprivacy\purpose(0, $record);
+        $purpose->create();
+
+        return $purpose;
+    }
+
+    /**
+     * Updates an existing data purpose.
+     *
+     * @param stdClass $record
+     * @return \tool_dataprivacy\purpose.
+     */
+    public static function update_purpose(stdClass $record) {
+
+        require_capability('tool/dataprivacy:managedataregistry', \context_system::instance());
+
+        $purpose = new \tool_dataprivacy\purpose($record->id);
+        $purpose->from_record($record);
+
+        $result = $purpose->update();
+
+        return $purpose;
+    }
+
+    /**
+     * Deletes a data purpose.
+     *
+     * @param int $id
+     * @return bool
+     */
+    public static function delete_purpose($id) {
+        require_capability('tool/dataprivacy:managedataregistry', \context_system::instance());
+
+        $purpose = new \tool_dataprivacy\purpose($id);
+        return $purpose->delete();
+    }
+
+    /**
+     * Get all system data purposes.
+     *
+     * @return \tool_dataprivacy\purpose[]
+     */
+    public static function get_purposes() {
+        require_capability('tool/dataprivacy:managedataregistry', \context_system::instance());
+
+        return \tool_dataprivacy\purpose::get_records([], 'name', 'ASC');
+    }
 }

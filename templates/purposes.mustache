@@ -1,0 +1,66 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    Manage purposes.
+
+    Classes required for JS:
+
+    Data attributes required for JS:
+
+    Context variables required for this template:
+    * purposes - array of objects
+    * actions - array of actions (already in HTML).
+}}
+<div data-region="purposes">
+<div class="m-t-1 m-b-1">
+    {{#actions}}
+    {{{.}}}
+    {{/actions}}
+</div>
+{{#purposesexist}}
+<table class="generaltable fullwidth">
+    <caption>{{#str}}purposeslist, tool_dataprivacy{{/str}}</caption>
+    <thead>
+        <tr>
+            <th scope="col">{{#str}}name{{/str}}</th>
+            <th scope="col">{{#str}}description{{/str}}</th>
+            <th scope="col">{{#str}}retentionperiod, tool_dataprivacy{{/str}}</th>
+            <th scope="col">{{#str}}actions{{/str}}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#purposes}}
+        <tr data-purposeid="{{id}}">
+            <td>{{{name}}}</td>
+            <td>{{{description}}}</td>
+            <td>{{retentionperiod}}</td>
+            <td>
+                {{#actions}}
+                    {{> core/action_menu}}
+                {{/actions}}
+            </td>
+        </tr>
+        {{/purposes}}
+    </tbody>
+</table>
+{{/purposesexist}}
+{{^purposesexist}}
+<p class="alert alert-info">
+    {{#str}}nopurposes, tool_dataprivacy{{/str}}
+</p>
+{{/purposesexist}}
+</div>

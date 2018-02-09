@@ -467,4 +467,52 @@ class external extends external_api {
             ]
         ));
     }
+
+    /**
+     * Parameter description for delete_purpose().
+     *
+     * @return external_function_parameters
+     */
+    public static function delete_purpose_parameters() {
+        return new external_function_parameters([
+            'id' => new external_value(PARAM_INT, 'The purpose ID', VALUE_REQUIRED)
+        ]);
+    }
+
+    /**
+     * Deletes a data purpose.
+     *
+     * @param int $id The ID.
+     * @return array
+     * @throws invalid_persistent_exception
+     * @throws coding_exception
+     * @throws invalid_parameter_exception
+     */
+    public static function delete_purpose($id) {
+        global $USER;
+
+        $warnings = [];
+        $params = external_api::validate_parameters(self::delete_purpose_parameters(), [
+            'id' => $id
+        ]);
+
+        $result = api::delete_purpose($params['id']);
+
+        return [
+            'result' => $result,
+            'warnings' => []
+        ];
+    }
+
+    /**
+     * Parameter description for delete_purpose().
+     *
+     * @return external_description
+     */
+    public static function delete_purpose_returns() {
+        return new external_single_structure([
+            'result' => new external_value(PARAM_BOOL, 'The processing result'),
+            'warnings' => new external_warnings()
+        ]);
+    }
 }

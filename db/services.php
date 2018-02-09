@@ -83,4 +83,14 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
+    'tool_dataprivacy_delete_purpose' => [
+        'classname'     => 'tool_dataprivacy\external',
+        'methodname'    => 'delete_purpose',
+        'classpath'     => '',
+        'description'   => 'Deletes an existing data purpose',
+        'type'          => 'write',
+        'capabilities'  => '',
+        'ajax'          => true,
+        'loginrequired' => true,
+    ],
 ];

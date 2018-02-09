@@ -91,4 +91,18 @@ class renderer extends plugin_renderer_base {
         return parent::render_from_template('tool_dataprivacy/data_registry', $data);
     }
 
+    /**
+     * Render the purposes page.
+     *
+     * @param purposes_page $page
+     * @return string html for the page
+     * @throws moodle_exception
+     */
+    public function render_purposes_page(purposes_page $page) {
+        global $PAGE;
+        $data = $page->export_for_template($this);
+        $PAGE->requires->js_call_amd('tool_dataprivacy/purposesactions', 'init');
+        return parent::render_from_template('tool_dataprivacy/purposes', $data);
+    }
+
 }
