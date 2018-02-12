@@ -93,4 +93,14 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
+    'tool_dataprivacy_delete_category' => [
+        'classname'     => 'tool_dataprivacy\external',
+        'methodname'    => 'delete_category',
+        'classpath'     => '',
+        'description'   => 'Deletes an existing data category',
+        'type'          => 'write',
+        'capabilities'  => '',
+        'ajax'          => true,
+        'loginrequired' => true,
+    ],
 ];

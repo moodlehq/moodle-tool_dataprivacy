@@ -515,4 +515,52 @@ class external extends external_api {
             'warnings' => new external_warnings()
         ]);
     }
+
+    /**
+     * Parameter description for delete_category().
+     *
+     * @return external_function_parameters
+     */
+    public static function delete_category_parameters() {
+        return new external_function_parameters([
+            'id' => new external_value(PARAM_INT, 'The category ID', VALUE_REQUIRED)
+        ]);
+    }
+
+    /**
+     * Deletes a data category.
+     *
+     * @param int $id The ID.
+     * @return array
+     * @throws invalid_persistent_exception
+     * @throws coding_exception
+     * @throws invalid_parameter_exception
+     */
+    public static function delete_category($id) {
+        global $USER;
+
+        $warnings = [];
+        $params = external_api::validate_parameters(self::delete_category_parameters(), [
+            'id' => $id
+        ]);
+
+        $result = api::delete_category($params['id']);
+
+        return [
+            'result' => $result,
+            'warnings' => []
+        ];
+    }
+
+    /**
+     * Parameter description for delete_category().
+     *
+     * @return external_description
+     */
+    public static function delete_category_returns() {
+        return new external_single_structure([
+            'result' => new external_value(PARAM_BOOL, 'The processing result'),
+            'warnings' => new external_warnings()
+        ]);
+    }
 }

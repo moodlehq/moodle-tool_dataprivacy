@@ -481,4 +481,63 @@ class api {
 
         return \tool_dataprivacy\purpose::get_records([], 'name', 'ASC');
     }
+
+    /**
+     * Creates a new data category.
+     *
+     * @param stdClass $record
+     * @return \tool_dataprivacy\category.
+     */
+    public static function create_category(stdClass $record) {
+
+        require_capability('tool/dataprivacy:managedataregistry', \context_system::instance());
+
+        $category = new \tool_dataprivacy\category(0, $record);
+        $category->create();
+
+        return $category;
+    }
+
+    /**
+     * Updates an existing data category.
+     *
+     * @param stdClass $record
+     * @return \tool_dataprivacy\category.
+     */
+    public static function update_category(stdClass $record) {
+
+        require_capability('tool/dataprivacy:managedataregistry', \context_system::instance());
+
+        $category = new \tool_dataprivacy\category($record->id);
+        $category->from_record($record);
+
+        $result = $category->update();
+
+        return $category;
+    }
+
+    /**
+     * Deletes a data category.
+     *
+     * @param int $id
+     * @return bool
+     */
+    public static function delete_category($id) {
+        require_capability('tool/dataprivacy:managedataregistry', \context_system::instance());
+
+        $category = new \tool_dataprivacy\category($id);
+        return $category->delete();
+    }
+
+    /**
+     * Get all system data categories.
+     *
+     * @return \tool_dataprivacy\category[]
+     */
+    public static function get_categories() {
+        require_capability('tool/dataprivacy:managedataregistry', \context_system::instance());
+
+        return \tool_dataprivacy\category::get_records([], 'name', 'ASC');
+    }
+
 }

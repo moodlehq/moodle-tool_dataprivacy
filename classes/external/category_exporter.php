@@ -15,17 +15,37 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Data privacy plugin version information
+ * Class for exporting data category.
  *
  * @package    tool_dataprivacy
- * @copyright  2018 onwards Jun Pataleta
+ * @copyright  2018 David Monllao
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+namespace tool_dataprivacy\external;
+defined('MOODLE_INTERNAL') || die();
 
-defined('MOODLE_INTERNAL') || die;
+use core\external\persistent_exporter;
 
-$plugin->version   = 2018020705;
-$plugin->requires  = 2018031600.00;        // Moodle 3.5dev (Build 2018031600) and upwards.
-$plugin->component = 'tool_dataprivacy';
-$plugin->release   = '0.0.1';
-$plugin->maturity  = MATURITY_ALPHA;
+/**
+ * Class for exporting field data.
+ *
+ * @copyright  2018 David Monllao
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class category_exporter extends persistent_exporter {
+
+    protected static function define_class() {
+        return \tool_dataprivacy\category::class;
+    }
+
+    /**
+     * Returns a list of objects that are related.
+     *
+     * @return array
+     */
+    protected static function define_related() {
+        return array(
+            'context' => 'context',
+        );
+    }
+}
