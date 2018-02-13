@@ -48,4 +48,33 @@ class purpose_exporter extends persistent_exporter {
             'context' => 'context',
         );
     }
+
+    /**
+     * Return the list of additional properties.
+     *
+     * @return array
+     */
+    protected static function define_other_properties() {
+        return array(
+            'formattedretentionperiod' => array(
+                'type' => PARAM_TEXT
+            ),
+        );
+    }
+
+    /**
+     * @param \renderer_base $output
+     * @throws coding_exception
+     * @throws dml_exception
+     * @return array
+     */
+    protected function get_other_values(\renderer_base $output) {
+        $retentionperiod = $this->persistent->get('retentionperiod');
+        if ($retentionperiod) {
+            $formattedtime = format_time($retentionperiod);
+        } else {
+            $formattedtime = get_string('retentionperiodnotdefined', 'tool_dataprivacy');
+        }
+        return ['formattedretentionperiod' => $formattedtime];
+    }
 }

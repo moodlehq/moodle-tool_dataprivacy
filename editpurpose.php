@@ -26,15 +26,14 @@ require_once(__DIR__ . '/../../../config.php');
 
 $id = optional_param('id', 0, PARAM_INT);
 
-require_login();
-$context = \context_system::instance();
-// TODO Check that data privacy is enabled.
-require_capability('tool/dataprivacy:managedataregistry', $context);
-
 $url = new \moodle_url('/admin/tool/dataprivacy/editpurpose.php', array('id' => $id));
-$PAGE->set_url($url);
-$PAGE->set_context($context);
-$PAGE->set_pagelayout('admin');
+if ($id) {
+    $title = get_string('editpurpose', 'tool_dataprivacy');
+} else {
+    $title = get_string('addpurpose', 'tool_dataprivacy');
+}
+
+\tool_dataprivacy\page_helper::setup($url, $title);
 
 $purpose = new \tool_dataprivacy\purpose($id);
 $form = new \tool_dataprivacy\form\purpose($PAGE->url->out(false), array('persistent' => $purpose));
@@ -54,16 +53,6 @@ if ($form->is_cancelled()) {
 }
 
 $output = $PAGE->get_renderer('tool_dataprivacy');
-
-if ($id === 0) {
-    $pagetitle = get_string('createpurpose', 'tool_dataprivacy');
-} else {
-    $purposeexporter = new \tool_dataprivacy\external\purpose_exporter($purpose, ['context' => $context]);
-    $exporteddata = $purposeexporter->export($output);
-    $pagetitle = get_string('editpurpose', 'tool_dataprivacy', $exporteddata->name);
-}
-
-$PAGE->set_heading($pagetitle);
 echo $output->header();
 $form->display();
 echo $output->footer();

@@ -32,6 +32,9 @@ defined('MOODLE_INTERNAL') || die();
  */
 class category extends \core\persistent {
 
+    /**
+     * Database table.
+     */
     const TABLE = 'dataprivacy_category';
 
     /**

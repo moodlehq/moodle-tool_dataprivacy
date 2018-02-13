@@ -83,7 +83,7 @@ function($, Ajax, Notification, Str, ModalFactory, ModalEvents) {
 
                         var request = {
                             methodname: 'tool_dataprivacy_delete_category',
-                            args: { 'id': id }
+                            args: {'id': id}
                         };
 
                         Ajax.call([request])[0].done(function(data) {

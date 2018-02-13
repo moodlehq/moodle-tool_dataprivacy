@@ -52,7 +52,11 @@ class category extends persistent {
         $mform->addElement('editor', 'description', get_string('description'));
         $mform->setType('description', PARAM_CLEANHTML);
 
-        $this->add_action_buttons(true, get_string('add'));
-
+        if (!$this->get_persistent()->get('id')) {
+            $savetext = get_string('add');
+        } else {
+            $savetext = get_string('savechanges');
+        }
+        $this->add_action_buttons(true, $savetext);
     }
 }

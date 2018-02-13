@@ -32,6 +32,9 @@ defined('MOODLE_INTERNAL') || die();
  */
 class purpose extends \core\persistent {
 
+    /**
+     * Database table.
+     */
     const TABLE = 'dataprivacy_purpose';
 
     /**

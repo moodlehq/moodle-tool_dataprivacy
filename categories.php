@@ -24,21 +24,12 @@
 
 require_once(__DIR__ . '/../../../config.php');
 
-$context = \context_system::instance();
-
 $url = new moodle_url("/admin/tool/dataprivacy/categories.php");
-$PAGE->set_url($url);
-$PAGE->set_context($context);
-$PAGE->set_pagelayout('admin');
+$title = get_string('categories', 'tool_dataprivacy');
 
-require_login();
-// TODO Check that data privacy is enabled.
-require_capability('tool/dataprivacy:managedataregistry', $context);
+\tool_dataprivacy\page_helper::setup($url, $title);
 
 $output = $PAGE->get_renderer('tool_dataprivacy');
-$title = get_string('categories', 'tool_dataprivacy');
-$PAGE->set_title($title);
-$PAGE->set_heading($title);
 echo $output->header();
 
 $categories = \tool_dataprivacy\api::get_categories();

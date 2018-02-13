@@ -505,4 +505,109 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
         $this->assertContains(fullname($dpo), $message->fullmessage);
         $this->assertContains(fullname($user1), $message->fullmessage);
     }
+
+    /**
+     * Test data purposes CRUD actions.
+     *
+     * @return null
+     */
+    public function test_purpose_crud() {
+
+        $pleb = $this->getDataGenerator()->create_user();
+
+        $this->setUser($pleb);
+        try {
+            api::create_purpose((object)[
+                'name' => 'aaa',
+                'description' => '<b>yeah</b>',
+                'descriptionformat' => 1,
+                'retentionperiod' => 60
+            ]);
+            $this->fail('Users shouldn\'t be allowed to manage purposes by default');
+        } catch (\required_capability_exception $e) {
+            # All good.
+        }
+
+        $this->setAdminUser();
+
+        // Add.
+        $purpose = api::create_purpose((object)[
+            'name' => 'bbb',
+            'description' => '<b>yeah</b>',
+            'descriptionformat' => 1,
+            'retentionperiod' => 60
+        ]);
+        $this->assertInstanceOf('\tool_dataprivacy\purpose', $purpose);
+        $this->assertEquals('bbb', $purpose->get('name'));
+        $this->assertEquals(60, $purpose->get('retentionperiod'));
+
+        // Update.
+        $purpose->set('retentionperiod', 120);
+        $purpose = api::update_purpose($purpose->to_record());
+        $this->assertEquals(120, $purpose->get('retentionperiod'));
+
+        // Retrieve.
+        $purpose = api::create_purpose((object)['name' => 'aaa', 'retentionperiod' => 60]);
+        $purposes = api::get_purposes();
+        $this->assertCount(2, $purposes);
+        $this->assertEquals('aaa', $purposes[0]->get('name'));
+        $this->assertEquals('bbb', $purposes[1]->get('name'));
+
+        // Delete.
+        api::delete_purpose($purposes[0]->get('id'));
+        $this->assertCount(1, api::get_purposes());
+        api::delete_purpose($purposes[1]->get('id'));
+        $this->assertCount(0, api::get_purposes());
+    }
+
+    /**
+     * Test data categories CRUD actions.
+     *
+     * @return null
+     */
+    public function test_category_crud() {
+
+        $pleb = $this->getDataGenerator()->create_user();
+
+        $this->setUser($pleb);
+        try {
+            api::create_category((object)[
+                'name' => 'bbb',
+                'description' => '<b>yeah</b>',
+                'descriptionformat' => 1
+            ]);
+            $this->fail('Users shouldn\'t be allowed to manage categories by default');
+        } catch (\required_capability_exception $e) {
+            # All good.
+        }
+
+        $this->setAdminUser();
+
+        // Add.
+        $category = api::create_category((object)[
+            'name' => 'bbb',
+            'description' => '<b>yeah</b>',
+            'descriptionformat' => 1
+        ]);
+        $this->assertInstanceOf('\tool_dataprivacy\category', $category);
+        $this->assertEquals('bbb', $category->get('name'));
+
+        // Update.
+        $category->set('name', 'bcd');
+        $category = api::update_category($category->to_record());
+        $this->assertEquals('bcd', $category->get('name'));
+
+        // Retrieve.
+        $category = api::create_category((object)['name' => 'aaa']);
+        $categories = api::get_categories();
+        $this->assertCount(2, $categories);
+        $this->assertEquals('aaa', $categories[0]->get('name'));
+        $this->assertEquals('bcd', $categories[1]->get('name'));
+
+        // Delete.
+        api::delete_category($categories[0]->get('id'));
+        $this->assertCount(1, api::get_categories());
+        api::delete_category($categories[1]->get('id'));
+        $this->assertCount(0, api::get_categories());
+    }
 }

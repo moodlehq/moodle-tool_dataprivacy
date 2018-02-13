@@ -23,32 +23,18 @@
  * @package mod_feedback
  */
 
-require_once("../../../config.php");
-require_once('lib.php');
-
-$courseid = optional_param('course', 0, PARAM_INT);
+require_once(__DIR__ . '/../../../config.php');
+require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/dataprivacy/lib.php');
 
 $url = new moodle_url('/admin/tool/dataprivacy/dataregistry.php');
-$PAGE->set_url($url);
-
-require_login();
-if (isguestuser()) {
-    print_error('noguest');
-}
-
-$context = context_system::instance();
-
-require_capability('tool/dataprivacy:managedataregistry', $context);
-
-$PAGE->set_context($context);
-
 $title = get_string('dataregistry', 'tool_dataprivacy');
-$PAGE->set_heading($title);
-$PAGE->set_title($title);
-echo $OUTPUT->header();
+
+\tool_dataprivacy\page_helper::setup($url, $title);
+
+$output = $PAGE->get_renderer('tool_dataprivacy');
+echo $output->header();
 
 $dataregistry = new tool_dataprivacy\output\data_registry_page();
-$renderer = $PAGE->get_renderer('tool_dataprivacy');
-echo $renderer->render($dataregistry);
 
+echo $output->render($dataregistry);
 echo $OUTPUT->footer();

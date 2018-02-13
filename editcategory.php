@@ -26,15 +26,13 @@ require_once(__DIR__ . '/../../../config.php');
 
 $id = optional_param('id', 0, PARAM_INT);
 
-require_login();
-$context = \context_system::instance();
-// TODO Check that data privacy is enabled.
-require_capability('tool/dataprivacy:managedataregistry', $context);
-
 $url = new \moodle_url('/admin/tool/dataprivacy/editcategory.php', array('id' => $id));
-$PAGE->set_url($url);
-$PAGE->set_context($context);
-$PAGE->set_pagelayout('admin');
+if ($id) {
+    $title = get_string('editcategory', 'tool_dataprivacy');
+} else {
+    $title = get_string('addcategory', 'tool_dataprivacy');
+}
+\tool_dataprivacy\page_helper::setup($url, $title);
 
 $category = new \tool_dataprivacy\category($id);
 $form = new \tool_dataprivacy\form\category($PAGE->url->out(false), array('persistent' => $category));
@@ -54,16 +52,6 @@ if ($form->is_cancelled()) {
 }
 
 $output = $PAGE->get_renderer('tool_dataprivacy');
-
-if ($id === 0) {
-    $pagetitle = get_string('createcategory', 'tool_dataprivacy');
-} else {
-    $categoryexporter = new \tool_dataprivacy\external\category_exporter($category, ['context' => $context]);
-    $exporteddata = $categoryexporter->export($output);
-    $pagetitle = get_string('editcategory', 'tool_dataprivacy', $exporteddata->name);
-}
-
-$PAGE->set_heading($pagetitle);
 echo $output->header();
 $form->display();
 echo $output->footer();

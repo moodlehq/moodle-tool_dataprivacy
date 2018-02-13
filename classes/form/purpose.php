@@ -54,7 +54,11 @@ class purpose extends persistent {
 
         $mform->addElement('duration', 'retentionperiod', get_string('retentionperiod', 'tool_dataprivacy'));
 
-        $this->add_action_buttons(true, get_string('add'));
-
+        if (!$this->get_persistent()->get('id')) {
+            $savetext = get_string('add');
+        } else {
+            $savetext = get_string('savechanges');
+        }
+        $this->add_action_buttons(true, $savetext);
     }
 }
