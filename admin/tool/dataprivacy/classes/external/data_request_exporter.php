@@ -89,6 +89,11 @@ class data_request_exporter extends persistent_exporter {
             'statuslabelclass' => [
                 'type' => PARAM_TEXT,
             ],
+            'canreview' => [
+                'type' => PARAM_BOOL,
+                'optional' => true,
+                'default' => false
+            ],
         ];
     }
 
@@ -133,6 +138,7 @@ class data_request_exporter extends persistent_exporter {
             $values['typenameshort'] = get_string('requesttypeothersshort', 'tool_dataprivacy');
         }
 
+        $values['canreview'] = false;
         switch ($this->persistent->get('status')) {
             case api::DATAREQUEST_STATUS_PENDING:
                 $values['statuslabelclass'] = 'label-default';
@@ -145,6 +151,8 @@ class data_request_exporter extends persistent_exporter {
             case api::DATAREQUEST_STATUS_AWAITING_APPROVAL:
                 $values['statuslabelclass'] = 'label-info';
                 $values['statuslabel'] = get_string('statusawaitingapproval', 'tool_dataprivacy');
+                // DPO can review the request once it's ready.
+                $values['canreview'] = true;
                 break;
             case api::DATAREQUEST_STATUS_APPROVED:
                 $values['statuslabelclass'] = 'label-info';

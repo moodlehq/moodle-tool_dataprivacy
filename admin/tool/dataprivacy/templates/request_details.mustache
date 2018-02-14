@@ -41,6 +41,7 @@
             "profileurl": "#",
             "profileimageurl": "https://randomuser.me/api/portraits/women/60.jpg"
         },
+        "canreview": true,
         "reviewurl": "#",
         "timecreated": 1517561224,
         "statuslabel": "Pending",
@@ -69,7 +70,9 @@
                 <span class="label {{statuslabelclass}}">{{statuslabel}}</span>
             </span>
             </div>
-            <a href="{{reviewurl}}" class="btn btn-default">{{#str}}reviewdata, tool_dataprivacy{{/str}}</a>
+            {{#canreview}}
+                <a href="{{reviewurl}}" class="btn btn-default">{{#str}}reviewdata, tool_dataprivacy{{/str}}</a>
+            {{/canreview}}
         </div>
     </div>
     <hr>
