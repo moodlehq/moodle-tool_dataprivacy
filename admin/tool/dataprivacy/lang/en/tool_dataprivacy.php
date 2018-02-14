@@ -61,6 +61,7 @@ $string['messageprovider:datarequestprocessingresults'] = 'Data request processi
 $string['message'] = 'Message';
 $string['messagelabel'] = 'Message:';
 $string['mypersonaldatarequests'] = 'My personal data requests';
+$string['nameemail'] = '{$a->name} ({$a->email})';
 $string['newrequest'] = 'New request';
 $string['nodatarequests'] = 'There are no data requests';
 $string['nopersonaldatarequests'] = 'You don\'t have any personal data requests';
