@@ -42,6 +42,8 @@ use tool_dataprivacy\data_request;
 class data_request_exporter extends persistent_exporter {
 
     /**
+     * Class definition.
+     *
      * @return string
      */
     protected static function define_class() {
@@ -49,6 +51,8 @@ class data_request_exporter extends persistent_exporter {
     }
 
     /**
+     * Related objects definition.
+     *
      * @return array
      */
     protected static function define_related() {
@@ -58,6 +62,8 @@ class data_request_exporter extends persistent_exporter {
     }
 
     /**
+     * Other properties definition.
+     *
      * @return array
      */
     protected static function define_other_properties() {
@@ -98,7 +104,9 @@ class data_request_exporter extends persistent_exporter {
     }
 
     /**
-     * @param renderer_base $output
+     * Assign values to the defined other properties.
+     *
+     * @param renderer_base $output The output renderer object.
      * @return array
      * @throws coding_exception
      * @throws dml_exception

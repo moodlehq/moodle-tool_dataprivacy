@@ -134,7 +134,7 @@ class external extends external_api {
     /**
      * Deny a data request.
      *
-     * @param $message
+     * @param string $message The message to be sent to the DPO.
      * @return array
      * @throws coding_exception
      * @throws invalid_parameter_exception

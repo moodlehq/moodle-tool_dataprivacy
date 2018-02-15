@@ -139,7 +139,7 @@ class api {
      * @throws dml_exception
      */
     public static function is_site_dpo($userid) {
-        $dpos = api::get_site_dpos();
+        $dpos = self::get_site_dpos();
         return array_key_exists($userid, $dpos);
     }
 
@@ -255,6 +255,7 @@ class api {
      *
      * @param int $requestid The request identifier.
      * @param int $status The request status.
+     * @param int $dpoid The user ID of the Data Protection Officer
      * @return bool
      * @throws invalid_persistent_exception
      * @throws coding_exception
@@ -306,7 +307,7 @@ class api {
         }
 
         // Update the status and the DPO.
-        $result = self::update_request_status($requestid, api::DATAREQUEST_STATUS_APPROVED, $USER->id);
+        $result = self::update_request_status($requestid, self::DATAREQUEST_STATUS_APPROVED, $USER->id);
 
         // Fire an ad hoc task to initiate the data request process.
         $task = new process_data_request_task();
@@ -342,7 +343,7 @@ class api {
         }
 
         // Update the status and the DPO.
-        return self::update_request_status($requestid, api::DATAREQUEST_STATUS_REJECTED, $USER->id);
+        return self::update_request_status($requestid, self::DATAREQUEST_STATUS_REJECTED, $USER->id);
     }
 
     /**
@@ -361,13 +362,13 @@ class api {
         // Create message to send to the Data Protection Officer(s).
         $typetext = null;
         switch ($request->get('type')) {
-            case api::DATAREQUEST_TYPE_EXPORT:
+            case self::DATAREQUEST_TYPE_EXPORT:
                 $typetext = get_string('requesttypeexport', 'tool_dataprivacy');
                 break;
-            case api::DATAREQUEST_TYPE_DELETE:
+            case self::DATAREQUEST_TYPE_DELETE:
                 $typetext = get_string('requesttypedelete', 'tool_dataprivacy');
                 break;
-            case api::DATAREQUEST_TYPE_OTHERS:
+            case self::DATAREQUEST_TYPE_OTHERS:
                 $typetext = get_string('requesttypeothers', 'tool_dataprivacy');
                 break;
             default:

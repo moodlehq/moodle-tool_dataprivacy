@@ -35,7 +35,7 @@ global $CFG;
 /**
  * API tests.
  *
- * @package    core_competency
+ * @package    tool_dataprivacy
  * @copyright  2018 Jun Pataleta
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -214,7 +214,7 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      * Test for api::can_contact_dpo()
      */
     public function test_can_contact_dpo() {
-        // Default (enabled).
+        // Default ('contactdataprotectionofficer' is enabled by default).
         $this->assertTrue(api::can_contact_dpo());
 
         // Disable.
@@ -395,8 +395,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      * Test for api::has_ongoing_request()
      *
      * @dataProvider status_provider
-     * @param $status
-     * @param $expected
+     * @param int $status The request status.
+     * @param bool $expected The expected result.
      */
     public function test_has_ongoing_request($status, $expected) {
         $generator = new testing_data_generator();
@@ -416,8 +416,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      * Test for api::is_active()
      *
      * @dataProvider status_provider
-     * @param $status
-     * @param $expected
+     * @param int $status The request status
+     * @param bool $expected The expected result
      */
     public function test_is_active($status, $expected) {
         // Check if this request is ongoing.
@@ -474,6 +474,8 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
      * Test for api::notify_dpo()
      *
      * @dataProvider notify_dpo_provider
+     * @param int $type The request type
+     * @param string $typestringid The request lang string identifier
      */
     public function test_notify_dpo($type, $typestringid) {
         $generator = new testing_data_generator();
