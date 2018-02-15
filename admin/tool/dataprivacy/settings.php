@@ -48,10 +48,12 @@ foreach ($capableroles as $key => $role) {
         $roles[$key] = $assignableroles[$key];
     }
 }
-$settings->add(new admin_setting_configmultiselect('tool_dataprivacy/dporoles',
-    new lang_string('dporolemapping', 'tool_dataprivacy'),
-    new lang_string('dporolemapping_desc', 'tool_dataprivacy'), null, $roles)
-);
+if (!empty($roles)) {
+    $settings->add(new admin_setting_configmultiselect('tool_dataprivacy/dporoles',
+            new lang_string('dporolemapping', 'tool_dataprivacy'),
+            new lang_string('dporolemapping_desc', 'tool_dataprivacy'), null, $roles)
+    );
+}
 
 $ADMIN->add('dataprivacysettings', new admin_externalpage('datarequests', get_string('datarequests', 'tool_dataprivacy'),
     new moodle_url('/admin/tool/dataprivacy/datarequests.php'), 'tool/dataprivacy:managedatarequests')
