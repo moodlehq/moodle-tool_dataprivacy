@@ -106,6 +106,7 @@ class process_data_request_task extends adhoc_task {
             'username' => fullname($foruser)
         ];
 
+        $emailonly = false;
         switch ($request->type) {
             case api::DATAREQUEST_TYPE_EXPORT:
                 $typetext = get_string('requesttypeexport', 'tool_dataprivacy');
@@ -127,6 +128,8 @@ class process_data_request_task extends adhoc_task {
                 $message->notification = 0;
                 // Message to the recipient.
                 $messagetextdata['message'] = get_string('resultdeleted', 'tool_dataprivacy', $SITE->fullname);
+                // Message will be sent to the deleted user via email only.
+                $emailonly = true;
                 break;
             default:
                 throw new moodle_exception('errorinvalidrequesttype', 'tool_dataprivacy');
@@ -143,10 +146,14 @@ class process_data_request_task extends adhoc_task {
         $message->fullmessagehtml = $messagehtml;
 
         // Send message to the user involved.
-        message_send($message);
+        if ($emailonly) {
+            email_to_user($foruser, $dpo, $subject, $message->fullmessage, $messagehtml);
+        } else {
+            message_send($message);
+        }
         mtrace('Message sent to user: ' . $messagetextdata['username']);
 
-        // Send to the requestor as well. requestedby is 0 if the request was made on behalf of the user by a DPO.
+        // Send to the requester as well. requestedby is 0 if the request was made on behalf of the user by a DPO.
         if (!empty($request->requestedby) && $foruser->id != $request->requestedby) {
             $requestedby = core_user::get_user($request->requestedby);
             $message->userto = $requestedby;
@@ -157,8 +164,12 @@ class process_data_request_task extends adhoc_task {
             $message->fullmessagehtml = $messagehtml;
 
             // Send message.
-            message_send($message);
-            mtrace('Message sent to requestor: ' . $messagetextdata['username']);
+            if ($emailonly) {
+                email_to_user($requestedby, $dpo, $subject, $message->fullmessage, $messagehtml);
+            } else {
+                message_send($message);
+            }
+            mtrace('Message sent to requester: ' . $messagetextdata['username']);
         }
     }
 }
