@@ -71,6 +71,7 @@ class data_requests_page implements renderable, templatable {
     public function export_for_template(renderer_base $output) {
         $data = new stdClass();
         $data->newdatarequesturl = new moodle_url('/admin/tool/dataprivacy/createdatarequest.php');
+        $data->newdatarequesturl->param('manage', true);
 
         $requests = [];
         foreach ($this->requests as $request) {

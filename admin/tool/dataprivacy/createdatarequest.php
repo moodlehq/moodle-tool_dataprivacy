@@ -27,6 +27,8 @@ require_once('lib.php');
 require_once('classes/api.php');
 require_once('createdatarequest_form.php');
 
+$manage = optional_param('manage', PARAM_BOOL, true);
+
 $url = new moodle_url('/admin/tool/dataprivacy/createdatarequest.php');
 
 $PAGE->set_url($url);
@@ -40,7 +42,11 @@ $usercontext = context_user::instance($USER->id);
 $PAGE->set_context($usercontext);
 
 // Return URL.
-$returnurl = new moodle_url($CFG->wwwroot . '/admin/tool/dataprivacy/mydatarequests.php');
+if ($manage) {
+    $returnurl = new moodle_url($CFG->wwwroot . '/admin/tool/dataprivacy/datarequests.php');
+} else {
+    $returnurl = new moodle_url($CFG->wwwroot . '/admin/tool/dataprivacy/mydatarequests.php');
+}
 
 // If contactdataprotectionofficer is disabled, send the user back to the profile page, or the privacy policy page.
 if (!\tool_dataprivacy\api::can_contact_dpo()) {

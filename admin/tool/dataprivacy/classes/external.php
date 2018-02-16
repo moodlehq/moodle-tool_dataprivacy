@@ -29,15 +29,18 @@ use coding_exception;
 use context_system;
 use context_user;
 use core\invalid_persistent_exception;
+use core_user;
 use dml_exception;
 use external_api;
 use external_description;
 use external_function_parameters;
+use external_multiple_structure;
 use external_single_structure;
 use external_value;
 use external_warnings;
 use invalid_parameter_exception;
 use moodle_exception;
+use required_capability_exception;
 use restricted_context_exception;
 use tool_dataprivacy\external\data_request_exporter;
 
@@ -397,5 +400,70 @@ class external extends external_api {
             'result' => new external_value(PARAM_BOOL, 'The processing result'),
             'warnings' => new external_warnings()
         ]);
+    }
+
+    /**
+     * Parameter description for get_data_request().
+     *
+     * @return external_function_parameters
+     */
+    public static function get_users_parameters() {
+        return new external_function_parameters([
+            'query' => new external_value(PARAM_TEXT, 'The search query', VALUE_REQUIRED)
+        ]);
+    }
+
+    /**
+     * Fetch the details of a user's data request.
+     *
+     * @param string $query The search request.
+     * @return array
+     * @throws required_capability_exception
+     * @throws dml_exception
+     * @throws invalid_parameter_exception
+     * @throws restricted_context_exception
+     */
+    public static function get_users($query) {
+        $params = external_api::validate_parameters(self::get_users_parameters(), [
+            'query' => $query
+        ]);
+        $query = $params['query'];
+
+        // Validate context.
+        $context = context_system::instance();
+        self::validate_context($context);
+        require_capability('tool/dataprivacy:managedatarequests', $context);
+
+        $allusernames = get_all_user_name_fields(true);
+        // Exclude admins and guest user.
+        $excludedusers = array_keys(get_admins()) + [guest_user()->id];
+        $sort = 'lastname ASC, firstname ASC';
+        $fields = 'id, email, ' . $allusernames;
+        $users = get_users(true, $query, true, $excludedusers, $sort, '', '', 0, 30, $fields);
+        foreach ($users as $user) {
+            $useroptions[$user->id] = (object)[
+                'id' => $user->id,
+                'fullname' => fullname($user),
+                'email' => $user->email
+            ];
+        }
+
+        return $useroptions;
+    }
+
+    /**
+     * Parameter description for get_users().
+     *
+     * @return external_description
+     * @throws coding_exception
+     */
+    public static function get_users_returns() {
+        return new external_multiple_structure(new external_single_structure(
+            [
+                'id' => new external_value(core_user::get_property_type('id'), 'ID of the user'),
+                'fullname' => new external_value(core_user::get_property_type('firstname'), 'The fullname of the user'),
+                'email' => new external_value(core_user::get_property_type('email'), 'The user\'s email address', VALUE_OPTIONAL),
+            ]
+        ));
     }
 }

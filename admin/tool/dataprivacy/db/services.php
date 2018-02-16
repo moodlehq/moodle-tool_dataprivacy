@@ -73,4 +73,14 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
+    'tool_dataprivacy_get_users' => [
+        'classname'     => 'tool_dataprivacy\external',
+        'methodname'    => 'get_users',
+        'classpath'     => '',
+        'description'   => 'Fetches a list of users',
+        'type'          => 'read',
+        'capabilities'  => 'tool/dataprivacy:managedatarequests',
+        'ajax'          => true,
+        'loginrequired' => true,
+    ],
 ];

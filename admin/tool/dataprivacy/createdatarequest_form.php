@@ -48,34 +48,31 @@ class tool_dataprivacy_data_request_form extends moodleform {
         global $DB, $USER;
         $mform =& $this->_form;
 
-        $useroptions = [];
         if (api::is_site_dpo($USER->id)) {
-            $allusernames = get_all_user_name_fields(true);
-            // Exclude admins and guest user.
-            $excludedusers = array_keys(get_admins()) + [guest_user()->id];
-            $sort = 'lastname ASC, firstname ASC';
-            $fields = 'id, email, ' . $allusernames;
-            $users = get_users(true, '', true, $excludedusers, $sort, '', '', '', '', $fields);
-            foreach ($users as $user) {
-                $nameemailparams = (object)[
-                    'name' => fullname($user),
-                    'email' => $user->email
-                ];
-                $nameemail = get_string('nameemail', 'tool_dataprivacy', $nameemailparams);
-                $useroptions[$user->id] = $nameemail;
-            }
+            $options = [
+                'ajax' => 'tool_dataprivacy/form-user-selector',
+                'multiple' => false
+            ];
+            $mform->addElement('autocomplete', 'userid', get_string('requestfor', 'tool_dataprivacy'), [], $options);
+            $mform->addRule('userid', null, 'required', null, 'client');
 
         } else {
             // Get users whom you are being a guardian to if your role has the capability to make data requests for children.
             $allusernames = get_all_user_name_fields(true, 'u');
-            $children = $DB->get_records_sql("SELECT u.id, $allusernames
-                                            FROM {role_assignments} ra, {context} c, {user} u
-                                           WHERE ra.userid = ?
-                                                 AND ra.contextid = c.id
-                                                 AND c.instanceid = u.id
-                                                 AND c.contextlevel = " . CONTEXT_USER, [$USER->id]);
+            $sql = "SELECT u.id, $allusernames
+                      FROM {role_assignments} ra, {context} c, {user} u
+                     WHERE ra.userid = :userid
+                           AND ra.contextid = c.id
+                           AND c.instanceid = u.id
+                           AND c.contextlevel = :contextlevel";
+            $params = [
+                'userid' => $USER->id,
+                'contextlevel' => CONTEXT_USER
+            ];
+            $children = $DB->get_records_sql($sql, $params);
 
             if ($children) {
+                $useroptions = [];
                 $useroptions[$USER->id] = fullname($USER);
                 foreach ($children as $child) {
                     $childcontext = context_user::instance($child->id);
@@ -83,14 +80,13 @@ class tool_dataprivacy_data_request_form extends moodleform {
                         $useroptions[$child->id] = fullname($child);
                     }
                 }
-            }
-        }
+                $mform->addElement('autocomplete', 'userid', get_string('requestfor', 'tool_dataprivacy'), $useroptions);
+                $mform->addRule('userid', null, 'required', null, 'client');
 
-        if (!empty($useroptions)) {
-            $mform->addElement('autocomplete', 'userid', get_string('requestfor', 'tool_dataprivacy'), $useroptions);
-        } else {
-            // Requesting for self.
-            $mform->addElement('hidden', 'userid', $USER->id);
+            } else {
+                // Requesting for self.
+                $mform->addElement('hidden', 'userid', $USER->id);
+            }
         }
 
         $mform->setType('userid', PARAM_INT);
