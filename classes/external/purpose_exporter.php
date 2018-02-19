@@ -34,6 +34,11 @@ use core\external\persistent_exporter;
  */
 class purpose_exporter extends persistent_exporter {
 
+    /**
+     * Defines the persistent class.
+     *
+     * @return string
+     */
     protected static function define_class() {
         return \tool_dataprivacy\purpose::class;
     }
@@ -63,6 +68,8 @@ class purpose_exporter extends persistent_exporter {
     }
 
     /**
+     * Return other properties.
+     *
      * @param \renderer_base $output
      * @throws coding_exception
      * @throws dml_exception

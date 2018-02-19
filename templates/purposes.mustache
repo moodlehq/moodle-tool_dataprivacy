@@ -15,6 +15,8 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
+    @template tool_dataprivacy/purposes
+
     Manage purposes.
 
     Classes required for JS:
@@ -24,6 +26,29 @@
     Context variables required for this template:
     * purposes - array of objects
     * actions - array of actions (already in HTML).
+
+    Example context (json):
+    {
+        "purposesexist": 1,
+        "purposes": [
+            {
+                "name" : "Purpose 1",
+                "description": "<strong>Purpose 1 description</strong>",
+                "retentionperiod": 86400,
+                "formattedretentionperiod": "1 day",
+                "actions": [
+                ]
+            }, {
+                "name" : "Purpose 2",
+                "description": "<strong>Purpose 2 description</strong>",
+                "retentionperiod": 7200,
+                "formattedretentionperiod": "2 hours",
+                "actions": [
+                ]
+            }
+        ]
+    }
+
 }}
 <div data-region="purposes">
 <div class="m-t-1 m-b-1">

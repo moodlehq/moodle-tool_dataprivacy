@@ -45,7 +45,7 @@ class purposes_page implements renderable, templatable {
     /**
      * Construct this renderable.
      *
-     * @param \tool_dataprivacy\purpose[]
+     * @param \tool_dataprivacy\purpose[] $purposes
      */
     public function __construct($purposes) {
         $this->purposes = $purposes;

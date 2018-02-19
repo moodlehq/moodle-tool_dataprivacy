@@ -45,7 +45,7 @@ class categories_page implements renderable, templatable {
     /**
      * Construct this renderable.
      *
-     * @param \tool_dataprivacy\category[]
+     * @param \tool_dataprivacy\category[] $categories
      */
     public function __construct($categories) {
         $this->categories = $categories;

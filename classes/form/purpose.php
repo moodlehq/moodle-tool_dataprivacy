@@ -36,6 +36,9 @@ use core\form\persistent;
  */
 class purpose extends persistent {
 
+    /**
+     * @var The persistent class.
+     */
     protected static $persistentclass = 'tool_dataprivacy\\purpose';
 
     /**

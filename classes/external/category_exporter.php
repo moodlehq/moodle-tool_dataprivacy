@@ -34,6 +34,11 @@ use core\external\persistent_exporter;
  */
 class category_exporter extends persistent_exporter {
 
+    /**
+     * Defines the persistent class.
+     *
+     * @return string
+     */
     protected static function define_class() {
         return \tool_dataprivacy\category::class;
     }

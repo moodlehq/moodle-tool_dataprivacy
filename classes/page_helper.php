@@ -34,6 +34,13 @@ defined('MOODLE_INTERNAL') || die();
  */
 class page_helper {
 
+    /**
+     * Sets up $PAGE.
+     *
+     * @param \moodle_url $url
+     * @param string $title
+     * @return null
+     */
     public static function setup(\moodle_url $url, $title) {
         global $PAGE;
 
