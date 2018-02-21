@@ -194,7 +194,13 @@ class api {
         global $USER;
         $results = [];
         if ($userid) {
-            $results = data_request::get_records(['userid' => $userid], 'status');
+            // Get the data requests for the user or data requests made by the user.
+            $select = "userid = :userid OR requestedby = :requestedby";
+            $params = [
+                'userid' => $userid,
+                'requestedby' => $userid
+            ];
+            $results = data_request::get_records_select($select, $params, 'status');
         } else {
             // If the current user is one of the site's Data Protection Officers, then fetch all data requests.
             if (self::is_site_dpo($USER->id)) {

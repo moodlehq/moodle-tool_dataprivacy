@@ -74,7 +74,7 @@ function($, Ajax, Notification, Str, ModalFactory, ModalEvents, Templates, Modal
 
             var promises = Ajax.call([request]);
             var modalTitle = '';
-            var modalType = ModalFactory.types.CANCEL;
+            var modalType = ModalFactory.types.DEFAULT;
             $.when(promises[0]).then(function(data) {
                 if (data.result) {
                     // Check if the status is awaiting approval.

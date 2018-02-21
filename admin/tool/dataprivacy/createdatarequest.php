@@ -27,7 +27,7 @@ require_once('lib.php');
 require_once('classes/api.php');
 require_once('createdatarequest_form.php');
 
-$manage = optional_param('manage', PARAM_BOOL, true);
+$manage = optional_param('manage', false, PARAM_BOOL);
 
 $url = new moodle_url('/admin/tool/dataprivacy/createdatarequest.php');
 

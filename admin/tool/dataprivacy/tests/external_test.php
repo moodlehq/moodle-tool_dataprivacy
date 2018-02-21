@@ -27,9 +27,7 @@ global $CFG;
 
 require_once($CFG->dirroot . '/webservice/tests/helpers.php');
 
-use core\session\manager;
 use tool_dataprivacy\api;
-use tool_dataprivacy\data_request;
 use tool_dataprivacy\external;
 
 /**
@@ -51,8 +49,6 @@ class tool_dataprivacy_external_testcase extends externallib_advanced_testcase {
      * Setup function- we will create a course and add an assign instance to it.
      */
     protected function setUp() {
-        global $CFG;
-
         $this->resetAfterTest();
 
         $generator = new testing_data_generator();
@@ -69,8 +65,7 @@ class tool_dataprivacy_external_testcase extends externallib_advanced_testcase {
         $this->requester = $requester;
 
         // Log out the user and set force login to true.
-        manager::init_empty_session();
-        $CFG->forcelogin = true;
+        $this->setUser();
     }
 
     /**

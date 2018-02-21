@@ -67,8 +67,6 @@ class my_data_requests_page implements renderable, templatable {
      * @throws moodle_exception
      */
     public function export_for_template(renderer_base $output) {
-        global $USER;
-
         $data = new stdClass();
         $data->newdatarequesturl = new moodle_url('/admin/tool/dataprivacy/createdatarequest.php');
 
@@ -76,7 +74,8 @@ class my_data_requests_page implements renderable, templatable {
         foreach ($this->requests as $request) {
             $requestid = $request->get('id');
             $status = $request->get('status');
-            $requestexporter = new data_request_exporter($request, ['context' => context_user::instance($USER->id)]);
+            $userid = $request->get('userid');
+            $requestexporter = new data_request_exporter($request, ['context' => context_user::instance($userid)]);
             $item = $requestexporter->export($output);
 
             $candownload = false;

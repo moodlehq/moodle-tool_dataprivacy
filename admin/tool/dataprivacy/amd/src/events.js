@@ -14,7 +14,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Contain the events the calendar component can fire.
+ * Contain the events the data privacy tool can fire.
  *
  * @module     tool_dataprivacy/events
  * @class      events

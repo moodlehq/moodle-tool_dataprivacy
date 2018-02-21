@@ -25,12 +25,7 @@
 require_once("../../../config.php");
 require_once('lib.php');
 
-$courseid = optional_param('course', 0, PARAM_INT);
-
 $url = new moodle_url('/admin/tool/dataprivacy/datarequests.php');
-if ($courseid) {
-    $url->param('course', $courseid);
-}
 
 $PAGE->set_url($url);
 
@@ -44,13 +39,6 @@ $context = context_system::instance();
 require_capability('tool/dataprivacy:managedatarequests', $context);
 
 $PAGE->set_context($context);
-
-// Return URL.
-$params = ['id' => $USER->id];
-if ($courseid) {
-    $params['course'] = $courseid;
-}
-$returnurl = new moodle_url('/user/profile.php', $params);
 
 $title = get_string('datarequests', 'tool_dataprivacy');
 $PAGE->set_heading($title);

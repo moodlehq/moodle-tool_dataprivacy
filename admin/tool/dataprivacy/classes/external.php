@@ -440,6 +440,7 @@ class external extends external_api {
         $sort = 'lastname ASC, firstname ASC';
         $fields = 'id, email, ' . $allusernames;
         $users = get_users(true, $query, true, $excludedusers, $sort, '', '', 0, 30, $fields);
+        $useroptions = [];
         foreach ($users as $user) {
             $useroptions[$user->id] = (object)[
                 'id' => $user->id,
