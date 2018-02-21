@@ -61,9 +61,10 @@ if ($hassiteconfig) {
 
 // Link that leads to the data requests management page.
 $ADMIN->add('dataprivacysettings', new admin_externalpage('datarequests', get_string('datarequests', 'tool_dataprivacy'),
-    new moodle_url('/admin/tool/dataprivacy/datarequests.php'), 'tool/dataprivacy:managedataregistry')
+    new moodle_url('/admin/tool/dataprivacy/datarequests.php'), 'tool/dataprivacy:managedatarequests')
 );
 
+// Link that leads to the data registry management page.
 $ADMIN->add('dataprivacysettings', new admin_externalpage('dataregistry', get_string('dataregistry', 'tool_dataprivacy'),
-    new moodle_url('/admin/tool/dataprivacy/dataregistry.php'), 'tool/dataprivacy:managedatarequests')
+    new moodle_url('/admin/tool/dataprivacy/dataregistry.php'), 'tool/dataprivacy:managedataregistry')
 );
