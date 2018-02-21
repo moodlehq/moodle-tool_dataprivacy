@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Class for loading/storing contexts data from the DB.
+ * Class for loading/storing context level data from the DB.
  *
  * @package    tool_dataprivacy
  * @copyright  2018 David Monllao
@@ -25,17 +25,17 @@ namespace tool_dataprivacy;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Class for loading/storing contexts data from the DB.
+ * Class for loading/storing context level data from the DB.
  *
  * @copyright  2018 David Monllao
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class context extends \core\persistent {
+class contextlevel extends \core\persistent {
 
     /**
      * Database table.
      */
-    const TABLE = 'dataprivacy_context';
+    const TABLE = 'dataprivacy_contextlevel';
 
     /**
      * Return the definition of the properties of this model.
@@ -44,9 +44,9 @@ class context extends \core\persistent {
      */
     protected static function define_properties() {
         return array(
-            'contextid' => array(
+            'contextlevel' => array(
                 'type' => PARAM_INT,
-                'description' => 'The context id.',
+                'description' => 'The context level.',
             ),
             'purposeid' => array(
                 'type' => PARAM_INT,
@@ -61,5 +61,26 @@ class context extends \core\persistent {
                 'description' => 'Purpose and category applied to all instances of this context',
             ),
         );
+    }
+
+    /**
+     * Returns an instance by contextlevel.
+     *
+     * @param mixed $contextlevel
+     * @param mixed $exception
+     * @return null
+     */
+    public static function get_record_by_contextlevel($contextlevel, $exception = true) {
+        global $DB;
+
+        if (!$record = $DB->get_record(self::TABLE, array('contextlevel' => $contextlevel))) {
+            if (!$exception) {
+                return false;
+            } else {
+                throw new \dml_missing_record_exception(self::TABLE);
+            }
+        }
+
+        return new static(0, $record);
     }
 }

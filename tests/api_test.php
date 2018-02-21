@@ -691,4 +691,64 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
         api::delete_category($categories[1]->get('id'));
         $this->assertCount(0, api::get_categories());
     }
+
+    /**
+     * Test context instances.
+     *
+     * @return null
+     */
+    public function test_context_instances() {
+        global $DB;
+
+        $this->setAdminUser();
+
+        list($purposes, $categories, $courses, $modules) = $this->add_purposes_and_categories();
+
+        $coursecontext1 = \context_course::instance($courses[0]->id);
+        $coursecontext2 = \context_course::instance($courses[1]->id);
+
+        $record1 = (object)['contextid' => $coursecontext1->id, 'purposeid' => $purposes[0]->get('id'), 'categoryid' => $categories[0]->get('id')];
+        $contextinstance1 = api::set_context_instance($record1);
+
+        $record2 = (object)['contextid' => $coursecontext2->id, 'purposeid' => $purposes[1]->get('id'), 'categoryid' => $categories[1]->get('id')];
+        $contextinstance2 = api::set_context_instance($record2);
+
+        $this->assertCount(2, $DB->get_records('dataprivacy_context_instance'));
+
+        api::unset_context_instance($contextinstance1);
+        $this->assertCount(1, $DB->get_records('dataprivacy_context_instance'));
+
+        $update = (object)['id' => $contextinstance2->get('id'), 'contextid' => $coursecontext2->id,
+            'purposeid' => $purposes[0]->get('id'), 'categoryid' => $categories[0]->get('id')];
+        $contextinstance2 = api::set_context_instance($update);
+        $this->assertCount(1, $DB->get_records('dataprivacy_context_instance'));
+    }
+
+
+    /**
+     * Creates test purposes and categories.
+     *
+     * @return null
+     */
+    protected function add_purposes_and_categories() {
+
+        $purpose1 = api::create_purpose((object)['name' => 'p1', 'retentionperiod' => 3600]);
+        $purpose2 = api::create_purpose((object)['name' => 'p2', 'retentionperiod' => 7200]);
+
+        $cat1 = api::create_category((object)['name' => 'a']);
+        $cat2 = api::create_category((object)['name' => 'b']);
+
+        $course1 = $this->getDataGenerator()->create_course();
+        $course2 = $this->getDataGenerator()->create_course();
+
+        $module1 = $this->getDataGenerator()->create_module('resource', array('course' => $course1));
+        $module2 = $this->getDataGenerator()->create_module('resource', array('course' => $course2));
+
+        return [
+            [$purpose1, $purpose2],
+            [$cat1, $cat2],
+            [$course1, $course2],
+            [$module1, $module2]
+        ];
+    }
 }

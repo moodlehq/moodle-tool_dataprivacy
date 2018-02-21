@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file contains the form add/update context data.
+ * This file contains the form add/update context level data.
  *
  * @package   tool_dataprivacy
  * @copyright 2018 David Monllao
@@ -28,18 +28,18 @@ defined('MOODLE_INTERNAL') || die();
 use core\form\persistent;
 
 /**
- * Context data form.
+ * Context level data form.
  *
  * @package   tool_dataprivacy
  * @copyright 2018 David Monllao
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class context extends context_instance {
+class contextlevel extends context_instance {
 
     /**
      * @var The persistent class.
      */
-    protected static $persistentclass = 'tool_dataprivacy\\context';
+    protected static $persistentclass = 'tool_dataprivacy\\contextlevel';
 
     /**
      * Define the form - called by parent constructor

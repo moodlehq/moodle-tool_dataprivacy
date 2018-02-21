@@ -60,4 +60,25 @@ class context_instance extends \core\persistent {
             ),
         );
     }
+
+    /**
+     * Returns an instance by contextid.
+     *
+     * @param mixed $contextid
+     * @param mixed $exception
+     * @return null
+     */
+    public static function get_record_by_contextid($contextid, $exception = true) {
+        global $DB;
+
+        if (!$record = $DB->get_record(self::TABLE, array('contextid' => $contextid))) {
+            if (!$exception) {
+                return false;
+            } else {
+                throw new \dml_missing_record_exception(self::TABLE);
+            }
+        }
+
+        return new static(0, $record);
+    }
 }

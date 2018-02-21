@@ -118,10 +118,10 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
 
     if ($oldversion < 2018021803) {
 
-        // Define table dataprivacy_context to be created.
-        $table = new xmldb_table('dataprivacy_context');
+        // Define table dataprivacy_contextlevel to be created.
+        $table = new xmldb_table('dataprivacy_contextlevel');
 
-        // Adding fields to table dataprivacy_context.
+        // Adding fields to table dataprivacy_contextlevel.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('contextlevel', XMLDB_TYPE_INTEGER, '3', null, XMLDB_NOTNULL, null, null);
         $table->add_field('purposeid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
@@ -131,13 +131,13 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
         $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
 
-        // Adding keys to table dataprivacy_context.
+        // Adding keys to table dataprivacy_contextlevel.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
-        $table->add_key('contextid', XMLDB_KEY_FOREIGN_UNIQUE, array('contextid'), 'context', array('id'));
+        $table->add_key('contextlevel', XMLDB_KEY_UNIQUE, array('contextlevel'));
         $table->add_key('categoryid', XMLDB_KEY_FOREIGN, array('categoryid'), 'dataprivacy_category', array('id'));
         $table->add_key('purposeid', XMLDB_KEY_FOREIGN, array('purposeid'), 'dataprivacy_purpose', array('id'));
 
-        // Conditionally launch create table for dataprivacy_context.
+        // Conditionally launch create table for dataprivacy_contextlevel.
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         }
@@ -145,7 +145,6 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
         // Dataprivacy savepoint reached.
         upgrade_plugin_savepoint(true, 2018021803, 'tool', 'dataprivacy');
     }
-
 
     return true;
 }

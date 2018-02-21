@@ -106,6 +106,23 @@ class api {
     }
 
     /**
+     * Checks if the current user can manage the data registry at the provided id.
+     *
+     * @param int $contextid Fallback to system context id.
+     * @throws \required_capability_exception
+     * @return null
+     */
+    public static function check_can_manage_data_registry($contextid = false) {
+        if ($contextid) {
+            $context = \context_helper::instance_by_id($contextid);
+        } else {
+            $context = \context_system::instance();
+        }
+
+        require_capability('tool/dataprivacy:managedataregistry', $context);
+    }
+
+    /**
      * Fetches the list of users with the Data Protection Officer role.
      *
      * @throws dml_exception
@@ -431,8 +448,7 @@ class api {
      * @return \tool_dataprivacy\purpose.
      */
     public static function create_purpose(stdClass $record) {
-
-        require_capability('tool/dataprivacy:managedataregistry', \context_system::instance());
+        self::check_can_manage_data_registry();
 
         $purpose = new \tool_dataprivacy\purpose(0, $record);
         $purpose->create();
@@ -447,8 +463,7 @@ class api {
      * @return \tool_dataprivacy\purpose.
      */
     public static function update_purpose(stdClass $record) {
-
-        require_capability('tool/dataprivacy:managedataregistry', \context_system::instance());
+        self::check_can_manage_data_registry();
 
         $purpose = new \tool_dataprivacy\purpose($record->id);
         $purpose->from_record($record);
@@ -465,7 +480,7 @@ class api {
      * @return bool
      */
     public static function delete_purpose($id) {
-        require_capability('tool/dataprivacy:managedataregistry', \context_system::instance());
+        self::check_can_manage_data_registry();
 
         $purpose = new \tool_dataprivacy\purpose($id);
         return $purpose->delete();
@@ -477,7 +492,7 @@ class api {
      * @return \tool_dataprivacy\purpose[]
      */
     public static function get_purposes() {
-        require_capability('tool/dataprivacy:managedataregistry', \context_system::instance());
+        self::check_can_manage_data_registry();
 
         return \tool_dataprivacy\purpose::get_records([], 'name', 'ASC');
     }
@@ -489,8 +504,7 @@ class api {
      * @return \tool_dataprivacy\category.
      */
     public static function create_category(stdClass $record) {
-
-        require_capability('tool/dataprivacy:managedataregistry', \context_system::instance());
+        self::check_can_manage_data_registry();
 
         $category = new \tool_dataprivacy\category(0, $record);
         $category->create();
@@ -505,8 +519,7 @@ class api {
      * @return \tool_dataprivacy\category.
      */
     public static function update_category(stdClass $record) {
-
-        require_capability('tool/dataprivacy:managedataregistry', \context_system::instance());
+        self::check_can_manage_data_registry();
 
         $category = new \tool_dataprivacy\category($record->id);
         $category->from_record($record);
@@ -523,7 +536,7 @@ class api {
      * @return bool
      */
     public static function delete_category($id) {
-        require_capability('tool/dataprivacy:managedataregistry', \context_system::instance());
+        self::check_can_manage_data_registry();
 
         $category = new \tool_dataprivacy\category($id);
         return $category->delete();
@@ -535,9 +548,79 @@ class api {
      * @return \tool_dataprivacy\category[]
      */
     public static function get_categories() {
-        require_capability('tool/dataprivacy:managedataregistry', \context_system::instance());
+        self::check_can_manage_data_registry();
 
         return \tool_dataprivacy\category::get_records([], 'name', 'ASC');
     }
 
+    /**
+     * Sets the context instance purpose and category.
+     *
+     * @param \stdClass $record
+     * @return \tool_datapriacy\context_instance
+     */
+    public static function set_context_instance($record) {
+        self::check_can_manage_data_registry($record->contextid);
+
+        if ($instance = \tool_dataprivacy\context_instance::get_record_by_contextid($record->contextid, false)) {
+            // Update.
+            $instance->from_record($record);
+
+            if (empty($record->purposeid) && empty($record->categoryid)) {
+                // We accept one of them to be null but we delete it if both are null.
+                self::unset_context_instance($instance);
+                return;
+            }
+
+        } else {
+            // Add.
+            $instance = new \tool_dataprivacy\context_instance(0, $record);
+        }
+        $instance->save();
+
+        return $instance;
+    }
+
+    /**
+     * Unsets the context instance record.
+     *
+     * @param \tool_dataprivacy\context_instance $instance
+     * @return null
+     */
+    public static function unset_context_instance(\tool_dataprivacy\context_instance $instance) {
+        self::check_can_manage_data_registry($instance->get('contextid'));
+        $instance->delete();
+    }
+
+    /**
+     * Sets the context level purpose and category.
+     *
+     * @param \stdClass $record
+     * @return null
+     */
+    public static function set_contextlevel($record) {
+        global $DB;
+
+        // Only manager at system level can set this.
+        self::check_can_manage_data_registry();
+
+        if ($instance = \tool_dataprivacy\context::get_record_by_contextlevel($record->contextlevel, false)) {
+            // Update.
+            $prevapplyallinstances = $instance->get('applyallinstances');
+            $instance->from_record($record);
+        } else {
+            // Add.
+            $instance = new \tool_dataprivacy\context(0, $record);
+        }
+        $instance->save();
+
+        if (empty($record->id) || ($record->applyallinstances == 1 and $prevapplyallinstances == 0)) {
+            // New contextlevel record or updated to remove all overrides.
+            $contextinstances = $DB->get_recordset_sql($sql, array('contextlevel' => $record->contextlevel));
+            foreach ($contextinstances as $record) {
+                $instance = new \tool_dataprivacy\context_instance(0, $record);
+                self::unset_context_instance($instance);
+            }
+        }
+    }
 }
