@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This page lets users manage categories.
+ * This page lets users manage categories and purposes.
  *
  * @package    tool_dataprivacy
  * @copyright  2018 David Monllao
@@ -24,8 +24,8 @@
 
 require_once(__DIR__ . '/../../../config.php');
 
-$url = new moodle_url("/admin/tool/dataprivacy/categories.php");
-$title = get_string('categories', 'tool_dataprivacy');
+$url = new moodle_url("/admin/tool/dataprivacy/dataregistrysetup.php");
+$title = get_string('dataregistrysetup', 'tool_dataprivacy');
 
 \tool_dataprivacy\page_helper::setup($url, $title);
 
@@ -33,7 +33,8 @@ $output = $PAGE->get_renderer('tool_dataprivacy');
 echo $output->header();
 
 $categories = \tool_dataprivacy\api::get_categories();
-$renderable = new \tool_dataprivacy\output\categories_page($categories);
+$purposes = \tool_dataprivacy\api::get_purposes();
+$renderable = new \tool_dataprivacy\output\data_registry_setup_page($categories, $purposes);
 
 echo $output->render($renderable);
 echo $output->footer();

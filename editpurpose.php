@@ -36,7 +36,8 @@ if ($id) {
 \tool_dataprivacy\page_helper::setup($url, $title);
 
 $purpose = new \tool_dataprivacy\purpose($id);
-$form = new \tool_dataprivacy\form\purpose($PAGE->url->out(false), array('persistent' => $purpose));
+$form = new \tool_dataprivacy\form\purpose($PAGE->url->out(false),
+    array('persistent' => $purpose, 'showbuttons' => true));
 
 $purposesurl = new \moodle_url('/admin/tool/dataprivacy/purposes.php');
 if ($form->is_cancelled()) {

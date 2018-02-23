@@ -43,6 +43,8 @@ use moodle_exception;
 use required_capability_exception;
 use restricted_context_exception;
 use tool_dataprivacy\external\data_request_exporter;
+use tool_dataprivacy\external\category_exporter;
+use tool_dataprivacy\external\purpose_exporter;
 
 /**
  * Class external.
@@ -469,6 +471,67 @@ class external extends external_api {
     }
 
     /**
+     * Parameter description for create_purpose_form().
+     *
+     * @return external_function_parameters
+     */
+    public static function create_purpose_form_parameters() {
+        return new external_function_parameters([
+            'jsonformdata' => new external_value(PARAM_RAW, 'The data to create the purpose, encoded as a json array')
+        ]);
+    }
+
+    /**
+     * Creates a data purpose from form data.
+     *
+     * @param string $jsonformdata
+     * @return array
+     */
+    public static function create_purpose_form($jsonformdata) {
+        global $PAGE;
+
+        $warnings = [];
+
+        $params = external_api::validate_parameters(self::create_purpose_form_parameters(), [
+            'jsonformdata' => $jsonformdata
+        ]);
+
+        self::validate_context(\context_system::instance());
+
+        $serialiseddata = json_decode($params['jsonformdata']);
+        $data = array();
+        parse_str($serialiseddata, $data);
+
+        $purpose = new \tool_dataprivacy\purpose(0);
+        $mform = new \tool_dataprivacy\form\purpose(null, ['persistent' => $purpose], 'post', '', null, true, $data);
+
+        if ($validateddata = $mform->get_data()) {
+            $purpose = api::create_purpose($validateddata);
+        } else if ($errors = $mform->is_validated()) {
+            $warnings[] = json_encode($errors);
+            throw new moodle_exception('generalerror');
+        }
+
+        $exporter = new purpose_exporter($purpose, ['context' => \context_system::instance()]);
+        return [
+            'purpose' => $exporter->export($PAGE->get_renderer('core')),
+            'warnings' => $warnings
+        ];
+    }
+
+    /**
+     * Returns for create_purpose_form().
+     *
+     * @return external_single_structure
+     */
+    public static function create_purpose_form_returns() {
+        return new external_single_structure([
+            'purpose' => purpose_exporter::get_read_structure(),
+            'warnings' => new external_warnings()
+        ]);
+    }
+
+    /**
      * Parameter description for delete_purpose().
      *
      * @return external_function_parameters
@@ -491,7 +554,6 @@ class external extends external_api {
     public static function delete_purpose($id) {
         global $USER;
 
-        $warnings = [];
         $params = external_api::validate_parameters(self::delete_purpose_parameters(), [
             'id' => $id
         ]);
@@ -507,11 +569,72 @@ class external extends external_api {
     /**
      * Parameter description for delete_purpose().
      *
-     * @return external_description
+     * @return external_single_structure
      */
     public static function delete_purpose_returns() {
         return new external_single_structure([
             'result' => new external_value(PARAM_BOOL, 'The processing result'),
+            'warnings' => new external_warnings()
+        ]);
+    }
+
+    /**
+     * Parameter description for create_category_form().
+     *
+     * @return external_function_parameters
+     */
+    public static function create_category_form_parameters() {
+        return new external_function_parameters([
+            'jsonformdata' => new external_value(PARAM_RAW, 'The data to create the category, encoded as a json array')
+        ]);
+    }
+
+    /**
+     * Creates a data category from form data.
+     *
+     * @param string $jsonformdata
+     * @return array
+     */
+    public static function create_category_form($jsonformdata) {
+        global $PAGE;
+
+        $warnings = [];
+
+        $params = external_api::validate_parameters(self::create_category_form_parameters(), [
+            'jsonformdata' => $jsonformdata
+        ]);
+
+        self::validate_context(\context_system::instance());
+
+        $serialiseddata = json_decode($params['jsonformdata']);
+        $data = array();
+        parse_str($serialiseddata, $data);
+
+        $category = new \tool_dataprivacy\category(0);
+        $mform = new \tool_dataprivacy\form\category(null, ['persistent' => $category], 'post', '', null, true, $data);
+
+        if ($validateddata = $mform->get_data()) {
+            $category = api::create_category($validateddata);
+        } else if ($errors = $mform->is_validated()) {
+            $warnings[] = json_encode($errors);
+            throw new moodle_exception('generalerror');
+        }
+
+        $exporter = new category_exporter($category, ['context' => \context_system::instance()]);
+        return [
+            'category' => $exporter->export($PAGE->get_renderer('core')),
+            'warnings' => $warnings
+        ];
+    }
+
+    /**
+     * Returns for create_category_form().
+     *
+     * @return external_single_structure
+     */
+    public static function create_category_form_returns() {
+        return new external_single_structure([
+            'category' => category_exporter::get_read_structure(),
             'warnings' => new external_warnings()
         ]);
     }
@@ -539,7 +662,6 @@ class external extends external_api {
     public static function delete_category($id) {
         global $USER;
 
-        $warnings = [];
         $params = external_api::validate_parameters(self::delete_category_parameters(), [
             'id' => $id
         ]);
@@ -555,7 +677,7 @@ class external extends external_api {
     /**
      * Parameter description for delete_category().
      *
-     * @return external_description
+     * @return external_single_structure
      */
     public static function delete_category_returns() {
         return new external_single_structure([

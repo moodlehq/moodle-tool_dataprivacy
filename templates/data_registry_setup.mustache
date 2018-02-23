@@ -32,25 +32,9 @@
     {
     }
 }}
-<div data-region="dataregistry">
-   <div class="singlebutton btn-group" role="group">
-        <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown" type="button">
-            {{#str}}add{{/str}}
-        </button>
-        <div class="dropdown-menu">
-            <li>
-                <a class="dropdown-item" data-add-element="category" href="#">
-                    {{#str}} addcategory, tool_dataprivacy {{/str}}
-                </a>
-            </li>
-            <li>
-                <a class="dropdown-item" data-add-element="purpose" href="#">
-                    {{#str}} addpurpose, tool_dataprivacy {{/str}}
-                </a>
-            </li>
-        </div>
-    </div>
-    {{#settingsbutton}}
-        {{> core/single_button}}
-    {{/settingsbutton}}
-</div>
+{{#navigation}}
+    {{{.}}}
+{{/navigation}}
+
+{{> tool_dataprivacy/categories}}
+{{> tool_dataprivacy/purposes}}

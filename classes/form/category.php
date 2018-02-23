@@ -52,14 +52,16 @@ class category extends persistent {
         $mform->addRule('name', get_string('required'), 'required', null, 'client');
         $mform->addRule('name', get_string('maximumchars', '', 100), 'maxlength', 100, 'client');
 
-        $mform->addElement('editor', 'description', get_string('description'));
+        $mform->addElement('editor', 'description', get_string('description'), null, ['autosave' => false]);
         $mform->setType('description', PARAM_CLEANHTML);
 
-        if (!$this->get_persistent()->get('id')) {
-            $savetext = get_string('add');
-        } else {
-            $savetext = get_string('savechanges');
+        if (!empty($this->_customdata['showbuttons'])) {
+            if (!$this->get_persistent()->get('id')) {
+                $savetext = get_string('add');
+            } else {
+                $savetext = get_string('savechanges');
+            }
+            $this->add_action_buttons(true, $savetext);
         }
-        $this->add_action_buttons(true, $savetext);
     }
 }

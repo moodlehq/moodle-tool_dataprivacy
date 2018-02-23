@@ -36,7 +36,7 @@ function($, Ajax, Notification, Str, ModalFactory, ModalEvents) {
      * @type {{DELETE: string}}
      */
     var ACTIONS = {
-        DELETE: '[data-action="delete"]',
+        DELETE: '[data-action="deletecategory"]',
     };
 
     /**
@@ -53,8 +53,8 @@ function($, Ajax, Notification, Str, ModalFactory, ModalEvents) {
         $(ACTIONS.DELETE).click(function(e) {
             e.preventDefault();
 
-            var id = $(this).data('categoryid');
-            var categoryname = $(this).data('categoryname');
+            var id = $(this).data('id');
+            var categoryname = $(this).data('name');
             var stringkeys = [
                 {
                     key: 'deletecategory',

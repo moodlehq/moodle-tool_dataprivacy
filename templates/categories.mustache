@@ -45,40 +45,40 @@
         ]
     }
 }}
-<div data-region="categories">
-<div class="m-t-1 m-b-1">
-    {{#actions}}
-    {{{.}}}
-    {{/actions}}
-</div>
-{{#categoriesexist}}
-<table class="generaltable fullwidth">
-    <caption>{{#str}}categorieslist, tool_dataprivacy{{/str}}</caption>
-    <thead>
-        <tr>
-            <th scope="col">{{#str}}name{{/str}}</th>
-            <th scope="col">{{#str}}description{{/str}}</th>
-            <th scope="col">{{#str}}actions{{/str}}</th>
-        </tr>
-    </thead>
-    <tbody>
-        {{#categories}}
-        <tr data-categoryid="{{id}}">
-            <td>{{{name}}}</td>
-            <td>{{{description}}}</td>
-            <td>
-                {{#actions}}
-                    {{> core/action_menu}}
-                {{/actions}}
-            </td>
-        </tr>
-        {{/categories}}
-    </tbody>
-</table>
-{{/categoriesexist}}
-{{^categoriesexist}}
-<p class="alert alert-info">
-    {{#str}}nocategories, tool_dataprivacy{{/str}}
-</p>
-{{/categoriesexist}}
+
+<div data-region="categories" class="m-t-3 m-b-1">
+    <h3>{{#str}}categories, tool_dataprivacy{{/str}}</h3>
+    <div class="m-y-1">
+        <button class="btn btn-primary" data-add-element="category">
+            {{#str}}addcategory, tool_dataprivacy{{/str}}
+        </button>
+    </div>
+    <table class="generaltable fullwidth">
+        <caption class="accesshide">{{#str}}categorieslist, tool_dataprivacy{{/str}}</caption>
+        <thead>
+            <tr>
+                <th scope="col">{{#str}}name{{/str}}</th>
+                <th scope="col">{{#str}}description{{/str}}</th>
+                <th scope="col">{{#str}}actions{{/str}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#categories}}
+            <tr data-categoryid="{{id}}">
+                <td>{{{name}}}</td>
+                <td>{{{description}}}</td>
+                <td>
+                    {{#actions}}
+                        {{> core/action_menu}}
+                    {{/actions}}
+                </td>
+            </tr>
+            {{/categories}}
+        </tbody>
+    </table>
+    {{^categories}}
+        <p>
+            {{#str}}nocategories, tool_dataprivacy{{/str}}
+        </p>
+    {{/categories}}
 </div>

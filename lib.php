@@ -76,3 +76,28 @@ function tool_dataprivacy_myprofile_navigation(tree $tree, $user, $iscurrentuser
 
     return false;
 }
+
+/**
+ * Fragment to add a new purpose.
+ *
+ * @param array $args The fragment arguments.
+ * @return string The rendered mform fragment.
+ */
+function tool_dataprivacy_output_fragment_addpurpose_form($args) {
+    $persistent = new \tool_dataprivacy\purpose();
+    $mform = new \tool_dataprivacy\form\purpose(null, ['persistent' => $persistent]);
+    return $mform->render();
+}
+
+
+/**
+ * Fragment to add a new category.
+ *
+ * @param array $args The fragment arguments.
+ * @return string The rendered mform fragment.
+ */
+function tool_dataprivacy_output_fragment_addcategory_form($args) {
+    $persistent = new \tool_dataprivacy\category();
+    $mform = new \tool_dataprivacy\form\category(null, ['persistent' => $persistent]);
+    return $mform->render();
+}

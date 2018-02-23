@@ -50,42 +50,42 @@
     }
 
 }}
-<div data-region="purposes">
-<div class="m-t-1 m-b-1">
-    {{#actions}}
-    {{{.}}}
-    {{/actions}}
-</div>
-{{#purposesexist}}
-<table class="generaltable fullwidth">
-    <caption>{{#str}}purposeslist, tool_dataprivacy{{/str}}</caption>
-    <thead>
-        <tr>
-            <th scope="col">{{#str}}name{{/str}}</th>
-            <th scope="col">{{#str}}description{{/str}}</th>
-            <th scope="col">{{#str}}retentionperiod, tool_dataprivacy{{/str}}</th>
-            <th scope="col">{{#str}}actions{{/str}}</th>
-        </tr>
-    </thead>
-    <tbody>
-        {{#purposes}}
-        <tr data-purposeid="{{id}}">
-            <td>{{{name}}}</td>
-            <td>{{{description}}}</td>
-            <td>{{formattedretentionperiod}}</td>
-            <td>
-                {{#actions}}
-                    {{> core/action_menu}}
-                {{/actions}}
-            </td>
-        </tr>
-        {{/purposes}}
-    </tbody>
-</table>
-{{/purposesexist}}
-{{^purposesexist}}
-<p class="alert alert-info">
-    {{#str}}nopurposes, tool_dataprivacy{{/str}}
-</p>
-{{/purposesexist}}
+
+<div data-region="purposes" class="m-t-3 m-b-1">
+    <h3>{{#str}}purposes, tool_dataprivacy{{/str}}</h3>
+    <div class="m-y-1">
+        <button class="btn btn-primary" data-add-element="purpose">
+            {{#str}}addpurpose, tool_dataprivacy{{/str}}
+        </button>
+    </div>
+    <table class="generaltable fullwidth">
+        <caption class="accesshide">{{#str}}purposeslist, tool_dataprivacy{{/str}}</caption>
+        <thead>
+            <tr>
+                <th scope="col">{{#str}}name{{/str}}</th>
+                <th scope="col">{{#str}}description{{/str}}</th>
+                <th scope="col">{{#str}}retentionperiod, tool_dataprivacy{{/str}}</th>
+                <th scope="col">{{#str}}actions{{/str}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#purposes}}
+            <tr data-purposeid="{{id}}">
+                <td>{{{name}}}</td>
+                <td>{{{description}}}</td>
+                <td>{{formattedretentionperiod}}</td>
+                <td>
+                    {{#actions}}
+                        {{> core/action_menu}}
+                    {{/actions}}
+                </td>
+            </tr>
+            {{/purposes}}
+        </tbody>
+    </table>
+    {{^purposes}}
+        <p>
+            {{#str}}nopurposes, tool_dataprivacy{{/str}}
+        </p>
+    {{/purposes}}
 </div>

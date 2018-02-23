@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Class containing data for the categories page
+ * Data registry renderable.
  *
  * @package    tool_dataprivacy
  * @copyright  2018 David Monllao
@@ -25,87 +25,118 @@ namespace tool_dataprivacy\output;
 defined('MOODLE_INTERNAL') || die();
 
 use renderable;
-use templatable;
 use renderer_base;
 use stdClass;
+use templatable;
+use tool_dataprivacy\external\purpose_exporter;
 use tool_dataprivacy\external\category_exporter;
 
 /**
- * Class containing data for the categories page
+ * Class containing the data registry setup renderable
  *
- * @package    tool_dataprivacy
  * @copyright  2018 David Monllao
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class categories_page implements renderable, templatable {
+class data_registry_setup_page implements renderable, templatable {
 
     /** @var array $categories All system categories. */
     protected $categories = [];
+
+    /** @var array $purposes All system purposes. */
+    protected $purposes = [];
 
     /**
      * Construct this renderable.
      *
      * @param \tool_dataprivacy\category[] $categories
+     * @param \tool_dataprivacy\purpose[] $purposes
      */
-    public function __construct($categories) {
+    public function __construct($categories, $purposes) {
         $this->categories = $categories;
+        $this->purposes = $purposes;
     }
 
     /**
      * Export this data so it can be used as the context for a mustache template.
      *
-     * @param renderer_base $output Renderer base.
+     * @param renderer_base $output
      * @return stdClass
      */
     public function export_for_template(renderer_base $output) {
+        global $PAGE;
+
+        $context = \context_system::instance();
+
+        $PAGE->requires->js_call_amd('tool_dataprivacy/categoriesactions', 'init');
+        $PAGE->requires->js_call_amd('tool_dataprivacy/add_category', 'getModal', [$context->id]);
+
+        $PAGE->requires->js_call_amd('tool_dataprivacy/purposesactions', 'init');
+        $PAGE->requires->js_call_amd('tool_dataprivacy/add_purpose', 'getModal', [$context->id]);
+
         $data = new stdClass();
 
-        $addcategorybutton = new \single_button(
-            new \moodle_url('/admin/tool/dataprivacy/editcategory.php'),
-            get_string('addcategory', 'tool_dataprivacy'),
+        // Navigation links.
+        $data->navigation = [];
+        $back = new \single_button(
+            new \moodle_url('/admin/tool/dataprivacy/dataregistry.php'),
+            get_string('back'),
             'get'
         );
-        $data->actions = [$output->render($addcategorybutton)];
+        $data->navigation[] = $output->render($back);
+        $defaults = new \single_button(
+            new \moodle_url('/admin/tool/dataprivacy/defaults.php'),
+            get_string('setdefaults', 'tool_dataprivacy'),
+            'get'
+        );
+        $data->navigation[] = $output->render($defaults);
+
+        $data->purposes = [];
+        foreach ($this->purposes as $purpose) {
+            $exporter = new purpose_exporter($purpose, ['context' => \context_system::instance()]);
+            $purpose = $exporter->export($output);
+
+            $actionmenu = $this->action_menu('purpose', $purpose->id, $purpose->name);
+            $purpose->actions = $actionmenu->export_for_template($output);
+            $data->purposes[] = $purpose;
+        }
 
         $data->categories = [];
         foreach ($this->categories as $category) {
             $exporter = new category_exporter($category, ['context' => \context_system::instance()]);
             $category = $exporter->export($output);
 
-            $category->actions = $this->category_actions_menu($category->id, $category->name)->export_for_template($output);
+            $actionmenu = $this->action_menu('category', $category->id, $category->name);
+            $category->actions = $actionmenu->export_for_template($output);
             $data->categories[] = $category;
-        }
-
-        if (!empty($data->categories)) {
-            $data->categoriesexist = true;
         }
 
         return $data;
     }
 
     /**
-     * Category actions menu.
+     * Adds an action menu for the provided element
      *
+     * @param string $elementname 'purpose' or 'category'
      * @param int $id
      * @param string $name
      * @return null
      */
-    private function category_actions_menu($id, $name) {
+    private function action_menu($elementname, $id, $name) {
 
         // Actions.
         $actionsmenu = new \action_menu();
         $actionsmenu->set_menu_trigger(get_string('actions'));
-        $actionsmenu->set_owner_selector('category-' . $id . '-actions');
+        $actionsmenu->set_owner_selector($elementname . '-' . $id . '-actions');
         $actionsmenu->set_alignment(\action_menu::TL, \action_menu::BL);
 
-        $url = new \moodle_url('/admin/tool/dataprivacy/editcategory.php',
+        $url = new \moodle_url('/admin/tool/dataprivacy/edit' . $elementname . '.php',
             ['id' => $id]);
         $link = new \action_menu_link_secondary($url, new \pix_icon('t/edit',
             get_string('edit')), get_string('edit'));
         $actionsmenu->add($link);
 
         $url = new \moodle_url('#');
-        $attrs = ['data-categoryid' => $id, 'data-action' => 'delete', 'data-categoryname' => $name];
+        $attrs = ['data-id' => $id, 'data-action' => 'delete' . $elementname, 'data-name' => $name];
         $link = new \action_menu_link_secondary($url, new \pix_icon('t/delete',
             get_string('delete')), get_string('delete'), $attrs);
         $actionsmenu->add($link);

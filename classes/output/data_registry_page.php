@@ -44,22 +44,45 @@ class data_registry_page implements renderable, templatable {
      * @return stdClass
      */
     public function export_for_template(renderer_base $output) {
-        $data = new stdClass();
-        $data->actions = [];
+        global $PAGE;
 
-        $editpurposes = new \single_button(
-            new \moodle_url('/admin/tool/dataprivacy/purposes.php'),
-            get_string('editpurposes', 'tool_dataprivacy'),
+        $PAGE->requires->js_call_amd('tool_dataprivacy/data_registry', 'init', [\context_system::instance()->id]);
+
+        $data = new stdClass();
+
+        $settingsbutton = new \single_button(
+            new \moodle_url('/admin/tool/dataprivacy/dataregistrysetup.php'),
+            get_string('settings'),
             'get'
         );
-        $data->actions[] = $output->render($editpurposes);
-        $editcategories = new \single_button(
-            new \moodle_url('/admin/tool/dataprivacy/categories.php'),
-            get_string('editcategories', 'tool_dataprivacy'),
-            'get'
-        );
-        $data->actions[] = $output->render($editcategories);
+        $data->settingsbutton = $settingsbutton->export_for_template($output);
 
         return $data;
+    }
+
+    /**
+     * Adds the add elements menu.
+     *
+     * @return \action_menu
+     */
+    private function add_menu() {
+
+        // Actions.
+        $actionsmenu = new \action_menu();
+        $actionsmenu->set_menu_trigger(get_string('add'));
+        $actionsmenu->set_owner_selector('add-actions');
+        $actionsmenu->set_alignment(\action_menu::TR, \action_menu::TR);
+
+        $url = new \moodle_url('#');
+        $attrs = ['data-add-element' => 'purpose'];
+        $link = new \action_menu_link_secondary($url, null, get_string('addpurpose', 'tool_dataprivacy'), $attrs);
+        $actionsmenu->add($link);
+
+        $url = new \moodle_url('#');
+        $attrs = ['data-add-element' => 'category'];
+        $link = new \action_menu_link_secondary($url, null, get_string('addcategory', 'tool_dataprivacy'), $attrs);
+        $actionsmenu->add($link);
+
+        return $actionsmenu;
     }
 }

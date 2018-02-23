@@ -35,7 +35,8 @@ if ($id) {
 \tool_dataprivacy\page_helper::setup($url, $title);
 
 $category = new \tool_dataprivacy\category($id);
-$form = new \tool_dataprivacy\form\category($PAGE->url->out(false), array('persistent' => $category));
+$form = new \tool_dataprivacy\form\category($PAGE->url->out(false),
+    array('persistent' => $category, 'showbuttons' => true));
 
 $categoriesurl = new \moodle_url('/admin/tool/dataprivacy/categories.php');
 if ($form->is_cancelled()) {
