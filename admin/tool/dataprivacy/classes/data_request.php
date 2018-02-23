@@ -35,7 +35,7 @@ use core\persistent;
 class data_request extends persistent {
 
     /** The table name this persistent object maps to. */
-    const TABLE = 'dataprivacy_data_request';
+    const TABLE = 'tool_dataprivacy_request';
 
     /**
      * Return the definition of the properties of this model.
