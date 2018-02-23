@@ -156,7 +156,7 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
         $this->assertEquals(api::DATAREQUEST_STATUS_APPROVED, $datarequest->get('status'));
 
         // Test adhoc task creation.
-        $adhoctasks = manager::get_adhoc_tasks(process_data_request_task::class);
+        $adhoctasks = $this->get_adhoc_tasks(process_data_request_task::class);
         $this->assertCount(1, $adhoctasks);
     }
 
@@ -288,7 +288,7 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
         $this->assertEquals($comment, $datarequest->get('comments'));
 
         // Test adhoc task creation.
-        $adhoctasks = manager::get_adhoc_tasks(initiate_data_request_task::class);
+        $adhoctasks = $this->get_adhoc_tasks(initiate_data_request_task::class);
         $this->assertCount(1, $adhoctasks);
     }
 
@@ -750,5 +750,26 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
             [$course1, $course2],
             [$module1, $module2]
         ];
+    }
+
+    /**
+     * Retrieves a list of adhoc tasks.
+     *
+     * @param string $classname The canonical class name.
+     * @return array
+     * @throws dml_exception
+     */
+    protected function get_adhoc_tasks($classname) {
+        global $DB;
+
+        if (strpos($classname, '\\') !== 0) {
+            $classname = '\\' . $classname;
+        }
+
+        $records = $DB->get_records('task_adhoc', array('classname' => $classname));
+
+        return array_map(function($record) {
+            return manager::adhoc_task_from_record($record);
+        }, $records);
     }
 }
