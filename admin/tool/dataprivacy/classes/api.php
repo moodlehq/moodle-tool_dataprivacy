@@ -409,7 +409,7 @@ class api {
         if ($requestedby->id == $requestingfor->id) {
             $messagetextdata['requestfor'] = $messagetextdata['requestedby'];
         } else {
-            $messagetextdata['requestfor'] = fullname(core_user::get_user($requestingfor));
+            $messagetextdata['requestfor'] = fullname($requestingfor);
         }
 
         // Email the data request to the Data Protection Officer(s)/Admin(s).
