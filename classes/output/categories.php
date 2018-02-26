@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Data registry renderable.
+ * Categories renderable.
  *
  * @package    tool_dataprivacy
  * @copyright  2018 David Monllao
@@ -28,14 +28,27 @@ use renderable;
 use renderer_base;
 use stdClass;
 use templatable;
+use tool_dataprivacy\external\category_exporter;
 
 /**
- * Class containing the data registry renderable
+ * Class containing the categories page renderable.
  *
  * @copyright  2018 David Monllao
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class data_registry_page implements renderable, templatable {
+class categories extends crud_element implements renderable, templatable {
+
+    /** @var array $categories All system categories. */
+    protected $categories = [];
+
+    /**
+     * Construct this renderable.
+     *
+     * @param \tool_dataprivacy\category[] $categories
+     */
+    public function __construct($categories) {
+        $this->categories = $categories;
+    }
 
     /**
      * Export this data so it can be used as the context for a mustache template.
@@ -46,19 +59,26 @@ class data_registry_page implements renderable, templatable {
     public function export_for_template(renderer_base $output) {
         global $PAGE;
 
-        $PAGE->requires->js_call_amd('tool_dataprivacy/data_registry', 'init', [\context_system::instance()->id]);
+        $context = \context_system::instance();
+
+        $PAGE->requires->js_call_amd('tool_dataprivacy/categoriesactions', 'init');
+        $PAGE->requires->js_call_amd('tool_dataprivacy/add_category', 'getModal', [$context->id]);
 
         $data = new stdClass();
 
-        $defaultsbutton = new \single_button(
-            new \moodle_url('/admin/tool/dataprivacy/defaults.php'),
-            get_string('setdefaults', 'tool_dataprivacy'),
-            'get'
-        );
-        $data->defaultsbutton = $defaultsbutton->export_for_template($output);
+        // Navigation links.
+        $data->navigation = $this->get_navigation($output);
 
-        $data->categoriesurl = new \moodle_url('/admin/tool/dataprivacy/categories.php');
-        $data->purposesurl = new \moodle_url('/admin/tool/dataprivacy/purposes.php');
+        $data->categories = [];
+        foreach ($this->categories as $category) {
+            $exporter = new category_exporter($category, ['context' => \context_system::instance()]);
+            $category = $exporter->export($output);
+
+            $actionmenu = $this->action_menu('category', $category->id, $category->name);
+            $category->actions = $actionmenu->export_for_template($output);
+            $data->categories[] = $category;
+        }
+
         return $data;
     }
 }

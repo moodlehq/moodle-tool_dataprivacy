@@ -38,9 +38,9 @@ $category = new \tool_dataprivacy\category($id);
 $form = new \tool_dataprivacy\form\category($PAGE->url->out(false),
     array('persistent' => $category, 'showbuttons' => true));
 
-$categoriesurl = new \moodle_url('/admin/tool/dataprivacy/categories.php');
+$returnurl = new \moodle_url('/admin/tool/dataprivacy/categories.php');
 if ($form->is_cancelled()) {
-    redirect($categoriesurl);
+    redirect($returnurl);
 } else if ($data = $form->get_data()) {
     if (empty($data->id)) {
         \tool_dataprivacy\api::create_category($data);
@@ -49,7 +49,7 @@ if ($form->is_cancelled()) {
         \tool_dataprivacy\api::update_category($data);
         $messagesuccess = get_string('categoryupdated', 'tool_dataprivacy');
     }
-    redirect($categoriesurl, $messagesuccess, 0, \core\output\notification::NOTIFY_SUCCESS);
+    redirect($returnurl, $messagesuccess, 0, \core\output\notification::NOTIFY_SUCCESS);
 }
 
 $output = $PAGE->get_renderer('tool_dataprivacy');

@@ -92,14 +92,26 @@ class renderer extends plugin_renderer_base {
     }
 
     /**
-     * Render the data registry setup page.
+     * Render the purposes management page.
      *
-     * @param categories_page $page
+     * @param purposes $page
      * @return string html for the page
      * @throws moodle_exception
      */
-    public function render_data_registry_setup_page(data_registry_setup_page $page) {
+    public function render_purposes(purposes $page) {
         $data = $page->export_for_template($this);
-        return parent::render_from_template('tool_dataprivacy/data_registry_setup', $data);
+        return parent::render_from_template('tool_dataprivacy/purposes', $data);
+    }
+
+    /**
+     * Render the categories management page.
+     *
+     * @param categories $page
+     * @return string html for the page
+     * @throws moodle_exception
+     */
+    public function render_categories(categories $page) {
+        $data = $page->export_for_template($this);
+        return parent::render_from_template('tool_dataprivacy/categories', $data);
     }
 }

@@ -24,36 +24,16 @@
 
 require_once(__DIR__ . '/../../../config.php');
 
-$id = optional_param('id', 0, PARAM_INT);
-
-$url = new \moodle_url('/admin/tool/dataprivacy/editpurpose.php', array('id' => $id));
-if ($id) {
-    $title = get_string('editpurpose', 'tool_dataprivacy');
-} else {
-    $title = get_string('addpurpose', 'tool_dataprivacy');
-}
+$url = new moodle_url("/admin/tool/dataprivacy/purposes.php");
+$title = get_string('editpurposes', 'tool_dataprivacy');
 
 \tool_dataprivacy\page_helper::setup($url, $title);
 
-$purpose = new \tool_dataprivacy\purpose($id);
-$form = new \tool_dataprivacy\form\purpose($PAGE->url->out(false),
-    array('persistent' => $purpose, 'showbuttons' => true));
-
-$returnurl = new \moodle_url('/admin/tool/dataprivacy/purposes.php');
-if ($form->is_cancelled()) {
-    redirect($returnurl);
-} else if ($data = $form->get_data()) {
-    if (empty($data->id)) {
-        \tool_dataprivacy\api::create_purpose($data);
-        $messagesuccess = get_string('purposecreated', 'tool_dataprivacy');
-    } else {
-        \tool_dataprivacy\api::update_purpose($data);
-        $messagesuccess = get_string('purposeupdated', 'tool_dataprivacy');
-    }
-    redirect($returnurl, $messagesuccess, 0, \core\output\notification::NOTIFY_SUCCESS);
-}
-
 $output = $PAGE->get_renderer('tool_dataprivacy');
 echo $output->header();
-$form->display();
+
+$purposes = \tool_dataprivacy\api::get_purposes();
+$renderable = new \tool_dataprivacy\output\purposes($purposes);
+
+echo $output->render($renderable);
 echo $output->footer();

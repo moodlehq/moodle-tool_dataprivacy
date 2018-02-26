@@ -101,3 +101,16 @@ function tool_dataprivacy_output_fragment_addcategory_form($args) {
     $mform = new \tool_dataprivacy\form\category(null, ['persistent' => $persistent]);
     return $mform->render();
 }
+
+/**
+ * Returns purpose and category var names from a context class name
+ *
+ * @param string $classname
+ * @return string[]
+ */
+function tool_dataprivacy_var_names_from_context($classname) {
+    return [
+        $classname . '_purpose',
+        $classname . '_category',
+    ];
+}

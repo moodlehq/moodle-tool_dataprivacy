@@ -43,6 +43,7 @@ class defaults extends \moodleform {
     public function definition() {
 
         $mform = $this->_form;
+        $mform->setDisableShortforms();
 
         foreach ($this->_customdata['levels'] as $level => $classname) {
 
@@ -50,15 +51,6 @@ class defaults extends \moodleform {
                 $classname::get_level_name());
 
             list($purposevar, $categoryvar) = tool_dataprivacy_var_names_from_context($classname);
-
-            // Purpose options.
-            $purposes = [];
-            foreach ($this->_customdata['purposes'] as $purposeid => $purpose) {
-                $purposes[$purposeid] = $purpose->get('name');
-            }
-            $mform->addElement('select', $purposevar, get_string('purpose', 'tool_dataprivacy'),
-                $purposes);
-            $mform->setType($purposevar, PARAM_INT);
 
             // Category options.
             $categories = [];
@@ -68,6 +60,15 @@ class defaults extends \moodleform {
             $mform->addElement('select', $categoryvar, get_string('category', 'tool_dataprivacy'),
                 $categories);
             $mform->setType($categoryvar, PARAM_INT);
+
+            // Purpose options.
+            $purposes = [];
+            foreach ($this->_customdata['purposes'] as $purposeid => $purpose) {
+                $purposes[$purposeid] = $purpose->get('name');
+            }
+            $mform->addElement('select', $purposevar, get_string('purpose', 'tool_dataprivacy'),
+                $purposes);
+            $mform->setType($purposevar, PARAM_INT);
         }
 
         $this->add_action_buttons(true, get_string('savechanges'));

@@ -46,11 +46,15 @@
     }
 }}
 
+{{#navigation}}
+    {{{.}}}
+{{/navigation}}
+
 <div data-region="categories" class="m-t-3 m-b-1">
     <h3>{{#str}}categories, tool_dataprivacy{{/str}}</h3>
     <div class="m-y-1">
-        <button class="btn btn-primary" data-add-element="category">
-            {{#str}}addcategory, tool_dataprivacy{{/str}}
+        <button class="btn btn-secondary" data-add-element="category">
+            {{#pix}}e/insert, moodle, {{#str}}addcategory, tool_dataprivacy{{/str}}{{/pix}}
         </button>
     </div>
     <table class="generaltable fullwidth">
