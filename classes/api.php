@@ -596,7 +596,7 @@ class api {
      * Sets the context level purpose and category.
      *
      * @param \stdClass $record
-     * @return null
+     * @return contextlevel
      */
     public static function set_contextlevel($record) {
         global $DB;
@@ -604,23 +604,28 @@ class api {
         // Only manager at system level can set this.
         self::check_can_manage_data_registry();
 
-        if ($instance = \tool_dataprivacy\context::get_record_by_contextlevel($record->contextlevel, false)) {
+        if ($contextlevel = \tool_dataprivacy\contextlevel::get_record_by_contextlevel($record->contextlevel, false)) {
             // Update.
-            $prevapplyallinstances = $instance->get('applyallinstances');
-            $instance->from_record($record);
+            $prevapplyallinstances = $contextlevel->get('applyallinstances');
+            $contextlevel->from_record($record);
         } else {
             // Add.
-            $instance = new \tool_dataprivacy\context(0, $record);
+            $contextlevel = new \tool_dataprivacy\contextlevel(0, $record);
         }
-        $instance->save();
+        $contextlevel->save();
 
         if (empty($record->id) || ($record->applyallinstances == 1 and $prevapplyallinstances == 0)) {
             // New contextlevel record or updated to remove all overrides.
+            $sql = "SELECT ci.* FROM {dataprivacy_context_instance} ci
+                      JOIN {context} ctx ON ctx.id = ci.contextid
+                     WHERE ctx.contextlevel = :contextlevel";
             $contextinstances = $DB->get_recordset_sql($sql, array('contextlevel' => $record->contextlevel));
             foreach ($contextinstances as $record) {
                 $instance = new \tool_dataprivacy\context_instance(0, $record);
                 self::unset_context_instance($instance);
             }
         }
+
+        return $contextlevel;
     }
 }

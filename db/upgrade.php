@@ -87,7 +87,7 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2018020705, 'error', 'dataprivacy');
     }
 
-    if ($oldversion < 2018021802) {
+    if ($oldversion < 2018021807) {
 
         // Define table dataprivacy_context_instance to be created.
         $table = new xmldb_table('dataprivacy_context_instance');
@@ -113,10 +113,10 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
         }
 
         // Dataprivacy savepoint reached.
-        upgrade_plugin_savepoint(true, 2018021802, 'tool', 'dataprivacy');
+        upgrade_plugin_savepoint(true, 2018021807, 'tool', 'dataprivacy');
     }
 
-    if ($oldversion < 2018021803) {
+    if ($oldversion < 2018021809) {
 
         // Define table dataprivacy_contextlevel to be created.
         $table = new xmldb_table('dataprivacy_contextlevel');
@@ -143,7 +143,7 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
         }
 
         // Dataprivacy savepoint reached.
-        upgrade_plugin_savepoint(true, 2018021803, 'tool', 'dataprivacy');
+        upgrade_plugin_savepoint(true, 2018021809, 'tool', 'dataprivacy');
     }
 
     return true;

@@ -46,12 +46,19 @@ class contextlevel extends context_instance {
      */
     public function definition() {
 
+        $this->_form->setDisableShortforms();
+
+        $this->_form->addElement('header', 'contextlevelname', $this->_customdata['contextlevelname']);
+
         $this->add_purpose_category();
 
         // Add apply to all instances checkbox.
         $this->_form->addElement('advcheckbox', 'applyallinstances', get_string('applyallinstances', 'tool_dataprivacy'),
             get_string('applyallinstanceslabel', 'tool_dataprivacy'));
 
-        $this->add_action_buttons();
+        $this->_form->addElement('hidden', 'contextlevel');
+        $this->_form->setType('contextlevel', PARAM_INT);
+
+        parent::add_action_buttons(false, get_string('savechanges'));
     }
 }

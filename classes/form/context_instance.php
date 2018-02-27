@@ -45,8 +45,9 @@ class context_instance extends persistent {
      * Define the form - called by parent constructor
      */
     public function definition() {
+        $this->_form->setDisableShortforms();
         $this->add_purpose_category();
-        $this->add_action_buttons();
+        parent::add_action_buttons(false, get_string('savechanges'));
     }
 
     /**
@@ -57,26 +58,22 @@ class context_instance extends persistent {
     protected function add_purpose_category() {
         $mform = $this->_form;
 
-        $mform->addElement('select', 'purposeid', get_string('purpose', 'tool_dataprivacy'));
+        // Purpose options.
+        $purposes = [];
+        foreach ($this->_customdata['purposes'] as $purposeid => $purpose) {
+            $purposes[$purposeid] = $purpose->get('name');
+        }
+        $mform->addElement('select', 'purposeid', get_string('purpose', 'tool_dataprivacy'), $purposes);
         $mform->setType('purposeid', PARAM_INT);
         $mform->addRule('purposeid', get_string('required'), 'required', null, 'client');
 
-        $mform->addElement('select', 'categoryid', get_string('category', 'tool_dataprivacy'));
+        // Category options.
+        $categories = [];
+        foreach ($this->_customdata['categories'] as $categoryid => $category) {
+            $categories[$categoryid] = $category->get('name');
+        }
+        $mform->addElement('select', 'categoryid', get_string('category', 'tool_dataprivacy'), $categories);
         $mform->setType('categoryid', PARAM_INT);
         $mform->addRule('categoryid', get_string('required'), 'required', null, 'client');
-    }
-
-    /**
-     * Adds action buttons.
-     *
-     * @return null
-     */
-    public function add_action_buttons() {
-        if (!$this->get_persistent()->get('id')) {
-            $savetext = get_string('add');
-        } else {
-            $savetext = get_string('savechanges');
-        }
-        parent::add_action_buttons(true, $savetext);
     }
 }

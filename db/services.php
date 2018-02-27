@@ -123,4 +123,15 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
+    'tool_dataprivacy_set_contextlevel_form' => [
+        'classname'     => 'tool_dataprivacy\external',
+        'methodname'    => 'set_contextlevel_form',
+        'classpath'     => '',
+        'description'   => 'Sets purpose and category across a context level',
+        'type'          => 'write',
+        'capabilities'  => '',
+        'ajax'          => true,
+        'loginrequired' => true,
+    ],
+
 ];

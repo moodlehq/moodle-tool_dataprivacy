@@ -685,4 +685,84 @@ class external extends external_api {
             'warnings' => new external_warnings()
         ]);
     }
+
+    /**
+     * Parameter description for set_contextlevel_form().
+     *
+     * @return external_function_parameters
+     */
+    public static function set_contextlevel_form_parameters() {
+        return new external_function_parameters([
+            'jsonformdata' => new external_value(PARAM_RAW, 'The context level data, encoded as a json array')
+        ]);
+    }
+
+    /**
+     * Creates a data category from form data.
+     *
+     * @param string $jsonformdata
+     * @return array
+     */
+    public static function set_contextlevel_form($jsonformdata) {
+        global $PAGE;
+
+        $warnings = [];
+
+        $params = external_api::validate_parameters(self::set_contextlevel_form_parameters(), [
+            'jsonformdata' => $jsonformdata
+        ]);
+
+        self::validate_context(\context_system::instance());
+
+        $serialiseddata = json_decode($params['jsonformdata']);
+        $data = array();
+        parse_str($serialiseddata, $data);
+
+        $persistent = \tool_dataprivacy\contextlevel::get_record_by_contextlevel($data['contextlevel'], false);
+        if (!$persistent) {
+            $persistent = new \tool_dataprivacy\contextlevel();
+        }
+
+        $levels = \context_helper::get_all_levels();
+        $class = $levels[$data['contextlevel']];
+
+        $customdata = [
+            'contextlevel' => $data['contextlevel'],
+            'contextlevelname' => $class::get_level_name(),
+            'persistent' => $persistent,
+            'purposes' => \tool_dataprivacy\api::get_purposes(),
+            'categories' => \tool_dataprivacy\api::get_categories(),
+        ];
+        $mform = new \tool_dataprivacy\form\contextlevel(null, $customdata, 'post', '', null, true, $data);
+
+        if ($validateddata = $mform->get_data()) {
+            $contextlevel = api::set_contextlevel($validateddata);
+        } else if ($errors = $mform->is_validated()) {
+            $warnings[] = json_encode($errors);
+            throw new moodle_exception('generalerror');
+        }
+
+        if ($contextlevel) {
+            $result = true;
+        } else {
+            $result = false;
+        }
+        return [
+            'result' => $result,
+            'warnings' => $warnings
+        ];
+    }
+
+    /**
+     * Returns for set_contextlevel_form().
+     *
+     * @return external_single_structure
+     */
+    public static function set_contextlevel_form_returns() {
+        return new external_single_structure([
+            'result' => new external_value(PARAM_BOOL, 'Whether the data was properly set or not'),
+            'warnings' => new external_warnings()
+        ]);
+    }
+
 }

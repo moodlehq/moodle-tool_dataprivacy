@@ -37,7 +37,7 @@
         {{> core/single_button}}
     {{/defaultsbutton}}
     <div class="singlebutton btn-group" role="group">
-        <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown" type="button">
+        <button class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" type="button">
             {{#str}}edit{{/str}}
         </button>
         <div class="dropdown-menu">
@@ -51,6 +51,17 @@
                     {{#str}} purposes, tool_dataprivacy {{/str}}
                 </a>
             </li>
+        </div>
+    </div>
+    <div class="container m-t-2">
+        <div class="row">
+            <div class="col-md-4 p-l-0">
+                {{#contextlevels}}
+                    {{> tool_dataprivacy/context_tree}}
+                {{/contextlevels}}
+            </div>
+            <div class="col-md-8" id="context-form-container">
+            </div>
         </div>
     </div>
 </div>

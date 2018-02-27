@@ -89,7 +89,6 @@ function tool_dataprivacy_output_fragment_addpurpose_form($args) {
     return $mform->render();
 }
 
-
 /**
  * Fragment to add a new category.
  *
@@ -99,6 +98,36 @@ function tool_dataprivacy_output_fragment_addpurpose_form($args) {
 function tool_dataprivacy_output_fragment_addcategory_form($args) {
     $persistent = new \tool_dataprivacy\category();
     $mform = new \tool_dataprivacy\form\category(null, ['persistent' => $persistent]);
+    return $mform->render();
+}
+
+/**
+ * Fragment to edit a contextlevel purpose and category.
+ *
+ * @param array $args The fragment arguments.
+ * @return string The rendered mform fragment.
+ */
+function tool_dataprivacy_output_fragment_contextlevel_form($args) {
+
+    $contextlevel = $args[0];
+
+    $levels = \context_helper::get_all_levels();
+    $class = $levels[$contextlevel];
+
+    $persistent = \tool_dataprivacy\contextlevel::get_record_by_contextlevel($contextlevel, false);
+    if (!$persistent) {
+        $persistent = new \tool_dataprivacy\contextlevel();
+        $persistent->set('contextlevel', $contextlevel);
+    }
+
+    $customdata = [
+        'contextlevel' => $contextlevel,
+        'contextlevelname' => $class::get_level_name(),
+        'persistent' => $persistent,
+        'purposes' => \tool_dataprivacy\api::get_purposes(),
+        'categories' => \tool_dataprivacy\api::get_categories(),
+    ];
+    $mform = new \tool_dataprivacy\form\contextlevel(null, $customdata);
     return $mform->render();
 }
 
