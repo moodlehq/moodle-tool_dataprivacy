@@ -726,16 +726,28 @@ class external extends external_api {
         $levels = \context_helper::get_all_levels();
         $class = $levels[$data['contextlevel']];
 
+        $purposeoptions = \tool_dataprivacy\output\data_registry_page::purpose_options(
+            \tool_dataprivacy\api::get_purposes()
+        );
+        $categoryoptions = \tool_dataprivacy\output\data_registry_page::category_options(
+            \tool_dataprivacy\api::get_categories()
+        );
+
         $customdata = [
             'contextlevel' => $data['contextlevel'],
             'contextlevelname' => $class::get_level_name(),
             'persistent' => $persistent,
-            'purposes' => \tool_dataprivacy\api::get_purposes(),
-            'categories' => \tool_dataprivacy\api::get_categories(),
+            'purposes' => $purposeoptions,
+            'categories' => $categoryoptions,
         ];
         $mform = new \tool_dataprivacy\form\contextlevel(null, $customdata, 'post', '', null, true, $data);
-
         if ($validateddata = $mform->get_data()) {
+
+            // Convert form-like structure to persistent fields.
+            $validateddata->purposeid = $validateddata->purposegroup['purposeid'];
+            $validateddata->categoryid = $validateddata->categorygroup['categoryid'];
+            unset($validateddata->purposegroup);
+            unset($validateddata->categorygroup);
             $contextlevel = api::set_contextlevel($validateddata);
         } else if ($errors = $mform->is_validated()) {
             $warnings[] = json_encode($errors);

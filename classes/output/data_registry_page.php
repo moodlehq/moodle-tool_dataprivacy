@@ -38,6 +38,28 @@ use templatable;
 class data_registry_page implements renderable, templatable {
 
     /**
+     * @var int
+     */
+    private $defaultcontextlevel;
+
+    /**
+     * @var int
+     */
+    private $defaultcontextid;
+
+    /**
+     * Constructor.
+     *
+     * @param int $defaultcontextlevel
+     * @param int $defaultcontextid
+     * @return null
+     */
+    public function __construct($defaultcontextlevel = false, $defaultcontextid = false) {
+        $this->defaultcontextlevel = $defaultcontextlevel;
+        $this->defaultcontextid = $defaultcontextid;
+    }
+
+    /**
      * Export this data so it can be used as the context for a mustache template.
      *
      * @param renderer_base $output
@@ -46,7 +68,8 @@ class data_registry_page implements renderable, templatable {
     public function export_for_template(renderer_base $output) {
         global $PAGE;
 
-        $PAGE->requires->js_call_amd('tool_dataprivacy/data_registry', 'init', [\context_system::instance()->id, CONTEXT_SYSTEM]);
+        $params = [\context_system::instance()->id, $this->defaultcontextlevel];
+        $PAGE->requires->js_call_amd('tool_dataprivacy/data_registry', 'init', $params);
 
         $data = new stdClass();
 
@@ -61,7 +84,6 @@ class data_registry_page implements renderable, templatable {
         $data->purposesurl = new \moodle_url('/admin/tool/dataprivacy/purposes.php');
 
         $data->contextlevels = $this->get_tree_structure();
-        $data->currentcontext = CONTEXT_SYSTEM;
 
         return $data;
     }
@@ -75,7 +97,6 @@ class data_registry_page implements renderable, templatable {
         $elements = [
             'text' => get_string('site'),
             'contextlevel' => CONTEXT_SYSTEM,
-            'active' => true,
             'children' => [
                 [
                     'text' => get_string('user'),
@@ -112,7 +133,7 @@ class data_registry_page implements renderable, templatable {
      */
     private function complete($node, $counter = 0) {
         if (!isset($node['active'])) {
-            $node['active'] = null;
+            $node['active'] = $this->defaultcontextlevel == $node['contextlevel'] ? true : null;
         }
         if (!isset($node['children'])) {
             $node['children'] = null;
@@ -124,5 +145,23 @@ class data_registry_page implements renderable, templatable {
         $node['padding'] = $counter;
 
         return $node;
+    }
+
+    public static function purpose_options($purposes) {
+        $options = [0 => get_string('notset', 'tool_dataprivacy')];
+        foreach ($purposes as $purpose) {
+            $options[$purpose->get('id')] = $purpose->get('name');
+        }
+
+        return $options;
+    }
+
+    public static function category_options($categories) {
+        $options = [0 => get_string('notset', 'tool_dataprivacy')];
+        foreach ($categories as $category) {
+            $options[$category->get('id')] = $category->get('name');
+        }
+
+        return $options;
     }
 }

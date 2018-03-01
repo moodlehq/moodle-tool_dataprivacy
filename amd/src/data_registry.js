@@ -21,9 +21,9 @@
  * @copyright  2018 Jun Pataleta
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/modal_factory', 'core/modal_events', 'core/fragment',
+define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates', 'core/modal_factory', 'core/modal_events', 'core/fragment',
     'tool_dataprivacy/add_purpose', 'tool_dataprivacy/add_category'],
-    function($, Str, Ajax, Notification, ModalFactory, ModalEvents, Fragment, AddPurpose, AddCategory) {
+    function($, Str, Ajax, Notification, Templates, ModalFactory, ModalEvents, Fragment, AddPurpose, AddCategory) {
 
         var SELECTORS = {
             TREE_NODES: '[data-context-tree-node=1]',
@@ -42,15 +42,41 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/modal_fact
          */
         DataRegistry.prototype.systemContextId = 0;
 
+        /**
+         * @var {AddPurpose} addpurpose
+         * @private
+         */
+        DataRegistry.prototype.addpurpose = null;
+
+        /**
+         * @var {AddCategory} addcategory
+         * @private
+         */
+        DataRegistry.prototype.addcategory = null;
+
         DataRegistry.prototype.init = function() {
             // Add purpose and category modals always at system context.
-            AddPurpose.getModal(this.systemContextId);
-            AddCategory.getModal(this.systemContextId);
+            this.addpurpose = AddPurpose.getInstance(this.systemContextId);
+            this.addcategory = AddCategory.getInstance(this.systemContextId);
+
+            var stringKeys = [
+                {
+                    key: 'changessaved',
+                    component: 'moodle'
+                },
+                {
+                    key: 'contextpurposecategorysaved',
+                    component: 'tool_dataprivacy'
+                }
+            ];
+            this.strings = Str.get_strings(stringKeys);
 
             this.registerEventListeners();
 
             // Load the default context level form.
-            this.loadContextLevelForm();
+            if (this.currentContextLevel) {
+                this.loadContextLevelForm();
+            }
         };
 
         DataRegistry.prototype.registerEventListeners = function() {
@@ -64,6 +90,13 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/modal_fact
 
                 var contextLevel = trigger.attr('data-contextlevel');
                 if (contextLevel) {
+
+                    window.history.pushState({}, null, '?contextlevel=' + contextLevel);
+
+                    // Remove previous add purpose and category listeners to avoid memory leaks.
+                    this.addpurpose.removeListeners();
+                    this.addcategory.removeListeners();
+
                     // Load the context level form.
                     this.currentContextLevel = contextLevel;
                     this.loadContextLevelForm();
@@ -80,9 +113,16 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/modal_fact
                 M.core_formchangechecker.reset_form_dirty_state();
             });
 
+            // Remove previous listeners.
+            $(SELECTORS.FORM_CONTAINER).off('submit', 'form');
+
             var fragment = Fragment.loadFragment('tool_dataprivacy', 'contextlevel_form', this.systemContextId, [this.currentContextLevel]);
             fragment.done(function(html, js) {
                 $(SELECTORS.FORM_CONTAINER).html(html);
+                Templates.runTemplateJS(js);
+
+                this.addpurpose.registerEventListeners();
+                this.addcategory.registerEventListeners();
 
                 // We also catch the form submit event and use it to submit the form with ajax.
                 $(SELECTORS.FORM_CONTAINER).on('submit', 'form', this.submitContextLevelFormAjax.bind(this));
@@ -108,13 +148,16 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/modal_fact
 
             // Convert all the form elements values to a serialised string.
             var formData = $(SELECTORS.FORM_CONTAINER).find('form').serialize();
-            console.log(formData);
-            Ajax.call([{
-                methodname: 'tool_dataprivacy_set_contextlevel_form',
-                args: {jsonformdata: JSON.stringify(formData)},
-                done: function() { console.log('saved');},
-                fail: Notification.exception
-            }]);
+            return this.strings.then(function(strings) {
+                Ajax.call([{
+                    methodname: 'tool_dataprivacy_set_contextlevel_form',
+                    args: {jsonformdata: JSON.stringify(formData)},
+                    done: function() {
+                        Notification.alert(strings[0], strings[1]);
+                    },
+                    fail: Notification.exception
+                }]);
+            }.bind(this));
         };
 
         return /** @alias module:tool_dataprivacy/data_registry */ {

@@ -62,7 +62,7 @@ class categories extends crud_element implements renderable, templatable {
         $context = \context_system::instance();
 
         $PAGE->requires->js_call_amd('tool_dataprivacy/categoriesactions', 'init');
-        $PAGE->requires->js_call_amd('tool_dataprivacy/add_category', 'getModal', [$context->id]);
+        $PAGE->requires->js_call_amd('tool_dataprivacy/add_category', 'getInstance', [$context->id]);
 
         $data = new stdClass();
 

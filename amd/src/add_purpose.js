@@ -30,7 +30,20 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/modal_fact
 
         var AddPurpose = function(contextId) {
             this.contextId = contextId;
-            this.init();
+
+            var stringKeys = [
+                {
+                    key: 'addpurpose',
+                    component: 'tool_dataprivacy'
+                },
+                {
+                    key: 'save',
+                    component: 'moodle'
+                }
+            ];
+            this.strings = Str.get_strings(stringKeys);
+
+            this.registerEventListeners();
         };
 
         /**
@@ -39,22 +52,17 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/modal_fact
          */
         AddPurpose.prototype.contextId = 0;
 
-        AddPurpose.prototype.init = function() {
+        /**
+         * @var {Promise}
+         * @private
+         */
+        AddPurpose.prototype.strings = 0;
+
+        AddPurpose.prototype.registerEventListeners = function() {
 
             var trigger = $(SELECTORS.PURPOSE_LINK)
             trigger.on('click', function(ev) {
-
-                var stringKeys = [
-                    {
-                        key: 'addpurpose',
-                        component: 'tool_dataprivacy'
-                    },
-                    {
-                        key: 'save',
-                        component: 'moodle'
-                    }
-                ];
-                return Str.get_strings(stringKeys).then(function(strings) {
+                return this.strings.then(function(strings) {
                     ModalFactory.create({
                         type: ModalFactory.types.SAVE_CANCEL,
                         title: strings[0],
@@ -137,8 +145,12 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/modal_fact
             this.modal.destroy();
         };
 
+        AddPurpose.prototype.removeListeners = function() {
+            $(SELECTORS.PURPOSE_LINK).off('click');
+        };
+
         return /** @alias module:tool_dataprivacy/add_purpose */ {
-            getModal: function(contextId) {
+            getInstance: function(contextId) {
                 return new AddPurpose(contextId);
             }
         };

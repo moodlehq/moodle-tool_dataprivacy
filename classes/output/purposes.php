@@ -62,7 +62,7 @@ class purposes extends crud_element implements renderable, templatable {
         $context = \context_system::instance();
 
         $PAGE->requires->js_call_amd('tool_dataprivacy/purposesactions', 'init');
-        $PAGE->requires->js_call_amd('tool_dataprivacy/add_purpose', 'getModal', [$context->id]);
+        $PAGE->requires->js_call_amd('tool_dataprivacy/add_purpose', 'getInstance', [$context->id]);
 
         $data = new stdClass();
 

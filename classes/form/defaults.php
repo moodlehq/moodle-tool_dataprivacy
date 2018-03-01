@@ -52,22 +52,12 @@ class defaults extends \moodleform {
 
             list($purposevar, $categoryvar) = tool_dataprivacy_var_names_from_context($classname);
 
-            // Category options.
-            $categories = [];
-            foreach ($this->_customdata['categories'] as $categoryid => $category) {
-                $categories[$categoryid] = $category->get('name');
-            }
             $mform->addElement('select', $categoryvar, get_string('category', 'tool_dataprivacy'),
-                $categories);
+                $this->_customdata['categories']);
             $mform->setType($categoryvar, PARAM_INT);
 
-            // Purpose options.
-            $purposes = [];
-            foreach ($this->_customdata['purposes'] as $purposeid => $purpose) {
-                $purposes[$purposeid] = $purpose->get('name');
-            }
             $mform->addElement('select', $purposevar, get_string('purpose', 'tool_dataprivacy'),
-                $purposes);
+                $this->_customdata['purposes']);
             $mform->setType($purposevar, PARAM_INT);
         }
 

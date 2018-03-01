@@ -32,10 +32,17 @@ $title = get_string('setdefaults', 'tool_dataprivacy');
 
 $levels = \context_helper::get_all_levels();
 
+$purposeoptions = \tool_dataprivacy\output\data_registry_page::purpose_options(
+    \tool_dataprivacy\api::get_purposes()
+);
+$categoryoptions = \tool_dataprivacy\output\data_registry_page::category_options(
+    \tool_dataprivacy\api::get_categories()
+);
+
 $customdata = [
     'levels' => $levels,
-    'purposes' => \tool_dataprivacy\api::get_purposes(),
-    'categories' => \tool_dataprivacy\api::get_categories()
+    'purposes' => $purposeoptions,
+    'categories' => $categoryoptions,
 ];
 $form = new \tool_dataprivacy\form\defaults($PAGE->url->out(false), $customdata);
 

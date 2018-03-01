@@ -56,24 +56,61 @@ class context_instance extends persistent {
      * @return null
      */
     protected function add_purpose_category() {
+        global $OUTPUT;
+
         $mform = $this->_form;
 
-        // Purpose options.
-        $purposes = [];
-        foreach ($this->_customdata['purposes'] as $purposeid => $purpose) {
-            $purposes[$purposeid] = $purpose->get('name');
-        }
-        $mform->addElement('select', 'purposeid', get_string('purpose', 'tool_dataprivacy'), $purposes);
-        $mform->setType('purposeid', PARAM_INT);
-        $mform->addRule('purposeid', get_string('required'), 'required', null, 'client');
+        $addicon = $OUTPUT->pix_icon('e/insert', get_string('add'));
 
-        // Category options.
-        $categories = [];
-        foreach ($this->_customdata['categories'] as $categoryid => $category) {
-            $categories[$categoryid] = $category->get('name');
-        }
-        $mform->addElement('select', 'categoryid', get_string('category', 'tool_dataprivacy'), $categories);
+        $purposeselect = $mform->createElement('select', 'purposeid', null, $this->_customdata['purposes']);
+        $addpurpose = $mform->createElement('button', 'addpurpose', $addicon, ['data-add-element' => 'purpose']);
+        $mform->addElement('group', 'purposegroup', get_string('purpose', 'tool_dataprivacy'), [$purposeselect, $addpurpose]);
+        $mform->setType('purposeid', PARAM_INT);
+        $mform->addRule('purposegroup', get_string('required'), 'required', null, 'client');
+
+        $categoryselect = $mform->createElement('select', 'categoryid', null, $this->_customdata['categories']);
+        $addcategory = $mform->createElement('button', 'addcategory', $addicon, ['data-add-element' => 'category']);
+        $mform->addElement('group', 'categorygroup', get_string('category', 'tool_dataprivacy'), [$categoryselect, $addcategory]);
         $mform->setType('categoryid', PARAM_INT);
-        $mform->addRule('categoryid', get_string('required'), 'required', null, 'client');
+        $mform->addRule('categorygroup', get_string('required'), 'required', null, 'client');
+    }
+
+    /**
+     * Filter out the foreign fields of the persistent.
+     *
+     * Overriden to return a persistent-like structure.
+     *
+     * @param stdClass $data The data to filter the fields out of.
+     * @return stdClass.
+     */
+    protected function filter_data_for_persistent($data) {
+        $data->purposeid = $data->purposegroup['purposeid'];
+        $data->categoryid = $data->categorygroup['categoryid'];
+        unset($data->purposegroup);
+        unset($data->categorygroup);
+
+        return $data;
+    }
+
+    /**
+     * Get the default data.
+     *
+     * This is the data that is prepopulated in the form at it loads, we automatically
+     * fetch all the properties of the persistent however some needs to be converted
+     * to map the form structure.
+     *
+     * Overriden so purpose and category are set inside their group fields.
+     *
+     * @return stdClass
+     */
+    protected function get_default_data() {
+        $data = parent::get_default_data();
+
+        $data->purposegroup = ['purposeid' => $data->purposeid];
+        $data->categorygroup = ['categoryid' => $data->categoryid];
+        unset($data->purposeid);
+        unset($data->categoryid);
+
+        return $data;
     }
 }

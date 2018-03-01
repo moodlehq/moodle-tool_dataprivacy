@@ -120,12 +120,19 @@ function tool_dataprivacy_output_fragment_contextlevel_form($args) {
         $persistent->set('contextlevel', $contextlevel);
     }
 
+    $purposeoptions = \tool_dataprivacy\output\data_registry_page::purpose_options(
+        \tool_dataprivacy\api::get_purposes()
+    );
+    $categoryoptions = \tool_dataprivacy\output\data_registry_page::category_options(
+        \tool_dataprivacy\api::get_categories()
+    );
+
     $customdata = [
         'contextlevel' => $contextlevel,
         'contextlevelname' => $class::get_level_name(),
         'persistent' => $persistent,
-        'purposes' => \tool_dataprivacy\api::get_purposes(),
-        'categories' => \tool_dataprivacy\api::get_categories(),
+        'purposes' => $purposeoptions,
+        'categories' => $categoryoptions,
     ];
     $mform = new \tool_dataprivacy\form\contextlevel(null, $customdata);
     return $mform->render();
