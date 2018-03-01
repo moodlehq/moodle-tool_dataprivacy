@@ -133,5 +133,14 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
-
+    'tool_dataprivacy_set_context_form' => [
+        'classname'     => 'tool_dataprivacy\external',
+        'methodname'    => 'set_context_form',
+        'classpath'     => '',
+        'description'   => 'Sets purpose and category for a specific context',
+        'type'          => 'write',
+        'capabilities'  => '',
+        'ajax'          => true,
+        'loginrequired' => true,
+    ],
 ];

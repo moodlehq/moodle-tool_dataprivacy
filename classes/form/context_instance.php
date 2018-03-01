@@ -46,7 +46,14 @@ class context_instance extends persistent {
      */
     public function definition() {
         $this->_form->setDisableShortforms();
+
+        $this->_form->addElement('header', 'contextname', $this->_customdata['contextname']);
+
         $this->add_purpose_category();
+
+        $this->_form->addElement('hidden', 'contextid');
+        $this->_form->setType('contextid', PARAM_INT);
+
         parent::add_action_buttons(false, get_string('savechanges'));
     }
 
@@ -66,13 +73,11 @@ class context_instance extends persistent {
         $addpurpose = $mform->createElement('button', 'addpurpose', $addicon, ['data-add-element' => 'purpose']);
         $mform->addElement('group', 'purposegroup', get_string('purpose', 'tool_dataprivacy'), [$purposeselect, $addpurpose]);
         $mform->setType('purposeid', PARAM_INT);
-        $mform->addRule('purposegroup', get_string('required'), 'required', null, 'client');
 
         $categoryselect = $mform->createElement('select', 'categoryid', null, $this->_customdata['categories']);
         $addcategory = $mform->createElement('button', 'addcategory', $addicon, ['data-add-element' => 'category']);
         $mform->addElement('group', 'categorygroup', get_string('category', 'tool_dataprivacy'), [$categoryselect, $addcategory]);
         $mform->setType('categoryid', PARAM_INT);
-        $mform->addRule('categorygroup', get_string('required'), 'required', null, 'client');
     }
 
     /**

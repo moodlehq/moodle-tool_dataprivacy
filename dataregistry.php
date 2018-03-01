@@ -26,6 +26,7 @@ require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/dataprivacy/lib.php');
 
 $contextlevel = optional_param('contextlevel', CONTEXT_SYSTEM, PARAM_INT);
+$contextid = optional_param('contextid', 0, PARAM_INT);
 
 $url = new moodle_url('/admin/tool/dataprivacy/dataregistry.php');
 $title = get_string('dataregistry', 'tool_dataprivacy');
@@ -35,7 +36,7 @@ $title = get_string('dataregistry', 'tool_dataprivacy');
 $output = $PAGE->get_renderer('tool_dataprivacy');
 echo $output->header();
 
-$dataregistry = new tool_dataprivacy\output\data_registry_page($contextlevel);
+$dataregistry = new tool_dataprivacy\output\data_registry_page($contextlevel, $contextid);
 
 echo $output->render($dataregistry);
 echo $OUTPUT->footer();

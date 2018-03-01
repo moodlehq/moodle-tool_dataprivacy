@@ -68,7 +68,7 @@ class data_registry_page implements renderable, templatable {
     public function export_for_template(renderer_base $output) {
         global $PAGE;
 
-        $params = [\context_system::instance()->id, $this->defaultcontextlevel];
+        $params = [\context_system::instance()->id, $this->defaultcontextlevel, $this->defaultcontextid];
         $PAGE->requires->js_call_amd('tool_dataprivacy/data_registry', 'init', $params);
 
         $data = new stdClass();
@@ -147,6 +147,12 @@ class data_registry_page implements renderable, templatable {
         return $node;
     }
 
+    /**
+     * From a list of purpose persistents to a list of id => name purposes.
+     *
+     * @param \tool_dataprivacy\purpose $purposes
+     * @return string[]
+     */
     public static function purpose_options($purposes) {
         $options = [0 => get_string('notset', 'tool_dataprivacy')];
         foreach ($purposes as $purpose) {
@@ -156,6 +162,12 @@ class data_registry_page implements renderable, templatable {
         return $options;
     }
 
+    /**
+     * From a list of category persistents to a list of id => name categories.
+     *
+     * @param \tool_dataprivacy\category $categories
+     * @return string[]
+     */
     public static function category_options($categories) {
         $options = [0 => get_string('notset', 'tool_dataprivacy')];
         foreach ($categories as $category) {

@@ -777,4 +777,94 @@ class external extends external_api {
         ]);
     }
 
+    /**
+     * Parameter description for set_context_form().
+     *
+     * @return external_function_parameters
+     */
+    public static function set_context_form_parameters() {
+        return new external_function_parameters([
+            'jsonformdata' => new external_value(PARAM_RAW, 'The context level data, encoded as a json array')
+        ]);
+    }
+
+    /**
+     * Creates a data category from form data.
+     *
+     * @param string $jsonformdata
+     * @return array
+     */
+    public static function set_context_form($jsonformdata) {
+        global $PAGE;
+
+        $warnings = [];
+
+        $params = external_api::validate_parameters(self::set_context_form_parameters(), [
+            'jsonformdata' => $jsonformdata
+        ]);
+
+        self::validate_context(\context_system::instance());
+
+        $serialiseddata = json_decode($params['jsonformdata']);
+        $data = array();
+        parse_str($serialiseddata, $data);
+
+        $context = \context_helper::instance_by_id($data['contextid']);
+
+        $persistent = \tool_dataprivacy\context_instance::get_record_by_contextid($data['contextid'], false);
+        if (!$persistent) {
+            $persistent = new \tool_dataprivacy\context_instance();
+        }
+
+        $purposeoptions = \tool_dataprivacy\output\data_registry_page::purpose_options(
+            \tool_dataprivacy\api::get_purposes()
+        );
+        $categoryoptions = \tool_dataprivacy\output\data_registry_page::category_options(
+            \tool_dataprivacy\api::get_categories()
+        );
+
+        $customdata = [
+            'contextid' => $data['contextid'],
+            'contextname' => $context->get_context_name(),
+            'persistent' => $persistent,
+            'purposes' => $purposeoptions,
+            'categories' => $categoryoptions,
+        ];
+        $mform = new \tool_dataprivacy\form\context_instance(null, $customdata, 'post', '', null, true, $data);
+        if ($validateddata = $mform->get_data()) {
+
+            // Convert form-like structure to persistent fields.
+            $validateddata->purposeid = $validateddata->purposegroup['purposeid'];
+            $validateddata->categoryid = $validateddata->categorygroup['categoryid'];
+            unset($validateddata->purposegroup);
+            unset($validateddata->categorygroup);
+            $context = api::set_context_instance($validateddata);
+        } else if ($errors = $mform->is_validated()) {
+            $warnings[] = json_encode($errors);
+            throw new moodle_exception('generalerror');
+        }
+
+        if ($context) {
+            $result = true;
+        } else {
+            $result = false;
+        }
+        return [
+            'result' => $result,
+            'warnings' => $warnings
+        ];
+    }
+
+    /**
+     * Returns for set_context_form().
+     *
+     * @return external_single_structure
+     */
+    public static function set_context_form_returns() {
+        return new external_single_structure([
+            'result' => new external_value(PARAM_BOOL, 'Whether the data was properly set or not'),
+            'warnings' => new external_warnings()
+        ]);
+    }
+
 }

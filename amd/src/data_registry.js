@@ -30,9 +30,10 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             FORM_CONTAINER: '#context-form-container',
         };
 
-        var DataRegistry = function(systemContextId, initContextLevel) {
+        var DataRegistry = function(systemContextId, initContextLevel, initContextId) {
             this.systemContextId = systemContextId;
             this.currentContextLevel = initContextLevel;
+            this.currentContextId = initContextId;
             this.init();
         };
 
@@ -41,6 +42,18 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
          * @private
          */
         DataRegistry.prototype.systemContextId = 0;
+
+        /**
+         * @var {int} currentContextLevel
+         * @private
+         */
+        DataRegistry.prototype.currentContextLevel = 0;
+
+        /**
+         * @var {int} currentContextId
+         * @private
+         */
+        DataRegistry.prototype.currentContextId = 0;
 
         /**
          * @var {AddPurpose} addpurpose
@@ -75,7 +88,9 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
 
             // Load the default context level form.
             if (this.currentContextLevel) {
-                this.loadContextLevelForm();
+                this.loadForm('contextlevel_form', [this.currentContextLevel], this.submitContextLevelFormAjax.bind(this))
+            } else {
+                this.loadForm('context_form', [this.currentContextId], this.submitContextFormAjax.bind(this))
             }
         };
 
@@ -99,25 +114,40 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
 
                     // Load the context level form.
                     this.currentContextLevel = contextLevel;
-                    this.loadContextLevelForm();
+                    this.loadForm('contextlevel_form', [this.currentContextLevel], this.submitContextLevelFormAjax.bind(this))
+                } else {
+                    var contextId = trigger.attr('data-contextid');
+
+                    if (!contextId) {
+                        console.error('No data-contextid attribute');
+                        return;
+                    }
+
+                    window.history.pushState({}, null, '?contextid=' + contextId);
+
+                    // Remove previous add purpose and category listeners to avoid memory leaks.
+                    this.addpurpose.removeListeners();
+                    this.addcategory.removeListeners();
+
+                    // Load the context level form.
+                    this.currentContextId = contextId;
+                    this.loadForm('context_form', [this.currentContextId], this.submitContextFormAjax.bind(this))
                 }
-                // TODO Specific context ids.
 
             }.bind(this));
         };
 
-        DataRegistry.prototype.loadContextLevelForm = function() {
+        DataRegistry.prototype.removeListeners = function() {
+            $(SELECTORS.TREE_NODES).off('click');
+        };
 
-            // For the previously loaded form.
-            Y.use('moodle-core-formchangechecker', function() {
-                M.core_formchangechecker.reset_form_dirty_state();
-            });
+        DataRegistry.prototype.loadForm = function(fragmentName, fragmentArgs, formSubmitCallback) {
 
-            // Remove previous listeners.
-            $(SELECTORS.FORM_CONTAINER).off('submit', 'form');
+            this.clearForm();
 
-            var fragment = Fragment.loadFragment('tool_dataprivacy', 'contextlevel_form', this.systemContextId, [this.currentContextLevel]);
+            var fragment = Fragment.loadFragment('tool_dataprivacy', fragmentName, this.systemContextId, fragmentArgs);
             fragment.done(function(html, js) {
+
                 $(SELECTORS.FORM_CONTAINER).html(html);
                 Templates.runTemplateJS(js);
 
@@ -125,9 +155,19 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 this.addcategory.registerEventListeners();
 
                 // We also catch the form submit event and use it to submit the form with ajax.
-                $(SELECTORS.FORM_CONTAINER).on('submit', 'form', this.submitContextLevelFormAjax.bind(this));
+                $(SELECTORS.FORM_CONTAINER).on('submit', 'form', formSubmitCallback);
 
             }.bind(this)).fail(Notification.exception);
+        };
+
+        DataRegistry.prototype.clearForm = function() {
+            // For the previously loaded form.
+            Y.use('moodle-core-formchangechecker', function() {
+                M.core_formchangechecker.reset_form_dirty_state();
+            });
+
+            // Remove previous listeners.
+            $(SELECTORS.FORM_CONTAINER).off('submit', 'form');
         };
 
         /**
@@ -143,6 +183,14 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
         };
 
         DataRegistry.prototype.submitContextLevelFormAjax = function(e) {
+            this.submitFormAjax(e, 'tool_dataprivacy_set_context_form')
+        };
+
+        DataRegistry.prototype.submitContextFormAjax = function(e) {
+            this.submitFormAjax(e, 'tool_dataprivacy_set_contextlevel_form')
+        };
+
+        DataRegistry.prototype.submitFormAjax = function(e, saveMethodName) {
             // We don't want to do a real form submission.
             e.preventDefault();
 
@@ -150,7 +198,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             var formData = $(SELECTORS.FORM_CONTAINER).find('form').serialize();
             return this.strings.then(function(strings) {
                 Ajax.call([{
-                    methodname: 'tool_dataprivacy_set_contextlevel_form',
+                    methodname: saveMethodName,
                     args: {jsonformdata: JSON.stringify(formData)},
                     done: function() {
                         Notification.alert(strings[0], strings[1]);
@@ -158,15 +206,15 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                     fail: Notification.exception
                 }]);
             }.bind(this));
-        };
 
+        };
         return /** @alias module:tool_dataprivacy/data_registry */ {
 
             /**
              * Initialise the page.
              */
-            init: function(systemContextId, initContextLevel) {
-                return new DataRegistry(systemContextId, initContextLevel);
+            init: function(systemContextId, initContextLevel, initContextId) {
+                return new DataRegistry(systemContextId, initContextLevel, initContextId);
             }
         };
     }

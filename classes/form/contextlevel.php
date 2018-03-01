@@ -45,7 +45,6 @@ class contextlevel extends context_instance {
      * Define the form - called by parent constructor
      */
     public function definition() {
-
         $this->_form->setDisableShortforms();
 
         $this->_form->addElement('header', 'contextlevelname', $this->_customdata['contextlevelname']);

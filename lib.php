@@ -102,6 +102,42 @@ function tool_dataprivacy_output_fragment_addcategory_form($args) {
 }
 
 /**
+ * Fragment to edit a context purpose and category.
+ *
+ * @param array $args The fragment arguments.
+ * @return string The rendered mform fragment.
+ */
+function tool_dataprivacy_output_fragment_context_form($args) {
+
+    $contextid = $args[0];
+
+    $context = \context_helper::instance_by_id($contextid);
+
+    $persistent = \tool_dataprivacy\context_instance::get_record_by_contextid($contextid, false);
+    if (!$persistent) {
+        $persistent = new \tool_dataprivacy\context_instance();
+        $persistent->set('contextid', $contextid);
+    }
+
+    $purposeoptions = \tool_dataprivacy\output\data_registry_page::purpose_options(
+        \tool_dataprivacy\api::get_purposes()
+    );
+    $categoryoptions = \tool_dataprivacy\output\data_registry_page::category_options(
+        \tool_dataprivacy\api::get_categories()
+    );
+
+    $customdata = [
+        'contextid' => $contextid,
+        'contextname' => $context->get_context_name(),
+        'persistent' => $persistent,
+        'purposes' => $purposeoptions,
+        'categories' => $categoryoptions,
+    ];
+    $mform = new \tool_dataprivacy\form\context_instance(null, $customdata);
+    return $mform->render();
+}
+
+/**
  * Fragment to edit a contextlevel purpose and category.
  *
  * @param array $args The fragment arguments.
