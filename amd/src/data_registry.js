@@ -87,15 +87,16 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             this.registerEventListeners();
 
             // Load the default context level form.
-            if (this.currentContextLevel) {
-                this.loadForm('contextlevel_form', [this.currentContextLevel], this.submitContextLevelFormAjax.bind(this))
-            } else {
+            if (this.currentContextId) {
                 this.loadForm('context_form', [this.currentContextId], this.submitContextFormAjax.bind(this))
+            } else {
+                this.loadForm('contextlevel_form', [this.currentContextLevel], this.submitContextLevelFormAjax.bind(this))
             }
         };
 
         DataRegistry.prototype.registerEventListeners = function() {
             $(SELECTORS.TREE_NODES).on('click', function(ev) {
+                ev.preventDefault();
 
                 var trigger = $(ev.currentTarget);
 
@@ -183,11 +184,11 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
         };
 
         DataRegistry.prototype.submitContextLevelFormAjax = function(e) {
-            this.submitFormAjax(e, 'tool_dataprivacy_set_context_form')
+            this.submitFormAjax(e, 'tool_dataprivacy_set_contextlevel_form')
         };
 
         DataRegistry.prototype.submitContextFormAjax = function(e) {
-            this.submitFormAjax(e, 'tool_dataprivacy_set_contextlevel_form')
+            this.submitFormAjax(e, 'tool_dataprivacy_set_context_form')
         };
 
         DataRegistry.prototype.submitFormAjax = function(e, saveMethodName) {

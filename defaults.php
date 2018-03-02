@@ -63,10 +63,10 @@ if ($form->is_cancelled()) {
 
         list($purposevar, $categoryvar) = tool_dataprivacy_var_names_from_context($classname);
 
-        if (!empty($data->{$purposevar})) {
+        if (isset($data->{$purposevar})) {
             set_config($purposevar, $data->{$purposevar}, 'tool_dataprivacy');
         }
-        if (!empty($data->{$categoryvar})) {
+        if (isset($data->{$categoryvar})) {
             set_config($categoryvar, $data->{$categoryvar}, 'tool_dataprivacy');
         }
     }

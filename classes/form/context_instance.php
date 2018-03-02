@@ -49,7 +49,7 @@ class context_instance extends persistent {
 
         $this->_form->addElement('header', 'contextname', $this->_customdata['contextname']);
 
-        $this->add_purpose_category();
+        $this->add_purpose_category($this->_customdata['context']->contextlevel);
 
         $this->_form->addElement('hidden', 'contextid');
         $this->_form->setType('contextid', PARAM_INT);
@@ -60,24 +60,36 @@ class context_instance extends persistent {
     /**
      * Adds purpose and category selectors.
      *
+     * @param int $contextlevel Apply this context level defaults. False for no defaults.
      * @return null
      */
-    protected function add_purpose_category() {
+    protected function add_purpose_category($contextlevel = false) {
         global $OUTPUT;
 
         $mform = $this->_form;
 
         $addicon = $OUTPUT->pix_icon('e/insert', get_string('add'));
 
-        $purposeselect = $mform->createElement('select', 'purposeid', null, $this->_customdata['purposes']);
-        $addpurpose = $mform->createElement('button', 'addpurpose', $addicon, ['data-add-element' => 'purpose']);
-        $mform->addElement('group', 'purposegroup', get_string('purpose', 'tool_dataprivacy'), [$purposeselect, $addpurpose]);
-        $mform->setType('purposeid', PARAM_INT);
-
         $categoryselect = $mform->createElement('select', 'categoryid', null, $this->_customdata['categories']);
         $addcategory = $mform->createElement('button', 'addcategory', $addicon, ['data-add-element' => 'category']);
         $mform->addElement('group', 'categorygroup', get_string('category', 'tool_dataprivacy'), [$categoryselect, $addcategory]);
-        $mform->setType('categoryid', PARAM_INT);
+        $mform->setType('categorygroup[categoryid]', PARAM_INT);
+
+        $purposeselect = $mform->createElement('select', 'purposeid', null, $this->_customdata['purposes']);
+        $addpurpose = $mform->createElement('button', 'addpurpose', $addicon, ['data-add-element' => 'purpose']);
+        $mform->addElement('group', 'purposegroup', get_string('purpose', 'tool_dataprivacy'), [$purposeselect, $addpurpose]);
+        $mform->setType('purposegroup[purposeid]', PARAM_INT);
+
+        if ($contextlevel) {
+            list($defaultpurposeid, $defaultcategoryid) = tool_dataprivacy_get_defaults($contextlevel);
+
+            if ($defaultcategoryid) {
+                $mform->setDefault('categorygroup[categoryid]', $defaultcategoryid);
+            }
+            if ($defaultpurposeid) {
+                $mform->setDefault('purposegroup[purposeid]', $defaultpurposeid);
+            }
+        }
     }
 
     /**

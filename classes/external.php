@@ -723,9 +723,6 @@ class external extends external_api {
             $persistent = new \tool_dataprivacy\contextlevel();
         }
 
-        $levels = \context_helper::get_all_levels();
-        $class = $levels[$data['contextlevel']];
-
         $purposeoptions = \tool_dataprivacy\output\data_registry_page::purpose_options(
             \tool_dataprivacy\api::get_purposes()
         );
@@ -735,7 +732,7 @@ class external extends external_api {
 
         $customdata = [
             'contextlevel' => $data['contextlevel'],
-            'contextlevelname' => $class::get_level_name(),
+            'contextlevelname' => get_string('contextlevelname' . $data['contextlevel'], 'tool_dataprivacy'),
             'persistent' => $persistent,
             'purposes' => $purposeoptions,
             'categories' => $categoryoptions,
@@ -824,7 +821,7 @@ class external extends external_api {
         );
 
         $customdata = [
-            'contextid' => $data['contextid'],
+            'context' => $context,
             'contextname' => $context->get_context_name(),
             'persistent' => $persistent,
             'purposes' => $purposeoptions,

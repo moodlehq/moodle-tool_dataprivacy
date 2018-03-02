@@ -48,16 +48,24 @@ class defaults extends \moodleform {
         foreach ($this->_customdata['levels'] as $level => $classname) {
 
             $mform->addElement('header', $classname . '-header',
-                $classname::get_level_name());
+                get_string('contextlevelname' . $level, 'tool_dataprivacy'));
 
             list($purposevar, $categoryvar) = tool_dataprivacy_var_names_from_context($classname);
 
+            $categoryoptions = $this->_customdata['categories'];
+            $purposeoptions = $this->_customdata['purposes'];
+
+            if ($level == CONTEXT_SYSTEM) {
+                unset($categoryoptions[0]);
+                unset($purposeoptions[0]);
+            }
+
             $mform->addElement('select', $categoryvar, get_string('category', 'tool_dataprivacy'),
-                $this->_customdata['categories']);
+                $categoryoptions);
             $mform->setType($categoryvar, PARAM_INT);
 
             $mform->addElement('select', $purposevar, get_string('purpose', 'tool_dataprivacy'),
-                $this->_customdata['purposes']);
+                $purposeoptions);
             $mform->setType($purposevar, PARAM_INT);
         }
 

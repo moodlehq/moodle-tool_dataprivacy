@@ -127,7 +127,7 @@ function tool_dataprivacy_output_fragment_context_form($args) {
     );
 
     $customdata = [
-        'contextid' => $contextid,
+        'context' => $context,
         'contextname' => $context->get_context_name(),
         'persistent' => $persistent,
         'purposes' => $purposeoptions,
@@ -147,9 +147,6 @@ function tool_dataprivacy_output_fragment_contextlevel_form($args) {
 
     $contextlevel = $args[0];
 
-    $levels = \context_helper::get_all_levels();
-    $class = $levels[$contextlevel];
-
     $persistent = \tool_dataprivacy\contextlevel::get_record_by_contextlevel($contextlevel, false);
     if (!$persistent) {
         $persistent = new \tool_dataprivacy\contextlevel();
@@ -165,7 +162,7 @@ function tool_dataprivacy_output_fragment_contextlevel_form($args) {
 
     $customdata = [
         'contextlevel' => $contextlevel,
-        'contextlevelname' => $class::get_level_name(),
+        'contextlevelname' => get_string('contextlevelname' . $contextlevel, 'tool_dataprivacy'),
         'persistent' => $persistent,
         'purposes' => $purposeoptions,
         'categories' => $categoryoptions,
@@ -186,3 +183,38 @@ function tool_dataprivacy_var_names_from_context($classname) {
         $classname . '_category',
     ];
 }
+
+/**
+ * Returns the default purpose id and category id for the provided context level.
+ *
+ * The caller code is responsible of checking that $contextlevel is an integer.
+ *
+ * @param int $contextlevel
+ * @return int[]
+ */
+function tool_dataprivacy_get_defaults($contextlevel) {
+
+    $classname = \context_helper::get_class_for_level($contextlevel);
+    $purposeid = get_config('tool_dataprivacy', $classname . '_purpose');
+    $categoryid = get_config('tool_dataprivacy', $classname . '_category');
+
+    if (empty($purposeid)) {
+        $purposeid = 0;
+    }
+    if (empty($categoryid)) {
+        $categoryid = 0;
+    }
+
+    return [$purposeid, $categoryid];
+}
+
+/**
+ * Get icon mapping for font-awesome.
+ */
+//function tool_dataprivacy_get_fontawesome_icon_map() {
+    //return [
+        //'tool_dataprivacy:expanded' => 'fa-angle-down',
+        //'tool_dataprivacy:expandable' => 'fa-angle-right',
+    //];
+//}
+
