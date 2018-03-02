@@ -105,6 +105,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 trigger.addClass('active');
 
                 var contextLevel = trigger.attr('data-contextlevel');
+                var contextId = trigger.attr('data-contextid');
                 if (contextLevel) {
 
                     window.history.pushState({}, null, '?contextlevel=' + contextLevel);
@@ -116,8 +117,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                     // Load the context level form.
                     this.currentContextLevel = contextLevel;
                     this.loadForm('contextlevel_form', [this.currentContextLevel], this.submitContextLevelFormAjax.bind(this))
-                } else {
-                    var contextId = trigger.attr('data-contextid');
+                } else if (contextId) {
 
                     if (!contextId) {
                         console.error('No data-contextid attribute');
@@ -133,6 +133,8 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                     // Load the context level form.
                     this.currentContextId = contextId;
                     this.loadForm('context_form', [this.currentContextId], this.submitContextFormAjax.bind(this))
+                } else {
+                    alert('Not yet coded mate, this will trigger an ajax call + extra nodes added to the tree. Long live straya.')
                 }
 
             }.bind(this));

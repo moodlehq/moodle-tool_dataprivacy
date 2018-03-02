@@ -29,6 +29,8 @@ use renderer_base;
 use stdClass;
 use templatable;
 
+require_once($CFG->dirroot . '/lib/coursecatlib.php');
+
 /**
  * Class containing the data registry renderable
  *
@@ -94,27 +96,67 @@ class data_registry_page implements renderable, templatable {
      * @return array
      */
     private function get_tree_structure() {
+
+        // They come sorted by depth ASC.
+        $categories = \coursecat::get_all(['returnhidden' => true]);
+
+        $categoriesbranch = [];
+        while (count($categories) > 0) {
+            foreach ($categories as $key => $category) {
+
+                $newnode = [
+                    'text' => $category->name,
+                    'categoryid' => $category->id,
+                    'contextid' => \context_coursecat::instance($category->id)->id,
+                ];
+                if ($category->coursecount > 0) {
+                    $newnode['children'] = [
+                        [
+                            'text' => get_string('courses'),
+                            'categoryid' => $category->id,
+                            'expanded' => true
+                        ]
+                    ];
+                }
+
+                $added = false;
+                if ($category->parent == 0) {
+                    // New categories root-level node.
+                    $categoriesbranch[] = $newnode;
+                    $added = true;
+
+                } else {
+                    // Add the new node under the appropriate parent.
+                    if ($this->add_to_parent_category_branch($category, $newnode, $categoriesbranch)) {
+                        $added = true;
+                    }
+                }
+
+                if ($added) {
+                    unset($categories[$key]);
+                }
+            }
+        }
+
         $elements = [
-            'text' => get_string('site'),
+            'text' => get_string('contextlevelname' . CONTEXT_SYSTEM, 'tool_dataprivacy'),
             'contextlevel' => CONTEXT_SYSTEM,
             'children' => [
                 [
-                    'text' => get_string('user'),
+                    'text' => get_string('contextlevelname' . CONTEXT_USER, 'tool_dataprivacy'),
                     'contextlevel' => CONTEXT_USER,
                 ], [
-                    'text' => get_string('category'),
+                    'text' => get_string('contextlevelname' . CONTEXT_COURSECAT, 'tool_dataprivacy'),
                     'contextlevel' => CONTEXT_COURSECAT,
-                    'children' => [
-                        [
-                            'text' => get_string('course'),
-                            'contextlevel' => CONTEXT_COURSE,
-                        ]
-                    ]
+                    'children' => $categoriesbranch,
                 ], [
-                    'text' => get_string('activitymodule'),
+                    'text' => get_string('contextlevelname' . CONTEXT_COURSE, 'tool_dataprivacy'),
+                    'contextlevel' => CONTEXT_COURSE,
+                ], [
+                    'text' => get_string('contextlevelname' . CONTEXT_MODULE, 'tool_dataprivacy'),
                     'contextlevel' => CONTEXT_MODULE,
                 ], [
-                    'text' => get_string('block'),
+                    'text' => get_string('contextlevelname' . CONTEXT_BLOCK, 'tool_dataprivacy'),
                     'contextlevel' => CONTEXT_BLOCK,
                 ]
             ]
@@ -124,25 +166,76 @@ class data_registry_page implements renderable, templatable {
         return [$this->complete($elements)];
     }
 
+    private function add_to_parent_category_branch($category, $newnode, &$categoriesbranch) {
+
+        foreach ($categoriesbranch as $key => $branch) {
+            if (!empty($branch['categoryid']) && $branch['categoryid'] == $category->parent) {
+                // It may be empty (if it does not contain courses and this is the first child cat).
+                if (!isset($categoriesbranch[$key]['children'])) {
+                    $categoriesbranch[$key]['children'] = [];
+                }
+                $categoriesbranch[$key]['children'][] = $newnode;
+                return true;
+            }
+            if (!empty($branch['children'])) {
+                $parent = $this->add_to_parent_category_branch($category, $newnode, $categoriesbranch[$key]['children']);
+                if ($parent) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Completes tree nodes with default values.
      *
      * @param array $node
-     * @param int $counter
      * @return array
      */
-    private function complete($node, $counter = 0) {
+    private function complete($node) {
         if (!isset($node['active'])) {
-            $node['active'] = $this->defaultcontextlevel == $node['contextlevel'] ? true : null;
+            if ($this->defaultcontextlevel && !empty($node['contextlevel']) &&
+                    $this->defaultcontextlevel == $node['contextlevel'] &&
+                    empty($this->defaultcontextid)) {
+                // This is the active context level, we also checked that there
+                // is no default contextid set.
+                $node['active'] = true;
+            } else if ($this->defaultcontextid && !empty($node['contextid']) &&
+                    $this->defaultcontextid == $node['contextid']) {
+                $node['active'] = true;
+            } else {
+                $node['active'] = null;
+            }
         }
+
         if (!isset($node['children'])) {
             $node['children'] = null;
         } else {
             foreach ($node['children'] as $key => $childnode) {
-                $node['children'][$key] = $this->complete($childnode, $counter + 1);
+                $node['children'][$key] = $this->complete($childnode);
             }
         }
-        $node['padding'] = $counter;
+
+        if (!isset($node['contextid'])) {
+            $node['contextid'] = null;
+        }
+
+        if (!isset($node['contextlevel'])) {
+            $node['contextlevel'] = null;
+        }
+
+        if (!empty($node['children'])) {
+            $node['expandable'] = 1;
+        } else if (empty($node['expandable'])) {
+            // Apply a default value.
+            $node['expandable'] = 0;
+        }
+
+        if (empty($node['expanded'])) {
+            $node['expanded'] = null;
+        }
 
         return $node;
     }

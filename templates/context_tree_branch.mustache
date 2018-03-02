@@ -32,9 +32,11 @@
 }}
 
 
-<a class="nav-link {{#active}}active{{/active}} m-l-{{padding}} my-1" href="#" data-context-tree-node="1"
+<a class="nav-link {{#active}}active{{/active}}" href="#" data-context-tree-node="1"
         {{#contextlevel}} data-contextlevel="{{.}}" {{/contextlevel}}
-        {{#contextid}} data-contextid="{{.}}" {{/contextid}}>
+        {{#contextid}} data-contextid="{{.}}" {{/contextid}}
+        data-expandable="{{expandable}}" data-expanded="{{expanded}}">
+    <i class="fa {{#expandable}}fa-angle-down{{/expandable}}{{#expanded}}fa-angle-right{{/expanded}}"></i>
     {{text}}
 </a>
 {{#children}}
