@@ -85,7 +85,7 @@ class data_registry_page implements renderable, templatable {
         $data->categoriesurl = new \moodle_url('/admin/tool/dataprivacy/categories.php');
         $data->purposesurl = new \moodle_url('/admin/tool/dataprivacy/purposes.php');
 
-        $data->contextlevels = $this->get_tree_structure();
+        $data->branches = $this->get_default_tree_structure();
 
         return $data;
     }
@@ -95,7 +95,32 @@ class data_registry_page implements renderable, templatable {
      *
      * @return array
      */
-    private function get_tree_structure() {
+    private function get_default_tree_structure() {
+
+        $categoriesbranch = $this->get_all_categories_branch();
+
+        $elements = [
+            'text' => get_string('contextlevelname' . CONTEXT_SYSTEM, 'tool_dataprivacy'),
+            'contextlevel' => CONTEXT_SYSTEM,
+            'children' => [
+                [
+                    'text' => get_string('user'),
+                    'contextlevel' => CONTEXT_USER,
+                ], [
+                    'text' => get_string('categories', 'tool_dataprivacy'),
+                    'children' => $categoriesbranch,
+                ], [
+                    'text' => get_string('contextlevelname' . CONTEXT_BLOCK, 'tool_dataprivacy'),
+                    'contextlevel' => CONTEXT_BLOCK,
+                ]
+            ]
+        ];
+
+        // Returned as an array to follow a common array format.
+        return [self::complete($elements, $this->defaultcontextlevel, $this->defaultcontextid)];
+    }
+
+    private function get_all_categories_branch() {
 
         // They come sorted by depth ASC.
         $categories = \coursecat::get_all(['returnhidden' => true]);
@@ -104,17 +129,19 @@ class data_registry_page implements renderable, templatable {
         while (count($categories) > 0) {
             foreach ($categories as $key => $category) {
 
+                $context = \context_coursecat::instance($category->id);
                 $newnode = [
-                    'text' => $category->name,
+                    'text' => format_string($category->name, true, ['context' => $context]),
                     'categoryid' => $category->id,
-                    'contextid' => \context_coursecat::instance($category->id)->id,
+                    'contextid' => $context->id,
                 ];
                 if ($category->coursecount > 0) {
                     $newnode['children'] = [
                         [
                             'text' => get_string('courses'),
-                            'categoryid' => $category->id,
-                            'expanded' => true
+                            'expandcontextid' => $context->id,
+                            'expandelement' => 'course',
+                            'expanded' => 0,
                         ]
                     ];
                 }
@@ -138,32 +165,69 @@ class data_registry_page implements renderable, templatable {
             }
         }
 
-        $elements = [
-            'text' => get_string('contextlevelname' . CONTEXT_SYSTEM, 'tool_dataprivacy'),
-            'contextlevel' => CONTEXT_SYSTEM,
-            'children' => [
-                [
-                    'text' => get_string('contextlevelname' . CONTEXT_USER, 'tool_dataprivacy'),
-                    'contextlevel' => CONTEXT_USER,
-                ], [
-                    'text' => get_string('contextlevelname' . CONTEXT_COURSECAT, 'tool_dataprivacy'),
-                    'contextlevel' => CONTEXT_COURSECAT,
-                    'children' => $categoriesbranch,
-                ], [
-                    'text' => get_string('contextlevelname' . CONTEXT_COURSE, 'tool_dataprivacy'),
-                    'contextlevel' => CONTEXT_COURSE,
-                ], [
-                    'text' => get_string('contextlevelname' . CONTEXT_MODULE, 'tool_dataprivacy'),
-                    'contextlevel' => CONTEXT_MODULE,
-                ], [
-                    'text' => get_string('contextlevelname' . CONTEXT_BLOCK, 'tool_dataprivacy'),
-                    'contextlevel' => CONTEXT_BLOCK,
-                ]
-            ]
-        ];
+        return $categoriesbranch;
+    }
 
-        // Returned as an array to follow a common array format.
-        return [$this->complete($elements)];
+    public static function get_courses_branch(\context $catcontext) {
+
+        if ($catcontext->contextlevel !== CONTEXT_COURSECAT) {
+            throw new \coding_exception('A course category context should be provided');
+        }
+
+        $coursecat = \coursecat::get($catcontext->instanceid);
+        $courses = $coursecat->get_courses();
+
+        $branches = [];
+
+        foreach ($courses as $course) {
+            $coursecontext = \context_course::instance($course->id);
+            $coursenode = [
+                'text' => format_string($course->shortname, true, ['context' => $coursecontext]),
+                'contextid' => $coursecontext->id,
+                'children' => [
+                    [
+                        'text' => get_string('activitiesandresources', 'tool_dataprivacy'),
+                        'expandcontextid' => $coursecontext->id,
+                        'expandelement' => 'module',
+                        'expanded' => 0,
+                    ], [
+                        'text' => get_string('blocks'),
+                        'expandcontextid' => $coursecontext->id,
+                        'expandelement' => 'block',
+                        'expanded' => 0,
+                    ],
+                ]
+            ];
+            $branches[] = self::complete($coursenode);
+        }
+
+        return $branches;
+    }
+
+    public static function get_modules_branch(\context $coursecontext) {
+
+        if ($coursecontext->contextlevel !== CONTEXT_COURSE) {
+            throw new \coding_exception('A course context should be provided');
+        }
+
+        $branches = [];
+
+        // Using the current user.
+        $modinfo = get_fast_modinfo($coursecontext->instanceid);
+        foreach ($modinfo->get_instances() as $type => $instances) {
+            foreach ($instances as $cm) {
+                $branches[] = self::complete([
+                    'text' => $cm->get_formatted_name(),
+                    'contextid' => $cm->context->id,
+                ]);
+            }
+        }
+
+        return $branches;
+    }
+
+    public static function get_blocks_branch(\context $coursecontext) {
+        return [];
     }
 
     private function add_to_parent_category_branch($category, $newnode, &$categoriesbranch) {
@@ -194,16 +258,16 @@ class data_registry_page implements renderable, templatable {
      * @param array $node
      * @return array
      */
-    private function complete($node) {
+    private static function complete($node, $currentcontextlevel = false, $currentcontextid = false) {
         if (!isset($node['active'])) {
-            if ($this->defaultcontextlevel && !empty($node['contextlevel']) &&
-                    $this->defaultcontextlevel == $node['contextlevel'] &&
-                    empty($this->defaultcontextid)) {
+            if ($currentcontextlevel && !empty($node['contextlevel']) &&
+                    $currentcontextlevel == $node['contextlevel'] &&
+                    empty($currentcontextid)) {
                 // This is the active context level, we also checked that there
                 // is no default contextid set.
                 $node['active'] = true;
-            } else if ($this->defaultcontextid && !empty($node['contextid']) &&
-                    $this->defaultcontextid == $node['contextid']) {
+            } else if ($currentcontextid && !empty($node['contextid']) &&
+                    $currentcontextid == $node['contextid']) {
                 $node['active'] = true;
             } else {
                 $node['active'] = null;
@@ -211,11 +275,19 @@ class data_registry_page implements renderable, templatable {
         }
 
         if (!isset($node['children'])) {
-            $node['children'] = null;
+            $node['children'] = [];
         } else {
             foreach ($node['children'] as $key => $childnode) {
-                $node['children'][$key] = $this->complete($childnode);
+                $node['children'][$key] = self::complete($childnode, $currentcontextlevel, $currentcontextid);
             }
+        }
+
+        if (!isset($node['expandelement'])) {
+            $node['expandelement'] = null;
+        }
+
+        if (!isset($node['expandcontextid'])) {
+            $node['expandcontextid'] = null;
         }
 
         if (!isset($node['contextid'])) {
@@ -226,17 +298,17 @@ class data_registry_page implements renderable, templatable {
             $node['contextlevel'] = null;
         }
 
-        if (!empty($node['children'])) {
+        if (!empty($node['children']) || !empty($node['expandelement'])) {
             $node['expandable'] = 1;
         } else if (empty($node['expandable'])) {
             // Apply a default value.
             $node['expandable'] = 0;
         }
 
-        if (empty($node['expanded'])) {
-            $node['expanded'] = null;
+        if (!isset($node['expanded'])) {
+            // Expanded by default as we splicitly flag expandable + not expanded elements.
+            $node['expanded'] = 1;
         }
-
         return $node;
     }
 

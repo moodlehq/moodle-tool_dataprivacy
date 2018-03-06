@@ -56,10 +56,6 @@ class contextlevel extends \core\persistent {
                 'type' => PARAM_INT,
                 'description' => 'The category id.',
             ),
-            'applyallinstances' => array(
-                'type' => PARAM_INT,
-                'description' => 'Purpose and category applied to all instances of this context',
-            ),
         );
     }
 

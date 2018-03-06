@@ -143,4 +143,15 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
+    'tool_dataprivacy_tree_extra_branches' => [
+        'classname'     => 'tool_dataprivacy\external',
+        'methodname'    => 'tree_extra_branches',
+        'classpath'     => '',
+        'description'   => 'Return branches for the context tree',
+        'type'          => 'write',
+        'capabilities'  => '',
+        'ajax'          => true,
+        'loginrequired' => true,
+    ],
+
 ];

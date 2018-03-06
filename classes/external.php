@@ -45,6 +45,7 @@ use restricted_context_exception;
 use tool_dataprivacy\external\data_request_exporter;
 use tool_dataprivacy\external\category_exporter;
 use tool_dataprivacy\external\purpose_exporter;
+use tool_dataprivacy\output\data_registry_page;
 
 /**
  * Class external.
@@ -723,10 +724,10 @@ class external extends external_api {
             $persistent = new \tool_dataprivacy\contextlevel();
         }
 
-        $purposeoptions = \tool_dataprivacy\output\data_registry_page::purpose_options(
+        $purposeoptions = data_registry_page::purpose_options(
             \tool_dataprivacy\api::get_purposes()
         );
-        $categoryoptions = \tool_dataprivacy\output\data_registry_page::category_options(
+        $categoryoptions = data_registry_page::category_options(
             \tool_dataprivacy\api::get_categories()
         );
 
@@ -813,10 +814,10 @@ class external extends external_api {
             $persistent = new \tool_dataprivacy\context_instance();
         }
 
-        $purposeoptions = \tool_dataprivacy\output\data_registry_page::purpose_options(
+        $purposeoptions = data_registry_page::purpose_options(
             \tool_dataprivacy\api::get_purposes()
         );
-        $categoryoptions = \tool_dataprivacy\output\data_registry_page::category_options(
+        $categoryoptions = data_registry_page::category_options(
             \tool_dataprivacy\api::get_categories()
         );
 
@@ -864,4 +865,98 @@ class external extends external_api {
         ]);
     }
 
+    /**
+     * Parameter description for tree_extra_branches().
+     *
+     * @return external_function_parameters
+     */
+    public static function tree_extra_branches_parameters() {
+        return new external_function_parameters([
+            'contextid' => new external_value(PARAM_INT, 'The context id to expand'),
+            'element' => new external_value(PARAM_ALPHA, 'The element we are interested on')
+        ]);
+    }
+
+    /**
+     * Returns tree extra branches.
+     *
+     * @param int $contextid
+     * @param string $element
+     * @return array
+     */
+    public static function tree_extra_branches($contextid, $element) {
+
+        $params = external_api::validate_parameters(self::tree_extra_branches_parameters(), [
+            'contextid' => $contextid,
+            'element' => $element,
+        ]);
+
+        $context = \context_helper::instance_by_id($params['contextid']);
+
+        self::validate_context($context);
+        api::check_can_manage_data_registry($context->id);
+
+        switch ($params['element']) {
+            case 'course':
+                $branches = data_registry_page::get_courses_branch($context);
+                break;
+            case 'module':
+                $branches = data_registry_page::get_modules_branch($context);
+                break;
+            case 'block':
+                $branches = data_registry_page::get_blocks_branch($context);
+                break;
+            default:
+                throw new \moodle_exception('Unsupported element provided.');
+        }
+
+        return [
+            'branches' => $branches,
+            'warnings' => [],
+        ];
+    }
+
+    /**
+     * Returns for tree_extra_branches().
+     *
+     * @return external_single_structure
+     */
+    public static function tree_extra_branches_returns() {
+        return new external_single_structure([
+            'branches' => new external_multiple_structure(self::get_tree_node_structure(true)),
+            'warnings' => new external_warnings()
+        ]);
+    }
+
+    private static function get_tree_node_structure($children = true) {
+        $fields = [
+            'text' => new external_value(PARAM_TEXT, 'The node text', VALUE_REQUIRED),
+            'expandcontextid' => new external_value(PARAM_INT, 'The contextid this node expands', VALUE_REQUIRED),
+            'expandelement' => new external_value(PARAM_ALPHA, 'What element is this node expanded to', VALUE_REQUIRED),
+            'contextid' => new external_value(PARAM_INT, 'The node contextid (only useful if expandable)', VALUE_REQUIRED),
+            'contextlevel' => new external_value(PARAM_INT, 'The node contextlevel', VALUE_REQUIRED),
+            'expandable' => new external_value(PARAM_INT, 'Is it expandable', VALUE_REQUIRED),
+            'expanded' => new external_value(PARAM_INT, 'Is it expanded', VALUE_REQUIRED),
+        ];
+
+        if ($children) {
+            // Passing false as we will not have more than 1 children level.
+            $fields['children'] = new external_multiple_structure(
+                self::get_tree_node_structure(false),
+                'Children node structure',
+                VALUE_OPTIONAL
+            );
+        } else {
+            // We need to add something here as mustache needs a null, otherwise we get into an infinite loop.
+            $fields['children'] = new external_multiple_structure(
+                new external_value(
+                    PARAM_TEXT,
+                    'Nothing really, it will always be null',
+                    VALUE_OPTIONAL
+                )
+            );
+        }
+
+        return new external_single_structure($fields, 'Node structure', VALUE_OPTIONAL);
+    }
 }

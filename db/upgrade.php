@@ -127,7 +127,6 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
         $table->add_field('contextlevel', XMLDB_TYPE_INTEGER, '3', null, XMLDB_NOTNULL, null, null);
         $table->add_field('purposeid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NULL, null, null);
         $table->add_field('categoryid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NULL, null, null);
-        $table->add_field('applyallinstances', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, null);
         $table->add_field('usermodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);

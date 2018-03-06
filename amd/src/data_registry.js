@@ -16,9 +16,9 @@
 /**
  * Request actions.
  *
- * @module     tool_dataprivacy/data_request_modal
+ * @module     tool_dataprivacy/data_registry
  * @package    tool_dataprivacy
- * @copyright  2018 Jun Pataleta
+ * @copyright  2018 David Monllao
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates', 'core/modal_factory', 'core/modal_events', 'core/fragment',
@@ -104,9 +104,10 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 $(SELECTORS.TREE_NODES).removeClass('active');
                 trigger.addClass('active');
 
-                var contextLevel = trigger.attr('data-contextlevel');
-                var contextId = trigger.attr('data-contextid');
+                var contextLevel = trigger.data('contextlevel');
+                var contextId = trigger.data('contextid');
                 if (contextLevel) {
+                    // Context level level.
 
                     window.history.pushState({}, null, '?contextlevel=' + contextLevel);
 
@@ -118,6 +119,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                     this.currentContextLevel = contextLevel;
                     this.loadForm('contextlevel_form', [this.currentContextLevel], this.submitContextLevelFormAjax.bind(this))
                 } else if (contextId) {
+                    // Context instance level.
 
                     if (!contextId) {
                         console.error('No data-contextid attribute');
@@ -134,7 +136,21 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                     this.currentContextId = contextId;
                     this.loadForm('context_form', [this.currentContextId], this.submitContextFormAjax.bind(this))
                 } else {
-                    alert('Not yet coded mate, this will trigger an ajax call + extra nodes added to the tree. Long live straya.')
+                    // Expandable nodes.
+
+                    var expandContextId = trigger.data('expandcontextid');
+                    var expandElement = trigger.data('expandelement');
+                    var expanded = trigger.data('expanded');
+                    // TODO All collapse stuff if the data is already loaded.
+                    if (!expanded) {
+                        if (trigger.data('loaded') || !expandContextId || !expandElement) {
+                            this.expand(trigger);
+                        } else {
+                            this.loadExtra(trigger, expandContextId, expandElement);
+                        }
+                    } else {
+                        this.collapse(trigger);
+                    }
                 }
 
             }.bind(this));
@@ -210,6 +226,50 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 }]);
             }.bind(this));
 
+        };
+
+        DataRegistry.prototype.loadExtra = function(parentNode, expandContextId, expandElement) {
+
+            Ajax.call([{
+                methodname: 'tool_dataprivacy_tree_extra_branches',
+                args: {
+                    contextid: expandContextId,
+                    element: expandElement,
+                },
+                done: function(data) {
+                    if (data.branches.length == 0) {
+                        // TODO Show a message or something.
+                        return;
+                    }
+                    // TODO Ugly, change this.
+                    return Templates.render('tool_dataprivacy/context_tree', data)
+                        .then(function(html) {
+                            parentNode.after(html);
+                            this.removeListeners();
+                            this.registerEventListeners();
+                            this.expand(parentNode);
+                            parentNode.data('loaded', 1);
+                        }.bind(this))
+                        .fail(Notification.exception);
+                }.bind(this),
+                fail: Notification.exception
+            }]);
+        };
+
+        DataRegistry.prototype.collapse = function(node) {
+            node.data('expanded', 0);
+            var nav = node.next('nav');
+            nav.addClass('hidden');
+            node.find('> i').removeClass('fa-folder-open');
+            node.find('> i').addClass('fa-folder');
+        };
+
+        DataRegistry.prototype.expand = function(node) {
+            node.data('expanded', 1);
+            var nav = node.next('nav');
+            nav.removeClass('hidden');
+            node.find('> i').removeClass('fa-folder');
+            node.find('> i').addClass('fa-folder-open');
         };
         return /** @alias module:tool_dataprivacy/data_registry */ {
 

@@ -51,10 +51,6 @@ class contextlevel extends context_instance {
 
         $this->add_purpose_category();
 
-        // Add apply to all instances checkbox.
-        $this->_form->addElement('advcheckbox', 'applyallinstances', get_string('applyallinstances', 'tool_dataprivacy'),
-            get_string('applyallinstanceslabel', 'tool_dataprivacy'));
-
         $this->_form->addElement('hidden', 'contextlevel');
         $this->_form->setType('contextlevel', PARAM_INT);
 

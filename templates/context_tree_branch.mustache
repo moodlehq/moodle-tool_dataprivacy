@@ -35,8 +35,15 @@
 <a class="nav-link {{#active}}active{{/active}}" href="#" data-context-tree-node="1"
         {{#contextlevel}} data-contextlevel="{{.}}" {{/contextlevel}}
         {{#contextid}} data-contextid="{{.}}" {{/contextid}}
+        {{#expandcontextid}} data-expandcontextid="{{.}}" {{/expandcontextid}}
+        {{#expandelement}} data-expandelement="{{.}}" {{/expandelement}}
         data-expandable="{{expandable}}" data-expanded="{{expanded}}">
-    <i class="fa {{#expandable}}fa-angle-down{{/expandable}}{{#expanded}}fa-angle-right{{/expanded}}"></i>
+    <i class="fa
+        {{#expandable}}{{#expanded}}fa-folder-open{{/expanded}}{{/expandable}}
+        {{#expandable}}{{^expanded}}fa-folder{{/expanded}}{{/expandable}}
+        {{^expandable}}fa-file{{/expandable}}"
+        >
+    </i>
     {{text}}
 </a>
 {{#children}}

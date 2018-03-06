@@ -606,25 +606,12 @@ class api {
 
         if ($contextlevel = \tool_dataprivacy\contextlevel::get_record_by_contextlevel($record->contextlevel, false)) {
             // Update.
-            $prevapplyallinstances = $contextlevel->get('applyallinstances');
             $contextlevel->from_record($record);
         } else {
             // Add.
             $contextlevel = new \tool_dataprivacy\contextlevel(0, $record);
         }
         $contextlevel->save();
-
-        if (empty($record->id) || ($record->applyallinstances == 1 and $prevapplyallinstances == 0)) {
-            // New contextlevel record or updated to remove all overrides.
-            $sql = "SELECT ci.* FROM {dataprivacy_context_instance} ci
-                      JOIN {context} ctx ON ctx.id = ci.contextid
-                     WHERE ctx.contextlevel = :contextlevel";
-            $contextinstances = $DB->get_recordset_sql($sql, array('contextlevel' => $record->contextlevel));
-            foreach ($contextinstances as $record) {
-                $instance = new \tool_dataprivacy\context_instance(0, $record);
-                self::unset_context_instance($instance);
-            }
-        }
 
         return $contextlevel;
     }
