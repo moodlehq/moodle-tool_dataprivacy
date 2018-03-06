@@ -35,6 +35,7 @@
                 "name" : "Purpose 1",
                 "description": "<strong>Purpose 1 description</strong>",
                 "retentionperiod": 86400,
+                "protected": 1,
                 "formattedretentionperiod": "1 day",
                 "actions": [
                 ]
@@ -42,6 +43,7 @@
                 "name" : "Purpose 2",
                 "description": "<strong>Purpose 2 description</strong>",
                 "retentionperiod": 7200,
+                "protected": 0,
                 "formattedretentionperiod": "2 hours",
                 "actions": [
                 ]
@@ -69,6 +71,7 @@
                 <th scope="col">{{#str}}name{{/str}}</th>
                 <th scope="col">{{#str}}description{{/str}}</th>
                 <th scope="col">{{#str}}retentionperiod, tool_dataprivacy{{/str}}</th>
+                <th scope="col">{{#str}}protected, tool_dataprivacy{{/str}}</th>
                 <th scope="col">{{#str}}actions{{/str}}</th>
             </tr>
         </thead>
@@ -78,6 +81,14 @@
                 <td>{{{name}}}</td>
                 <td>{{{description}}}</td>
                 <td>{{formattedretentionperiod}}</td>
+                <td>
+                    {{#protected}}
+                        {{#pix}}i/checked, core, {{#str}}yes{{/str}}{{/pix}}
+                    {{/protected}}
+                    {{^protected}}
+                        {{#str}}no{{/str}}
+                    {{/protected}}
+                </td>
                 <td>
                     {{#actions}}
                         {{> core/action_menu}}

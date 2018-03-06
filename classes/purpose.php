@@ -63,6 +63,11 @@ class purpose extends \core\persistent {
                 'type' => PARAM_INT,
                 'description' => 'Retention period. Time to store the data since it is not used any more. In seconds.',
             ),
+            'protected' => array(
+                'type' => PARAM_INT,
+                'description' => 'Data retention with higher precedent over user\'s request to be forgotten.',
+                'default' => '0',
+            ),
         );
     }
 }

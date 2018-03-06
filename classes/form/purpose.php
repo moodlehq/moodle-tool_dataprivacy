@@ -58,6 +58,9 @@ class purpose extends persistent {
         $mform->addElement('duration', 'retentionperiod', get_string('retentionperiod', 'tool_dataprivacy'));
         //$mform->addRule('retentionperiod', null, 'numeric', null, 'client');
 
+        $this->_form->addElement('advcheckbox', 'protected', get_string('protected', 'tool_dataprivacy'),
+            get_string('protectedlabel', 'tool_dataprivacy'));
+
         if (!empty($this->_customdata['showbuttons'])) {
             if (!$this->get_persistent()->get('id')) {
                 $savetext = get_string('add');

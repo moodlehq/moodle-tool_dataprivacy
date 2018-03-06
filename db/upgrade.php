@@ -45,6 +45,7 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
         $table->add_field('description', XMLDB_TYPE_TEXT, null, null, null, null, null);
         $table->add_field('descriptionformat', XMLDB_TYPE_INTEGER, '1', null, null, null, null);
         $table->add_field('retentionperiod', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('protected', XMLDB_TYPE_INTEGER, '1', null, null, null, null);
         $table->add_field('usermodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
