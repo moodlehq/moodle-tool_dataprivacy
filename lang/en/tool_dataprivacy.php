@@ -89,6 +89,7 @@ $string['messageprovider:contactdataprotectionofficer'] = 'Data requests';
 $string['messageprovider:datarequestprocessingresults'] = 'Data request processing results';
 $string['message'] = 'Message';
 $string['messagelabel'] = 'Message:';
+$string['moduleinstancename'] = '{$a->instancename} ({$a->modulename})';
 $string['mypersonaldatarequests'] = 'My personal data requests';
 $string['nameemail'] = '{$a->name} ({$a->email})';
 $string['newrequest'] = 'New request';

@@ -29,7 +29,8 @@ use renderer_base;
 use stdClass;
 use templatable;
 
-require_once($CFG->dirroot . '/lib/coursecatlib.php');
+require_once($CFG->libdir . '/coursecatlib.php');
+require_once($CFG->libdir . '/blocklib.php');
 
 /**
  * Class containing the data registry renderable
@@ -230,10 +231,17 @@ class data_registry_page implements renderable, templatable {
 
         // Using the current user.
         $modinfo = get_fast_modinfo($coursecontext->instanceid);
-        foreach ($modinfo->get_instances() as $type => $instances) {
+        foreach ($modinfo->get_instances() as $moduletype => $instances) {
             foreach ($instances as $cm) {
+
+                $a = (object)[
+                    'instancename' => $cm->get_formatted_name(),
+                    'modulename' => get_string('pluginname', 'mod_' . $moduletype),
+                ];
+
+                $text = get_string('moduleinstancename', 'tool_dataprivacy', $a);
                 $branches[] = self::complete([
-                    'text' => $cm->get_formatted_name(),
+                    'text' => $text,
                     'contextid' => $cm->context->id,
                 ]);
             }
@@ -242,8 +250,36 @@ class data_registry_page implements renderable, templatable {
         return $branches;
     }
 
+    /**
+     * Gets the blocks branch for the provided course.
+     *
+     * @param \context $coursecontext
+     * @return null
+     */
     public static function get_blocks_branch(\context $coursecontext) {
-        return [];
+
+        if ($coursecontext->contextlevel !== CONTEXT_COURSE) {
+            throw new \coding_exception('A course context should be provided');
+        }
+
+        $branches = [];
+
+        $blockinstances = \core_block_external::get_course_blocks($coursecontext->instanceid);
+        if (empty($blockinstances['blocks'])) {
+            return $branches;
+        }
+
+        foreach ($blockinstances['blocks'] as $bi) {
+            $blockinstance = block_instance_by_id($bi['instanceid']);
+            $blockcontext = \context_block::instance($bi['instanceid']);
+            $branches[] = self::complete([
+                'text' => format_string($blockinstance->get_title(), true, ['context' => $blockcontext->id]),
+                'contextid' => $blockcontext->id,
+            ]);
+        }
+
+        return $branches;
+
     }
 
     /**
