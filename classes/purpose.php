@@ -24,6 +24,8 @@
 namespace tool_dataprivacy;
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/dataprivacy/lib.php');
+
 /**
  * Class for loading/storing data purposes from the DB.
  *
@@ -69,5 +71,30 @@ class purpose extends \core\persistent {
                 'default' => '0',
             ),
         );
+    }
+
+    /**
+     * Is this purpose used?.
+     *
+     * @return null
+     */
+    public function is_used() {
+
+        if (\tool_dataprivacy\contextlevel::is_purpose_used($this->get('id')) ||
+                \tool_dataprivacy\context_instance::is_purpose_used($this->get('id'))) {
+            return true;
+        }
+
+        $pluginconfig = get_config('tool_dataprivacy');
+        $levels = \context_helper::get_all_levels();
+        foreach ($levels as $level => $classname) {
+
+            list($purposevar, $unused) = tool_dataprivacy_var_names_from_context($classname);
+            if (!empty($pluginconfig->{$purposevar}) && $pluginconfig->{$purposevar} == $this->get('id')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

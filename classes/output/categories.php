@@ -72,11 +72,11 @@ class categories extends crud_element implements renderable, templatable {
         $data->categories = [];
         foreach ($this->categories as $category) {
             $exporter = new category_exporter($category, ['context' => \context_system::instance()]);
-            $category = $exporter->export($output);
+            $exportedcategory = $exporter->export($output);
 
-            $actionmenu = $this->action_menu('category', $category->id, $category->name);
-            $category->actions = $actionmenu->export_for_template($output);
-            $data->categories[] = $category;
+            $actionmenu = $this->action_menu('category', $exportedcategory, $category);
+            $exportedcategory->actions = $actionmenu->export_for_template($output);
+            $data->categories[] = $exportedcategory;
         }
 
         return $data;

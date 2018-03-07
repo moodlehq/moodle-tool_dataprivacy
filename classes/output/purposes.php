@@ -72,11 +72,11 @@ class purposes extends crud_element implements renderable, templatable {
         $data->purposes = [];
         foreach ($this->purposes as $purpose) {
             $exporter = new purpose_exporter($purpose, ['context' => \context_system::instance()]);
-            $purpose = $exporter->export($output);
+            $exportedpurpose = $exporter->export($output);
 
-            $actionmenu = $this->action_menu('purpose', $purpose->id, $purpose->name);
-            $purpose->actions = $actionmenu->export_for_template($output);
-            $data->purposes[] = $purpose;
+            $actionmenu = $this->action_menu('purpose', $exportedpurpose, $purpose);
+            $exportedpurpose->actions = $actionmenu->export_for_template($output);
+            $data->purposes[] = $exportedpurpose;
         }
 
         return $data;

@@ -56,30 +56,35 @@ abstract class crud_element {
     /**
      * Adds an action menu for the provided element
      *
-     * @param string $elementname
-     * @param int $id
-     * @param string $name
+     * @param string $elementname 'purpose' or 'category'.
+     * @param \stdClass $exported
+     * @param \core\persistent $persistent
      * @return \action_menu
      */
-    protected final function action_menu($elementname, $id, $name) {
+    protected final function action_menu($elementname, $exported, $persistent) {
+
+        // Just in case, we are doing funny stuff below.
+        $elementname = clean_param($elementname, PARAM_ALPHA);
 
         // Actions.
         $actionmenu = new \action_menu();
         $actionmenu->set_menu_trigger(get_string('actions'));
-        $actionmenu->set_owner_selector($elementname . '-' . $id . '-actions');
+        $actionmenu->set_owner_selector($elementname . '-' . $exported->id . '-actions');
         $actionmenu->set_alignment(\action_menu::TL, \action_menu::BL);
 
         $url = new \moodle_url('/admin/tool/dataprivacy/edit' . $elementname . '.php',
-            ['id' => $id]);
+            ['id' => $exported->id]);
         $link = new \action_menu_link_secondary($url, new \pix_icon('t/edit',
             get_string('edit')), get_string('edit'));
         $actionmenu->add($link);
 
-        $url = new \moodle_url('#');
-        $attrs = ['data-id' => $id, 'data-action' => 'delete' . $elementname, 'data-name' => $name];
-        $link = new \action_menu_link_secondary($url, new \pix_icon('t/delete',
-            get_string('delete')), get_string('delete'), $attrs);
-        $actionmenu->add($link);
+        if (!$persistent->is_used()) {
+            $url = new \moodle_url('#');
+            $attrs = ['data-id' => $exported->id, 'data-action' => 'delete' . $elementname, 'data-name' => $exported->name];
+            $link = new \action_menu_link_secondary($url, new \pix_icon('t/delete',
+                get_string('delete')), get_string('delete'), $attrs);
+            $actionmenu->add($link);
+        }
 
         return $actionmenu;
     }

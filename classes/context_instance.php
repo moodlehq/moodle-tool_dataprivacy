@@ -81,4 +81,26 @@ class context_instance extends \core\persistent {
 
         return new static(0, $record);
     }
+
+    /**
+     * Is the provided purpose used by any context instance?
+     *
+     * @param int $purposeid
+     * @return bool
+     */
+    public static function is_purpose_used($purposeid) {
+        global $DB;
+        return $DB->record_exists(self::TABLE, array('purposeid' => $purposeid));
+    }
+
+    /**
+     * Is the provided category used by any context instance?
+     *
+     * @param int $categoryid
+     * @return bool
+     */
+    public static function is_category_used($categoryid) {
+        global $DB;
+        return $DB->record_exists(self::TABLE, array('categoryid' => $categoryid));
+    }
 }

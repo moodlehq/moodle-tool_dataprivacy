@@ -483,6 +483,9 @@ class api {
         self::check_can_manage_data_registry();
 
         $purpose = new \tool_dataprivacy\purpose($id);
+        if ($purpose->is_used()) {
+            throw new \moodle_exception('Purpose with id ' . $id . ' can not be deleted because it is used.');
+        }
         return $purpose->delete();
     }
 
@@ -539,6 +542,9 @@ class api {
         self::check_can_manage_data_registry();
 
         $category = new \tool_dataprivacy\category($id);
+        if ($category->is_used()) {
+            throw new \moodle_exception('Category with id ' . $id . ' can not be deleted because it is used.');
+        }
         return $category->delete();
     }
 

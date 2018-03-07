@@ -24,6 +24,8 @@
 namespace tool_dataprivacy;
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/dataprivacy/lib.php');
+
 /**
  * Class for loading/storing data categories from the DB.
  *
@@ -60,5 +62,30 @@ class category extends \core\persistent {
                 'default' => FORMAT_HTML
             ),
         );
+    }
+
+    /**
+     * Is this category used?.
+     *
+     * @return null
+     */
+    public function is_used() {
+
+        if (\tool_dataprivacy\contextlevel::is_category_used($this->get('id')) ||
+                \tool_dataprivacy\context_instance::is_category_used($this->get('id'))) {
+            return true;
+        }
+
+        $pluginconfig = get_config('tool_dataprivacy');
+        $levels = \context_helper::get_all_levels();
+        foreach ($levels as $level => $classname) {
+
+            list($unused, $categoryvar) = tool_dataprivacy_var_names_from_context($classname);
+            if (!empty($pluginconfig->{$categoryvar}) && $pluginconfig->{$categoryvar} == $this->get('id')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
