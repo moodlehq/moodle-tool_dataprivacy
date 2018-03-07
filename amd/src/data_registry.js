@@ -76,9 +76,17 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 {
                     key: 'changessaved',
                     component: 'moodle'
-                },
-                {
+                }, {
                     key: 'contextpurposecategorysaved',
+                    component: 'tool_dataprivacy'
+                }, {
+                    key: 'noblockstoload',
+                    component: 'tool_dataprivacy'
+                }, {
+                    key: 'noactivitiestoload',
+                    component: 'tool_dataprivacy'
+                }, {
+                    key: 'nocoursestoload',
                     component: 'tool_dataprivacy'
                 }
             ];
@@ -141,15 +149,19 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                     var expandContextId = trigger.data('expandcontextid');
                     var expandElement = trigger.data('expandelement');
                     var expanded = trigger.data('expanded');
-                    // TODO All collapse stuff if the data is already loaded.
-                    if (!expanded) {
-                        if (trigger.data('loaded') || !expandContextId || !expandElement) {
-                            this.expand(trigger);
+
+                    // Extra checking that there is an expandElement because we remove it after loading 0 branches.
+                    if (expandElement) {
+
+                        if (!expanded) {
+                            if (trigger.data('loaded') || !expandContextId || !expandElement) {
+                                this.expand(trigger);
+                            } else {
+                                this.loadExtra(trigger, expandContextId, expandElement);
+                            }
                         } else {
-                            this.loadExtra(trigger, expandContextId, expandElement);
+                            this.collapse(trigger);
                         }
-                    } else {
-                        this.collapse(trigger);
                     }
                 }
 
@@ -238,11 +250,11 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 },
                 done: function(data) {
                     if (data.branches.length == 0) {
-                        // TODO Show a message or something.
+                        this.noElements(parentNode, expandElement);
                         return;
                     }
                     // TODO Ugly, change this.
-                    return Templates.render('tool_dataprivacy/context_tree', data)
+                    return Templates.render('tool_dataprivacy/context_tree_branches', data)
                         .then(function(html) {
                             parentNode.after(html);
                             this.removeListeners();
@@ -254,6 +266,23 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 }.bind(this),
                 fail: Notification.exception
             }]);
+        };
+
+        DataRegistry.prototype.noElements = function(node, expandElement) {
+            // TODO Check what is going wrong with this, not working with data() nor removeData()...
+            node.data('expandcontextid', 0);
+            node.data('expandelement', 0);
+            this.strings.then(function(strings) {
+
+                // 2 = blocks, 3 = activities, 4 = courses (although courses is not likely really).
+                var key = 2;
+                if (expandElement == 'module') {
+                    key = 3;
+                } else if (expandElement == 'course') {
+                    key = 4
+                }
+                node.text(strings[key]);
+            });
         };
 
         DataRegistry.prototype.collapse = function(node) {

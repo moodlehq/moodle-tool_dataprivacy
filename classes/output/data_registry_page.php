@@ -86,7 +86,7 @@ class data_registry_page implements renderable, templatable {
         $data->categoriesurl = new \moodle_url('/admin/tool/dataprivacy/categories.php');
         $data->purposesurl = new \moodle_url('/admin/tool/dataprivacy/purposes.php');
 
-        $data->branches = $this->get_default_tree_structure();
+        $data->tree = $this->get_default_tree_structure();
 
         return $data;
     }
@@ -98,18 +98,18 @@ class data_registry_page implements renderable, templatable {
      */
     private function get_default_tree_structure() {
 
-        $categoriesbranch = $this->get_all_categories_branch();
+        $categorybranches = $this->get_all_category_branches();
 
         $elements = [
             'text' => get_string('contextlevelname' . CONTEXT_SYSTEM, 'tool_dataprivacy'),
             'contextlevel' => CONTEXT_SYSTEM,
-            'children' => [
+            'branches' => [
                 [
                     'text' => get_string('user'),
                     'contextlevel' => CONTEXT_USER,
                 ], [
                     'text' => get_string('categories', 'tool_dataprivacy'),
-                    'children' => $categoriesbranch,
+                    'branches' => $categorybranches,
                     'expandelement' => 'category',
                 ], [
                     'text' => get_string('contextlevelname' . CONTEXT_MODULE, 'tool_dataprivacy'),
@@ -125,7 +125,12 @@ class data_registry_page implements renderable, templatable {
         return [self::complete($elements, $this->defaultcontextlevel, $this->defaultcontextid)];
     }
 
-    private function get_all_categories_branch() {
+    /**
+     * Returns the hierarchy of system course categories.
+     *
+     * @return array
+     */
+    private function get_all_category_branches() {
 
         // They come sorted by depth ASC.
         $categories = \coursecat::get_all(['returnhidden' => true]);
@@ -141,7 +146,7 @@ class data_registry_page implements renderable, templatable {
                     'contextid' => $context->id,
                 ];
                 if ($category->coursecount > 0) {
-                    $newnode['children'] = [
+                    $newnode['branches'] = [
                         [
                             'text' => get_string('courses'),
                             'expandcontextid' => $context->id,
@@ -195,7 +200,7 @@ class data_registry_page implements renderable, templatable {
             $coursenode = [
                 'text' => format_string($course->shortname, true, ['context' => $coursecontext]),
                 'contextid' => $coursecontext->id,
-                'children' => [
+                'branches' => [
                     [
                         'text' => get_string('activitiesandresources', 'tool_dataprivacy'),
                         'expandcontextid' => $coursecontext->id,
@@ -285,7 +290,7 @@ class data_registry_page implements renderable, templatable {
     /**
      * Adds the provided category to the categories branch.
      *
-     * @param \stdClass $category
+     * @param stdClass $category
      * @param array $newnode
      * @param array $categoriesbranch
      * @return bool
@@ -295,14 +300,14 @@ class data_registry_page implements renderable, templatable {
         foreach ($categoriesbranch as $key => $branch) {
             if (!empty($branch['categoryid']) && $branch['categoryid'] == $category->parent) {
                 // It may be empty (if it does not contain courses and this is the first child cat).
-                if (!isset($categoriesbranch[$key]['children'])) {
-                    $categoriesbranch[$key]['children'] = [];
+                if (!isset($categoriesbranch[$key]['branches'])) {
+                    $categoriesbranch[$key]['branches'] = [];
                 }
-                $categoriesbranch[$key]['children'][] = $newnode;
+                $categoriesbranch[$key]['branches'][] = $newnode;
                 return true;
             }
-            if (!empty($branch['children'])) {
-                $parent = $this->add_to_parent_category_branch($category, $newnode, $categoriesbranch[$key]['children']);
+            if (!empty($branch['branches'])) {
+                $parent = $this->add_to_parent_category_branch($category, $newnode, $categoriesbranch[$key]['branches']);
                 if ($parent) {
                     return true;
                 }
@@ -334,11 +339,11 @@ class data_registry_page implements renderable, templatable {
             }
         }
 
-        if (!isset($node['children'])) {
-            $node['children'] = [];
+        if (!isset($node['branches'])) {
+            $node['branches'] = [];
         } else {
-            foreach ($node['children'] as $key => $childnode) {
-                $node['children'][$key] = self::complete($childnode, $currentcontextlevel, $currentcontextid);
+            foreach ($node['branches'] as $key => $childnode) {
+                $node['branches'][$key] = self::complete($childnode, $currentcontextlevel, $currentcontextid);
             }
         }
 
@@ -359,7 +364,7 @@ class data_registry_page implements renderable, templatable {
         }
 
         if (!isset($node['expanded'])) {
-            if (!empty($node['children'])) {
+            if (!empty($node['branches'])) {
                 $node['expanded'] = 1;
             } else {
                 $node['expanded'] = 0;

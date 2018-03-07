@@ -928,7 +928,13 @@ class external extends external_api {
         ]);
     }
 
-    private static function get_tree_node_structure($children = true) {
+    /**
+     * Gets the structure of a tree node (link + child branches).
+     *
+     * @param bool $allowchildbranches
+     * @return array
+     */
+    private static function get_tree_node_structure($allowchildbranches = true) {
         $fields = [
             'text' => new external_value(PARAM_TEXT, 'The node text', VALUE_REQUIRED),
             'expandcontextid' => new external_value(PARAM_INT, 'The contextid this node expands', VALUE_REQUIRED),
@@ -938,19 +944,20 @@ class external extends external_api {
             'expanded' => new external_value(PARAM_INT, 'Is it expanded', VALUE_REQUIRED),
         ];
 
-        if ($children) {
-            // Passing false as we will not have more than 1 children level.
-            $fields['children'] = new external_multiple_structure(
+        if ($allowchildbranches) {
+            // Passing false as we will not have more than 1 sub-level.
+            $fields['branches'] = new external_multiple_structure(
                 self::get_tree_node_structure(false),
                 'Children node structure',
                 VALUE_OPTIONAL
             );
         } else {
-            // We need to add something here as mustache needs a null, otherwise we get into an infinite loop.
-            $fields['children'] = new external_multiple_structure(
+            // We will only have 1 sub-level and we don't want an infinite get_tree_node_structure, this is a hacky
+            // way to prevent this infinite loop when calling get_tree_node_structure recursively.
+            $fields['branches'] = new external_multiple_structure(
                 new external_value(
                     PARAM_TEXT,
-                    'Nothing really, it will always be null',
+                    'Nothing really, it will always be an empty array',
                     VALUE_OPTIONAL
                 )
             );
