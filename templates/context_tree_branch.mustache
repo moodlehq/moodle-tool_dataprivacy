@@ -37,11 +37,12 @@
         {{#contextid}} data-contextid="{{.}}" {{/contextid}}
         {{#expandcontextid}} data-expandcontextid="{{.}}" {{/expandcontextid}}
         {{#expandelement}} data-expandelement="{{.}}" {{/expandelement}}
-        data-expandable="{{expandable}}" data-expanded="{{expanded}}">
+        data-expanded="{{expanded}}">
     <i class="fa
-        {{#expandable}}{{#expanded}}fa-folder-open{{/expanded}}{{/expandable}}
-        {{#expandable}}{{^expanded}}fa-folder{{/expanded}}{{/expandable}}
-        {{^expandable}}fa-file{{/expandable}}"
+        {{#expandelement}}{{#expanded}}fa-minus{{/expanded}}{{/expandelement}}
+        {{#expandelement}}{{^expanded}}fa-plus{{/expanded}}{{/expandelement}}
+        {{^expandelement}}{{#expanded}}fa-folder-open{{/expanded}}{{/expandelement}}
+        {{^expandelement}}{{^expanded}}fa-file{{/expanded}}{{/expandelement}}"
         >
     </i>
     {{text}}

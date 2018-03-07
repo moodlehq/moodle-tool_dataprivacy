@@ -109,6 +109,10 @@ class data_registry_page implements renderable, templatable {
                 ], [
                     'text' => get_string('categories', 'tool_dataprivacy'),
                     'children' => $categoriesbranch,
+                    'expandelement' => 'category',
+                ], [
+                    'text' => get_string('contextlevelname' . CONTEXT_MODULE, 'tool_dataprivacy'),
+                    'contextlevel' => CONTEXT_MODULE,
                 ], [
                     'text' => get_string('contextlevelname' . CONTEXT_BLOCK, 'tool_dataprivacy'),
                     'contextlevel' => CONTEXT_BLOCK,
@@ -168,6 +172,12 @@ class data_registry_page implements renderable, templatable {
         return $categoriesbranch;
     }
 
+    /**
+     * Gets the courses branch for the provided category.
+     *
+     * @param \context $catcontext
+     * @return array
+     */
     public static function get_courses_branch(\context $catcontext) {
 
         if ($catcontext->contextlevel !== CONTEXT_COURSECAT) {
@@ -204,6 +214,12 @@ class data_registry_page implements renderable, templatable {
         return $branches;
     }
 
+    /**
+     * Gets the modules branch for the provided course.
+     *
+     * @param \context $coursecontext
+     * @return array
+     */
     public static function get_modules_branch(\context $coursecontext) {
 
         if ($coursecontext->contextlevel !== CONTEXT_COURSE) {
@@ -230,6 +246,14 @@ class data_registry_page implements renderable, templatable {
         return [];
     }
 
+    /**
+     * Adds the provided category to the categories branch.
+     *
+     * @param \stdClass $category
+     * @param array $newnode
+     * @param array $categoriesbranch
+     * @return bool
+     */
     private function add_to_parent_category_branch($category, $newnode, &$categoriesbranch) {
 
         foreach ($categoriesbranch as $key => $branch) {
@@ -298,16 +322,12 @@ class data_registry_page implements renderable, templatable {
             $node['contextlevel'] = null;
         }
 
-        if (!empty($node['children']) || !empty($node['expandelement'])) {
-            $node['expandable'] = 1;
-        } else if (empty($node['expandable'])) {
-            // Apply a default value.
-            $node['expandable'] = 0;
-        }
-
         if (!isset($node['expanded'])) {
-            // Expanded by default as we splicitly flag expandable + not expanded elements.
-            $node['expanded'] = 1;
+            if (!empty($node['children'])) {
+                $node['expanded'] = 1;
+            } else {
+                $node['expanded'] = 0;
+            }
         }
         return $node;
     }

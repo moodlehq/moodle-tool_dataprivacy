@@ -933,9 +933,8 @@ class external extends external_api {
             'text' => new external_value(PARAM_TEXT, 'The node text', VALUE_REQUIRED),
             'expandcontextid' => new external_value(PARAM_INT, 'The contextid this node expands', VALUE_REQUIRED),
             'expandelement' => new external_value(PARAM_ALPHA, 'What element is this node expanded to', VALUE_REQUIRED),
-            'contextid' => new external_value(PARAM_INT, 'The node contextid (only useful if expandable)', VALUE_REQUIRED),
+            'contextid' => new external_value(PARAM_INT, 'The node contextid', VALUE_REQUIRED),
             'contextlevel' => new external_value(PARAM_INT, 'The node contextlevel', VALUE_REQUIRED),
-            'expandable' => new external_value(PARAM_INT, 'Is it expandable', VALUE_REQUIRED),
             'expanded' => new external_value(PARAM_INT, 'Is it expanded', VALUE_REQUIRED),
         ];
 

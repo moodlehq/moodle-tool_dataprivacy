@@ -207,14 +207,3 @@ function tool_dataprivacy_get_defaults($contextlevel) {
 
     return [$purposeid, $categoryid];
 }
-
-/**
- * Get icon mapping for font-awesome.
- */
-//function tool_dataprivacy_get_fontawesome_icon_map() {
-    //return [
-        //'tool_dataprivacy:expanded' => 'fa-angle-down',
-        //'tool_dataprivacy:expandable' => 'fa-angle-right',
-    //];
-//}
-

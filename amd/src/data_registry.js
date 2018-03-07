@@ -258,18 +258,16 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
 
         DataRegistry.prototype.collapse = function(node) {
             node.data('expanded', 0);
-            var nav = node.next('nav');
-            nav.addClass('hidden');
-            node.find('> i').removeClass('fa-folder-open');
-            node.find('> i').addClass('fa-folder');
+            node.siblings('nav').addClass('hidden');
+            node.find('> i').removeClass('fa-minus');
+            node.find('> i').addClass('fa-plus');
         };
 
         DataRegistry.prototype.expand = function(node) {
             node.data('expanded', 1);
-            var nav = node.next('nav');
-            nav.removeClass('hidden');
-            node.find('> i').removeClass('fa-folder');
-            node.find('> i').addClass('fa-folder-open');
+            node.siblings('nav').removeClass('hidden');
+            node.find('> i').removeClass('fa-plus');
+            node.find('> i').addClass('fa-minus');
         };
         return /** @alias module:tool_dataprivacy/data_registry */ {
 
