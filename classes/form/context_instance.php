@@ -64,19 +64,18 @@ class context_instance extends persistent {
      * @return null
      */
     protected function add_purpose_category($contextlevel = false) {
-        global $OUTPUT;
 
         $mform = $this->_form;
 
-        $addicon = $OUTPUT->pix_icon('e/insert', get_string('add'));
-
+        $addcategorytext = $this->get_add_element_content(get_string('addcategory', 'tool_dataprivacy'));
         $categoryselect = $mform->createElement('select', 'categoryid', null, $this->_customdata['categories']);
-        $addcategory = $mform->createElement('button', 'addcategory', $addicon, ['data-add-element' => 'category']);
+        $addcategory = $mform->createElement('button', 'addcategory', $addcategorytext, ['data-add-element' => 'category']);
         $mform->addElement('group', 'categorygroup', get_string('category', 'tool_dataprivacy'), [$categoryselect, $addcategory]);
         $mform->setType('categorygroup[categoryid]', PARAM_INT);
 
+        $addpurposetext = $this->get_add_element_content(get_string('addpurpose', 'tool_dataprivacy'));
         $purposeselect = $mform->createElement('select', 'purposeid', null, $this->_customdata['purposes']);
-        $addpurpose = $mform->createElement('button', 'addpurpose', $addicon, ['data-add-element' => 'purpose']);
+        $addpurpose = $mform->createElement('button', 'addpurpose', $addpurposetext, ['data-add-element' => 'purpose']);
         $mform->addElement('group', 'purposegroup', get_string('purpose', 'tool_dataprivacy'), [$purposeselect, $addpurpose]);
         $mform->setType('purposegroup[purposeid]', PARAM_INT);
 
@@ -90,6 +89,35 @@ class context_instance extends persistent {
                 $mform->setDefault('purposegroup[purposeid]', $defaultpurposeid);
             }
         }
+    }
+
+    /**
+     * Returns the 'add' label.
+     *
+     * It depends on the theme in use.
+     *
+     * @return \renderable|string
+     */
+    private function get_add_element_content($label) {
+        global $PAGE, $OUTPUT;
+
+        $bs4 = false;
+
+        $theme = $PAGE->theme;
+        if ($theme->name === 'boost') {
+            $bs4 = true;
+        } else {
+            foreach ($theme->parents as $basetheme) {
+                if ($basetheme === 'boost') {
+                    $bs4 = true;
+                }
+            }
+        }
+
+        if (!$bs4) {
+            return $label;
+        }
+        return $OUTPUT->pix_icon('e/insert', $label);
     }
 
     /**

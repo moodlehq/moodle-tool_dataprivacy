@@ -506,16 +506,18 @@ class external extends external_api {
         $purpose = new \tool_dataprivacy\purpose(0);
         $mform = new \tool_dataprivacy\form\purpose(null, ['persistent' => $purpose], 'post', '', null, true, $data);
 
+        $validationerrors = true;
         if ($validateddata = $mform->get_data()) {
             $purpose = api::create_purpose($validateddata);
+            $validationerrors = false;
         } else if ($errors = $mform->is_validated()) {
-            $warnings[] = json_encode($errors);
             throw new moodle_exception('generalerror');
         }
 
         $exporter = new purpose_exporter($purpose, ['context' => \context_system::instance()]);
         return [
             'purpose' => $exporter->export($PAGE->get_renderer('core')),
+            'validationerrors' => $validationerrors,
             'warnings' => $warnings
         ];
     }
@@ -528,6 +530,7 @@ class external extends external_api {
     public static function create_purpose_form_returns() {
         return new external_single_structure([
             'purpose' => purpose_exporter::get_read_structure(),
+            'validationerrors' => new external_value(PARAM_BOOL, 'Were there validation errors', VALUE_REQUIRED),
             'warnings' => new external_warnings()
         ]);
     }
@@ -614,16 +617,18 @@ class external extends external_api {
         $category = new \tool_dataprivacy\category(0);
         $mform = new \tool_dataprivacy\form\category(null, ['persistent' => $category], 'post', '', null, true, $data);
 
+        $validationerrors = true;
         if ($validateddata = $mform->get_data()) {
             $category = api::create_category($validateddata);
+            $validationerrors = false;
         } else if ($errors = $mform->is_validated()) {
-            $warnings[] = json_encode($errors);
             throw new moodle_exception('generalerror');
         }
 
         $exporter = new category_exporter($category, ['context' => \context_system::instance()]);
         return [
             'category' => $exporter->export($PAGE->get_renderer('core')),
+            'validationerrors' => $validationerrors,
             'warnings' => $warnings
         ];
     }
@@ -636,6 +641,7 @@ class external extends external_api {
     public static function create_category_form_returns() {
         return new external_single_structure([
             'category' => category_exporter::get_read_structure(),
+            'validationerrors' => new external_value(PARAM_BOOL, 'Were there validation errors', VALUE_REQUIRED),
             'warnings' => new external_warnings()
         ]);
     }

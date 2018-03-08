@@ -49,14 +49,15 @@ class purpose extends persistent {
 
         $mform->addElement('text', 'name', get_string('name'), 'maxlength="100"');
         $mform->setType('name', PARAM_TEXT);
-        $mform->addRule('name', get_string('required'), 'required', null, 'client');
-        $mform->addRule('name', get_string('maximumchars', '', 100), 'maxlength', 100, 'client');
+        $mform->addRule('name', get_string('required'), 'required', null, 'server');
+        $mform->addRule('name', get_string('maximumchars', '', 100), 'maxlength', 100, 'server');
 
         $mform->addElement('editor', 'description', get_string('description'), null, ['autosave' => false]);
         $mform->setType('description', PARAM_CLEANHTML);
 
-        $mform->addElement('duration', 'retentionperiod', get_string('retentionperiod', 'tool_dataprivacy'));
-        //$mform->addRule('retentionperiod', null, 'numeric', null, 'client');
+        $options = ['defaultunit' => YEARSECS, 'optional' => false];
+        $mform->addElement('duration', 'retentionperiod', get_string('retentionperiod', 'tool_dataprivacy'), $options);
+        $mform->setType('retentionperiod', PARAM_INT);
 
         $this->_form->addElement('advcheckbox', 'protected', get_string('protected', 'tool_dataprivacy'),
             get_string('protectedlabel', 'tool_dataprivacy'));

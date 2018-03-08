@@ -78,11 +78,18 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/modal_fact
 
         /**
          * @method getBody
+         * @param {Object} formData
          * @private
          * @return {Promise}
          */
-        AddCategory.prototype.getBody = function() {
-            return Fragment.loadFragment('tool_dataprivacy', 'addcategory_form', this.contextId);
+        AddCategory.prototype.getBody = function(formdata) {
+
+            var params = null;
+            if (typeof formdata !== "undefined") {
+                params = {jsonformdata: JSON.stringify(formdata)};
+            }
+            // Get the content of the modal.
+            return Fragment.loadFragment('tool_dataprivacy', 'addcategory_form', this.contextId, params);
         };
 
         AddCategory.prototype.setupFormModal = function(modal, saveText) {
@@ -128,7 +135,13 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/modal_fact
             Ajax.call([{
                 methodname: 'tool_dataprivacy_create_category_form',
                 args: {jsonformdata: JSON.stringify(formData)},
-                done: this.close.bind(this),
+                done: function(data) {
+                    if (data.validationerrors) {
+                        this.modal.setBody(this.getBody(formData));
+                    } else {
+                        this.close();
+                    }
+                }.bind(this),
                 fail: Notification.exception
             }]);
         };

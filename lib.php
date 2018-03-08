@@ -84,8 +84,22 @@ function tool_dataprivacy_myprofile_navigation(tree $tree, $user, $iscurrentuser
  * @return string The rendered mform fragment.
  */
 function tool_dataprivacy_output_fragment_addpurpose_form($args) {
+
+    $formdata = [];
+    if (!empty($args['jsonformdata'])) {
+        $serialiseddata = json_decode($args['jsonformdata']);
+        parse_str($serialiseddata, $formdata);
+    }
+
     $persistent = new \tool_dataprivacy\purpose();
-    $mform = new \tool_dataprivacy\form\purpose(null, ['persistent' => $persistent]);
+    $mform = new \tool_dataprivacy\form\purpose(null, ['persistent' => $persistent],
+        'post', '', null, true, $formdata);
+
+    if (!empty($args['jsonformdata'])) {
+        // Show errors if data was received.
+        $mform->is_validated();
+    }
+
     return $mform->render();
 }
 
@@ -96,8 +110,22 @@ function tool_dataprivacy_output_fragment_addpurpose_form($args) {
  * @return string The rendered mform fragment.
  */
 function tool_dataprivacy_output_fragment_addcategory_form($args) {
+
+    $formdata = [];
+    if (!empty($args['jsonformdata'])) {
+        $serialiseddata = json_decode($args['jsonformdata']);
+        parse_str($serialiseddata, $formdata);
+    }
+
     $persistent = new \tool_dataprivacy\category();
-    $mform = new \tool_dataprivacy\form\category(null, ['persistent' => $persistent]);
+    $mform = new \tool_dataprivacy\form\category(null, ['persistent' => $persistent],
+        'post', '', null, true, $formdata);
+
+    if (!empty($args['jsonformdata'])) {
+        // Show errors if data was received.
+        $mform->is_validated();
+    }
+
     return $mform->render();
 }
 

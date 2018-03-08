@@ -83,8 +83,21 @@ class data_registry_page implements renderable, templatable {
         );
         $data->defaultsbutton = $defaultsbutton->export_for_template($output);
 
-        $data->categoriesurl = new \moodle_url('/admin/tool/dataprivacy/categories.php');
-        $data->purposesurl = new \moodle_url('/admin/tool/dataprivacy/purposes.php');
+        $actionmenu = new \action_menu();
+        $actionmenu->set_attributes(['class' => 'moodle-actionmenu singlebutton btn btn-default']);
+        $actionmenu->set_menu_trigger(get_string('edit'));
+        $actionmenu->set_owner_selector('dataregistry-actions');
+        $actionmenu->set_alignment(\action_menu::TL, \action_menu::BL);
+
+        $url = new \moodle_url('/admin/tool/dataprivacy/categories.php');
+        $categories = new \action_menu_link_secondary($url, null, get_string('categories', 'tool_dataprivacy'));
+        $actionmenu->add($categories);
+
+        $url = new \moodle_url('/admin/tool/dataprivacy/purposes.php');
+        $purposes = new \action_menu_link_secondary($url, null, get_string('purposes', 'tool_dataprivacy'));
+        $actionmenu->add($purposes);
+
+        $data->actions = $actionmenu->export_for_template($output);
 
         $data->tree = $this->get_default_tree_structure();
 
@@ -141,7 +154,7 @@ class data_registry_page implements renderable, templatable {
 
                 $context = \context_coursecat::instance($category->id);
                 $newnode = [
-                    'text' => format_string($category->name, true, ['context' => $context]),
+                    'text' => shorten_text(format_string($category->name, true, ['context' => $context])),
                     'categoryid' => $category->id,
                     'contextid' => $context->id,
                 ];
@@ -198,7 +211,7 @@ class data_registry_page implements renderable, templatable {
         foreach ($courses as $course) {
             $coursecontext = \context_course::instance($course->id);
             $coursenode = [
-                'text' => format_string($course->shortname, true, ['context' => $coursecontext]),
+                'text' => shorten_text(format_string($course->shortname, true, ['context' => $coursecontext])),
                 'contextid' => $coursecontext->id,
                 'branches' => [
                     [
@@ -240,7 +253,7 @@ class data_registry_page implements renderable, templatable {
             foreach ($instances as $cm) {
 
                 $a = (object)[
-                    'instancename' => $cm->get_formatted_name(),
+                    'instancename' => shorten_text($cm->get_formatted_name()),
                     'modulename' => get_string('pluginname', 'mod_' . $moduletype),
                 ];
 
@@ -277,8 +290,9 @@ class data_registry_page implements renderable, templatable {
         foreach ($blockinstances['blocks'] as $bi) {
             $blockinstance = block_instance_by_id($bi['instanceid']);
             $blockcontext = \context_block::instance($bi['instanceid']);
+            $displayname = shorten_text(format_string($blockinstance->get_title(), true, ['context' => $blockcontext->id]));
             $branches[] = self::complete([
-                'text' => format_string($blockinstance->get_title(), true, ['context' => $blockcontext->id]),
+                'text' => $displayname,
                 'contextid' => $blockcontext->id,
             ]);
         }

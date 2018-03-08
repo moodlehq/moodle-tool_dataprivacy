@@ -49,8 +49,8 @@ class category extends persistent {
 
         $mform->addElement('text', 'name', get_string('name'), 'maxlength="100"');
         $mform->setType('name', PARAM_TEXT);
-        $mform->addRule('name', get_string('required'), 'required', null, 'client');
-        $mform->addRule('name', get_string('maximumchars', '', 100), 'maxlength', 100, 'client');
+        $mform->addRule('name', get_string('required'), 'required', null, 'server');
+        $mform->addRule('name', get_string('maximumchars', '', 100), 'maxlength', 100, 'server');
 
         $mform->addElement('editor', 'description', get_string('description'), null, ['autosave' => false]);
         $mform->setType('description', PARAM_CLEANHTML);

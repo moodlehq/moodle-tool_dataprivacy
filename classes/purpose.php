@@ -64,6 +64,7 @@ class purpose extends \core\persistent {
             'retentionperiod' => array(
                 'type' => PARAM_INT,
                 'description' => 'Retention period. Time to store the data since it is not used any more. In seconds.',
+                'default' => '0',
             ),
             'protected' => array(
                 'type' => PARAM_INT,

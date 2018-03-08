@@ -1,3 +1,9 @@
 .nav-pills .nav-pills {
     margin-left: 1rem;
 }
+
+/*Extra attribute selection to have preference over bs2's .moodle-actionmenu[data-enhance] */
+.dataregistry > .top-nav > .singlebutton,
+.dataregistry > .top-nav > .singlebutton[data-owner='dataregistry-actions'] {
+    display: inline-block;
+}

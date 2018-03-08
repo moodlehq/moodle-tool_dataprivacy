@@ -32,35 +32,23 @@
     {
     }
 }}
-<div data-region="dataregistry">
-    {{#defaultsbutton}}
-        {{> core/single_button}}
-    {{/defaultsbutton}}
-    <div class="singlebutton btn-group" role="group">
-        <button class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" type="button">
-            {{#str}}edit{{/str}}
-        </button>
-        <div class="dropdown-menu">
-            <li>
-                <a class="dropdown-item" href="{{categoriesurl}}">
-                    {{#str}} categories, tool_dataprivacy {{/str}}
-                </a>
-            </li>
-            <li>
-                <a class="dropdown-item" href="{{purposesurl}}">
-                    {{#str}} purposes, tool_dataprivacy {{/str}}
-                </a>
-            </li>
-        </div>
+<div class="dataregistry">
+    <div class="top-nav">
+        {{#defaultsbutton}}
+            {{> core/single_button}}
+        {{/defaultsbutton}}
+        {{#actions}}
+            {{> core/action_menu}}
+        {{/actions}}
     </div>
     <div class="container m-t-2">
         <div class="row">
-            <div class="col-md-4 p-l-0 nav-pills nav">
+            <div class="span3 col-md-4 p-l-0 nav-pills">
                 {{#tree}}
                     {{> tool_dataprivacy/context_tree_node}}
                 {{/tree}}
             </div>
-            <div class="col-md-8" id="context-form-container">
+            <div class="span9 col-md-8" id="context-form-container">
             </div>
         </div>
     </div>
