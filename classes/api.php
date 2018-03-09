@@ -621,4 +621,31 @@ class api {
 
         return $contextlevel;
     }
+
+    /**
+     * Returns the roles assigned to the provided level.
+     *
+     * Important to note that it returns course-level assigned roles
+     * if the provided context level is below course.
+     *
+     * @param \context $context
+     * @return array
+     */
+    public static function get_subject_scope(\context $context) {
+
+        if ($contextcourse = $context->get_course_context(false)) {
+            // Below course level we only look at course-assigned roles.
+            $roles = get_user_roles($contextcourse, 0, false);
+        } else {
+            $roles = get_user_roles($context, 0, false);
+        }
+
+        return array_map(function($role) {
+            if ($role->name) {
+                return $role->name;
+            } else {
+                return $role->shortname;
+            }
+        }, $roles);
+    }
 }

@@ -49,6 +49,12 @@ class context_instance extends persistent {
 
         $this->_form->addElement('header', 'contextname', $this->_customdata['contextname']);
 
+        $subjectscope = implode(', ', $this->_customdata['subjectscope']);
+        if (empty($subjectscope)) {
+            $subjectscope = get_string('noassignedroles', 'tool_dataprivacy');
+        }
+        $this->_form->addElement('static', 'subjectscope', get_string('subjectscope', 'tool_dataprivacy'), $subjectscope);
+
         $this->add_purpose_category($this->_customdata['context']->contextlevel);
 
         $this->_form->addElement('hidden', 'contextid');

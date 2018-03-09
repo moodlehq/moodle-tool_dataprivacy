@@ -829,6 +829,7 @@ class external extends external_api {
 
         $customdata = [
             'context' => $context,
+            'subjectscope' => \tool_dataprivacy\api::get_subject_scope($context),
             'contextname' => $context->get_context_name(),
             'persistent' => $persistent,
             'purposes' => $purposeoptions,
