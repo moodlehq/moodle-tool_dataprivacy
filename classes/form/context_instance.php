@@ -102,6 +102,7 @@ class context_instance extends persistent {
      *
      * It depends on the theme in use.
      *
+     * @param string $label
      * @return \renderable|string
      */
     private function get_add_element_content($label) {

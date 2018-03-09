@@ -3,7 +3,12 @@
 }
 
 /*Extra attribute selection to have preference over bs2's .moodle-actionmenu[data-enhance] */
-.dataregistry > .top-nav > .singlebutton,
-.dataregistry > .top-nav > .singlebutton[data-owner='dataregistry-actions'] {
+.data-registry > .top-nav > .singlebutton,
+.data-registry > .top-nav > .singlebutton[data-owner='dataregistry-actions'] {
     display: inline-block;
+}
+
+.data-registry .context-tree {
+    height: 70vh;
+    overflow-y: scroll;
 }

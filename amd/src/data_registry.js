@@ -21,8 +21,8 @@
  * @copyright  2018 David Monllao
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates', 'core/modal_factory', 'core/modal_events', 'core/fragment',
-    'tool_dataprivacy/add_purpose', 'tool_dataprivacy/add_category'],
+define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates', 'core/modal_factory',
+    'core/modal_events', 'core/fragment', 'tool_dataprivacy/add_purpose', 'tool_dataprivacy/add_category'],
     function($, Str, Ajax, Notification, Templates, ModalFactory, ModalEvents, Fragment, AddPurpose, AddCategory) {
 
         var SELECTORS = {
@@ -96,9 +96,9 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
 
             // Load the default context level form.
             if (this.currentContextId) {
-                this.loadForm('context_form', [this.currentContextId], this.submitContextFormAjax.bind(this))
+                this.loadForm('context_form', [this.currentContextId], this.submitContextFormAjax.bind(this));
             } else {
-                this.loadForm('contextlevel_form', [this.currentContextLevel], this.submitContextLevelFormAjax.bind(this))
+                this.loadForm('contextlevel_form', [this.currentContextLevel], this.submitContextLevelFormAjax.bind(this));
             }
         };
 
@@ -125,14 +125,9 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
 
                     // Load the context level form.
                     this.currentContextLevel = contextLevel;
-                    this.loadForm('contextlevel_form', [this.currentContextLevel], this.submitContextLevelFormAjax.bind(this))
+                    this.loadForm('contextlevel_form', [this.currentContextLevel], this.submitContextLevelFormAjax.bind(this));
                 } else if (contextId) {
                     // Context instance level.
-
-                    if (!contextId) {
-                        console.error('No data-contextid attribute');
-                        return;
-                    }
 
                     window.history.pushState({}, null, '?contextid=' + contextId);
 
@@ -142,7 +137,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
 
                     // Load the context level form.
                     this.currentContextId = contextId;
-                    this.loadForm('context_form', [this.currentContextId], this.submitContextFormAjax.bind(this))
+                    this.loadForm('context_form', [this.currentContextId], this.submitContextFormAjax.bind(this));
                 } else {
                     // Expandable nodes.
 
@@ -214,11 +209,11 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
         };
 
         DataRegistry.prototype.submitContextLevelFormAjax = function(e) {
-            this.submitFormAjax(e, 'tool_dataprivacy_set_contextlevel_form')
+            this.submitFormAjax(e, 'tool_dataprivacy_set_contextlevel_form');
         };
 
         DataRegistry.prototype.submitContextFormAjax = function(e) {
-            this.submitFormAjax(e, 'tool_dataprivacy_set_context_form')
+            this.submitFormAjax(e, 'tool_dataprivacy_set_context_form');
         };
 
         DataRegistry.prototype.submitFormAjax = function(e, saveMethodName) {
@@ -236,7 +231,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                     },
                     fail: Notification.exception
                 }]);
-            }.bind(this));
+            });
 
         };
 
@@ -253,14 +248,14 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                         this.noElements(parentNode, expandElement);
                         return;
                     }
-                    // TODO Ugly, change this.
-                    return Templates.render('tool_dataprivacy/context_tree_branches', data)
+                    Templates.render('tool_dataprivacy/context_tree_branches', data)
                         .then(function(html) {
                             parentNode.after(html);
                             this.removeListeners();
                             this.registerEventListeners();
                             this.expand(parentNode);
                             parentNode.data('loaded', 1);
+                            return;
                         }.bind(this))
                         .fail(Notification.exception);
                 }.bind(this),
@@ -269,9 +264,8 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
         };
 
         DataRegistry.prototype.noElements = function(node, expandElement) {
-            // TODO Check what is going wrong with this, not working with data() nor removeData()...
-            node.data('expandcontextid', 0);
-            node.data('expandelement', 0);
+            node.data('expandcontextid', '');
+            node.data('expandelement', '');
             this.strings.then(function(strings) {
 
                 // 2 = blocks, 3 = activities, 4 = courses (although courses is not likely really).
@@ -279,10 +273,11 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                 if (expandElement == 'module') {
                     key = 3;
                 } else if (expandElement == 'course') {
-                    key = 4
+                    key = 4;
                 }
                 node.text(strings[key]);
-            });
+                return;
+            }).fail(Notification.exception);
         };
 
         DataRegistry.prototype.collapse = function(node) {
@@ -302,6 +297,11 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
 
             /**
              * Initialise the page.
+             *
+             * @param {Integer} systemContextId
+             * @param {Integer} initContextLevel
+             * @param {Integer} initContextId
+             * @returns DataRegistry
              */
             init: function(systemContextId, initContextLevel, initContextId) {
                 return new DataRegistry(systemContextId, initContextLevel, initContextId);

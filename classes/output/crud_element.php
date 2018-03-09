@@ -42,6 +42,7 @@ abstract class crud_element {
     /**
      * Returns the top navigation buttons.
      *
+     * @param \renderer_base $output
      * @return \single_button[]
      */
     protected final function get_navigation(renderer_base $output) {

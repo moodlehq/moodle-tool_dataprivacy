@@ -60,8 +60,8 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/modal_fact
 
         AddPurpose.prototype.registerEventListeners = function() {
 
-            var trigger = $(SELECTORS.PURPOSE_LINK)
-            trigger.on('click', function(ev) {
+            var trigger = $(SELECTORS.PURPOSE_LINK);
+            trigger.on('click', function() {
                 return this.strings.then(function(strings) {
                     ModalFactory.create({
                         type: ModalFactory.types.SAVE_CANCEL,
@@ -78,7 +78,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/modal_fact
 
         /**
          * @method getBody
-         * @param {Object} formData
+         * @param {Object} formdata
          * @private
          * @return {Promise}
          */
