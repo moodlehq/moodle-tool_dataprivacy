@@ -746,12 +746,6 @@ class external extends external_api {
         ];
         $mform = new \tool_dataprivacy\form\contextlevel(null, $customdata, 'post', '', null, true, $data);
         if ($validateddata = $mform->get_data()) {
-
-            // Convert form-like structure to persistent fields.
-            $validateddata->purposeid = $validateddata->purposegroup['purposeid'];
-            $validateddata->categoryid = $validateddata->categorygroup['categoryid'];
-            unset($validateddata->purposegroup);
-            unset($validateddata->categorygroup);
             $contextlevel = api::set_contextlevel($validateddata);
         } else if ($errors = $mform->is_validated()) {
             $warnings[] = json_encode($errors);
@@ -837,12 +831,6 @@ class external extends external_api {
         ];
         $mform = new \tool_dataprivacy\form\context_instance(null, $customdata, 'post', '', null, true, $data);
         if ($validateddata = $mform->get_data()) {
-
-            // Convert form-like structure to persistent fields.
-            $validateddata->purposeid = $validateddata->purposegroup['purposeid'];
-            $validateddata->categoryid = $validateddata->categorygroup['categoryid'];
-            unset($validateddata->purposegroup);
-            unset($validateddata->categorygroup);
             $context = api::set_context_instance($validateddata);
         } else if ($errors = $mform->is_validated()) {
             $warnings[] = json_encode($errors);
