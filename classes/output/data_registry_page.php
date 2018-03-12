@@ -30,6 +30,7 @@ use stdClass;
 use templatable;
 
 require_once($CFG->libdir . '/coursecatlib.php');
+require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/dataprivacy/lib.php');
 require_once($CFG->libdir . '/blocklib.php');
 
 /**
@@ -98,6 +99,14 @@ class data_registry_page implements renderable, templatable {
         $actionmenu->add($purposes);
 
         $data->actions = $actionmenu->export_for_template($output);
+
+        list($purposeid, $categoryid) = tool_dataprivacy_get_defaults(CONTEXT_SYSTEM);
+        if (!$purposeid || !$categoryid) {
+            $data->nosystemdefaults = (object)[
+                'message' => get_string('nosystemdefaults', 'tool_dataprivacy'),
+                'announce' => 1
+            ];
+        }
 
         $data->tree = $this->get_default_tree_structure();
 

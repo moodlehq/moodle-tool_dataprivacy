@@ -41,9 +41,13 @@ class defaults extends \moodleform {
      * Define the form.
      */
     public function definition() {
+        global $OUTPUT;
 
         $mform = $this->_form;
         $mform->setDisableShortforms();
+
+        $notification = $OUTPUT->notification(get_string('defaultsinfo', 'tool_dataprivacy'), \core\output\notification::NOTIFY_INFO);
+        $mform->addElement('html', $notification);
 
         foreach ($this->_customdata['levels'] as $level => $classname) {
 
