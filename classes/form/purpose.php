@@ -55,9 +55,15 @@ class purpose extends persistent {
         $mform->addElement('editor', 'description', get_string('description'), null, ['autosave' => false]);
         $mform->setType('description', PARAM_CLEANHTML);
 
-        $options = ['defaultunit' => YEARSECS, 'optional' => false];
-        $mform->addElement('duration', 'retentionperiod', get_string('retentionperiod', 'tool_dataprivacy'), $options);
-        $mform->setType('retentionperiod', PARAM_INT);
+        $number = $mform->createElement('text', 'retentionperiodnumber', null, ['size' => 8]);
+        $unitoptions = [
+            'Y' => get_string('years'),
+            'M' => strtolower(get_string('months')),
+            'D' => strtolower(get_string('days'))
+        ];
+        $unit = $mform->createElement('select', 'retentionperiodunit', '', $unitoptions);
+        $mform->addGroup(['number' => $number, 'unit' => $unit], 'retentionperiod', get_string('retentionperiod', 'tool_dataprivacy'), null, false);
+        $mform->setType('retentionperiodnumber', PARAM_INT);
 
         $this->_form->addElement('advcheckbox', 'protected', get_string('protected', 'tool_dataprivacy'),
             get_string('protectedlabel', 'tool_dataprivacy'));
@@ -70,5 +76,38 @@ class purpose extends persistent {
             }
             $this->add_action_buttons(true, $savetext);
         }
+    }
+
+    /**
+     * Converts fields.
+     *
+     * @param \stdClass $data
+     * @return \stdClass
+     */
+    protected static function convert_fields(\stdClass $data) {
+        $data = parent::convert_fields($data);
+
+        // A single value.
+        $data->retentionperiod = 'P' . $data->retentionperiodnumber . $data->retentionperiodunit;
+        unset($data->retentionperiodnumber);
+        unset($data->retentionperiodunit);
+        return $data;
+    }
+
+    /**
+     * Get the default data.
+     *
+     * @return \stdClass
+     */
+    protected function get_default_data() {
+        $data = parent::get_default_data();
+
+        // Convert the single properties into number and unit.
+        $strlen = strlen($data->retentionperiod);
+        $data->retentionperiodnumber = substr($data->retentionperiod, 1, $strlen - 2);
+        $data->retentionperiodunit = substr($data->retentionperiod, $strlen - 1);
+        unset($data->retentionperiod);
+
+        return $data;
     }
 }

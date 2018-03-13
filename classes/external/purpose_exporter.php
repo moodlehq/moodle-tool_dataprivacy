@@ -78,7 +78,18 @@ class purpose_exporter extends persistent_exporter {
     protected function get_other_values(\renderer_base $output) {
         $retentionperiod = $this->persistent->get('retentionperiod');
         if ($retentionperiod) {
-            $formattedtime = format_time($retentionperiod);
+            $interval = new \DateInterval($retentionperiod);
+
+            // It is one or another.
+            if ($interval->y) {
+                $formattedtime = get_string('numyears', 'moodle', $interval->format('%y'));
+            } else if ($interval->m) {
+                $formattedtime = get_string('nummonths', 'moodle', $interval->format('%m'));
+            } else if ($interval->d) {
+                $formattedtime = get_string('numdays', 'moodle', $interval->format('%d'));
+            } else {
+                $formattedtime = get_string('retentionperiodnotdefined', 'tool_dataprivacy');
+            }
         } else {
             $formattedtime = get_string('retentionperiodnotdefined', 'tool_dataprivacy');
         }

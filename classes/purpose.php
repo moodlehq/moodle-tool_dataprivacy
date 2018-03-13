@@ -62,9 +62,9 @@ class purpose extends \core\persistent {
                 'default' => FORMAT_HTML
             ),
             'retentionperiod' => array(
-                'type' => PARAM_INT,
-                'description' => 'Retention period. Time to store the data since it is not used any more. In seconds.',
-                'default' => '0',
+                'type' => PARAM_ALPHANUM,
+                'description' => 'Retention period. ISO_8601 durations format (as in DateInterval format).',
+                'default' => '',
             ),
             'protected' => array(
                 'type' => PARAM_INT,

@@ -86,17 +86,6 @@ class context_instance extends persistent {
         $mform->addElement('group', 'purposegroup', get_string('purpose', 'tool_dataprivacy'),
             [$purposeselect, $addpurpose], null, false);
         $mform->setType('purposeid', PARAM_INT);
-
-        if ($contextlevel) {
-            list($defaultpurposeid, $defaultcategoryid) = tool_dataprivacy_get_defaults($contextlevel);
-
-            if ($defaultcategoryid) {
-                $mform->setDefault('categoryid', $defaultcategoryid);
-            }
-            if ($defaultpurposeid) {
-                $mform->setDefault('purposeid', $defaultpurposeid);
-            }
-        }
     }
 
     /**

@@ -146,5 +146,18 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2018021809, 'tool', 'dataprivacy');
     }
 
+    if ($oldversion < 2018021813) {
+
+        // Changing type of field retentionperiod on table dataprivacy_purpose to char.
+        $table = new xmldb_table('dataprivacy_purpose');
+        $field = new xmldb_field('retentionperiod', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+
+        // Launch change of type for field retentionperiod.
+        $dbman->change_field_type($table, $field);
+
+        // Dataprivacy savepoint reached.
+        upgrade_plugin_savepoint(true, 2018021813, 'tool', 'dataprivacy');
+    }
+
     return true;
 }

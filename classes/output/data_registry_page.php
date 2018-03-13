@@ -85,7 +85,6 @@ class data_registry_page implements renderable, templatable {
         $data->defaultsbutton = $defaultsbutton->export_for_template($output);
 
         $actionmenu = new \action_menu();
-        $actionmenu->set_attributes(['class' => 'moodle-actionmenu singlebutton']);
         $actionmenu->set_menu_trigger(get_string('edit'), 'btn btn-default');
         $actionmenu->set_owner_selector('dataregistry-actions');
         $actionmenu->set_alignment(\action_menu::TL, \action_menu::BL);
