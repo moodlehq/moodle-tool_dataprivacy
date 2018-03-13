@@ -96,8 +96,8 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
         // Adding fields to table dataprivacy_context_instance.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('contextid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('purposeid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NULL, null, null);
-        $table->add_field('categoryid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NULL, null, null);
+        $table->add_field('purposeid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('categoryid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
         $table->add_field('usermodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
@@ -125,8 +125,8 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
         // Adding fields to table dataprivacy_contextlevel.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('contextlevel', XMLDB_TYPE_INTEGER, '3', null, XMLDB_NOTNULL, null, null);
-        $table->add_field('purposeid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NULL, null, null);
-        $table->add_field('categoryid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NULL, null, null);
+        $table->add_field('purposeid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('categoryid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
         $table->add_field('usermodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);

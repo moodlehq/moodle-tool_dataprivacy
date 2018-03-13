@@ -38,7 +38,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/modal_fact
                 },
                 {
                     key: 'save',
-                    component: 'moodle'
+                    component: 'admin'
                 }
             ];
             this.strings = Str.get_strings(stringKeys);

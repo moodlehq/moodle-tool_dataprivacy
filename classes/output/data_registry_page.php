@@ -154,8 +154,7 @@ class data_registry_page implements renderable, templatable {
      */
     private function get_all_category_branches() {
 
-        // They come sorted by depth ASC.
-        $categories = \coursecat::get_all(['returnhidden' => true]);
+        $categories = $this->get_site_categories();
 
         $categoriesbranch = [];
         while (count($categories) > 0) {
@@ -218,7 +217,13 @@ class data_registry_page implements renderable, templatable {
         $branches = [];
 
         foreach ($courses as $course) {
+
             $coursecontext = \context_course::instance($course->id);
+
+            if (!$course->visible && !has_capability('moodle/course:viewhiddencourses', $coursecontext)) {
+                continue;
+            }
+
             $coursenode = [
                 'text' => shorten_text(format_string($course->shortname, true, ['context' => $coursecontext])),
                 'contextid' => $coursecontext->id,
@@ -260,6 +265,10 @@ class data_registry_page implements renderable, templatable {
         $modinfo = get_fast_modinfo($coursecontext->instanceid);
         foreach ($modinfo->get_instances() as $moduletype => $instances) {
             foreach ($instances as $cm) {
+
+                if (!$cm->uservisible) {
+                    continue;
+                }
 
                 $a = (object)[
                     'instancename' => shorten_text($cm->get_formatted_name()),
@@ -426,5 +435,29 @@ class data_registry_page implements renderable, templatable {
         }
 
         return $options;
+    }
+
+    /**
+     * Returns all site categories that are visible to the current user.
+     *
+     * @return \coursecat[]
+     */
+    private static function get_site_categories() {
+        global $DB;
+
+        if (method_exists('\coursecat', 'get_all')) {
+            $categories = \coursecat::get_all(['returnhidden' => true]);
+        } else {
+            // Fallback (to be removed once this gets integrated into master).
+            $ids = $DB->get_fieldset_select('course_categories', 'id', '');
+            $categories = \coursecat::get_many($ids);
+        }
+
+        foreach ($categories as $key => $category) {
+            if (!$category->is_uservisible()) {
+                unset($categories[$key]);
+            }
+        }
+        return $categories;
     }
 }
