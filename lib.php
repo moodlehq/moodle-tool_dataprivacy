@@ -29,7 +29,7 @@ defined('MOODLE_INTERNAL') || die();
  * Add nodes to myprofile page.
  *
  * @param tree $tree Tree object
- * @param stdClass $user user object
+ * @param stdClass $user User object
  * @param bool $iscurrentuser
  * @param stdClass $course Course object
  * @return bool
@@ -40,28 +40,37 @@ defined('MOODLE_INTERNAL') || die();
 function tool_dataprivacy_myprofile_navigation(tree $tree, $user, $iscurrentuser, $course) {
     global $PAGE, $USER;
 
-    // Create a Privacy category.
-    $categoryname = get_string('privacy', 'tool_dataprivacy');
-    $dataprivacycategory = new core_user\output\myprofile\category('dataprivacy', $categoryname, 'contact');
+    // Get the Privacy and policies category.
+    if (!array_key_exists('privacyandpolicies', $tree->__get('categories'))) {
+        // Create the category.
+        $categoryname = get_string('privacyandpolicies', 'admin');
+        $category = new core_user\output\myprofile\category('privacyandpolicies', $categoryname, 'contact');
+        $tree->add_category($category);
+    } else {
+        // Get the existing category.
+        $category = $tree->__get('categories')['privacyandpolicies'];
+    }
 
     // Contact data protection officer link.
     if (\tool_dataprivacy\api::can_contact_dpo() && $iscurrentuser) {
         $renderer = $PAGE->get_renderer('tool_dataprivacy');
         $content = $renderer->render_contact_dpo_link($USER->email);
-        $node = new core_user\output\myprofile\node('dataprivacy', 'contactdpo', null, null, null, $content);
-        $dataprivacycategory->add_node($node);
+        $node = new core_user\output\myprofile\node('privacyandpolicies', 'contactdpo', null, null, null, $content);
+        $category->add_node($node);
         $PAGE->requires->js_call_amd('tool_dataprivacy/myrequestactions', 'init');
 
         $url = new moodle_url('/admin/tool/dataprivacy/mydatarequests.php');
-        $node = new core_user\output\myprofile\node('dataprivacy', 'datarequests',
+        $node = new core_user\output\myprofile\node('privacyandpolicies', 'datarequests',
             get_string('datarequests', 'tool_dataprivacy'), null, $url);
-        $dataprivacycategory->add_node($node);
+        $category->add_node($node);
     }
 
-    // Add the Privacy category to the tree if it's not empty.
-    $nodes = $dataprivacycategory->nodes;
+    // Add the Privacy category to the tree if it's not empty and it doesn't exist.
+    $nodes = $category->nodes;
     if (!empty($nodes)) {
-        $tree->add_category($dataprivacycategory);
+        if (!array_key_exists('privacyandpolicies', $tree->__get('categories'))) {
+            $tree->add_category($category);
+        }
         return true;
     }
 
