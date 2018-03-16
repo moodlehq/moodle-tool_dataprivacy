@@ -292,6 +292,7 @@ class data_registry_page implements renderable, templatable {
      * @return null
      */
     public static function get_blocks_branch(\context $coursecontext) {
+        global $DB;
 
         if ($coursecontext->contextlevel !== CONTEXT_COURSE) {
             throw new \coding_exception('A course context should be provided');
@@ -305,7 +306,13 @@ class data_registry_page implements renderable, templatable {
         }
 
         foreach ($blockinstances['blocks'] as $bi) {
-            $blockinstance = block_instance_by_id($bi['instanceid']);
+            if (function_exists('block_instance_by_id')) {
+                $blockinstance = block_instance_by_id($bi['instanceid']);
+            } else {
+                // TODO To be removed when MDL-61621 gets integrated.
+                $blockinstance = $DB->get_record('block_instances', ['id' => $bi['instanceid']]);
+                $blockinstance = block_instance($blockinstance->blockname, $blockinstance);
+            }
             $blockcontext = \context_block::instance($bi['instanceid']);
             $displayname = shorten_text(format_string($blockinstance->get_title(), true, ['context' => $blockcontext->id]));
             $branches[] = self::complete([
