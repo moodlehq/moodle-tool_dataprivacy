@@ -507,27 +507,44 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
     }
 
     /**
-     * Test data purposes as a user without privileges.
-     *
-     * @return null
+     * Test of creating purpose as a user without privileges.
      */
-    public function test_purpose_non_dop_user() {
-
+    public function test_create_purpose_non_dpo_user() {
         $pleb = $this->getDataGenerator()->create_user();
 
         $this->setUser($pleb);
-        try {
-            api::create_purpose((object)[
-                'name' => 'aaa',
-                'description' => '<b>yeah</b>',
-                'descriptionformat' => 1,
-                'retentionperiod' => 60
-            ]);
-            $this->fail('Users shouldn\'t be allowed to manage purposes by default');
-        } catch (\required_capability_exception $e) {
-            // All good.
-        }
+        $this->expectException(required_capability_exception::class);
+        api::create_purpose((object)[
+            'name' => 'aaa',
+            'description' => '<b>yeah</b>',
+            'descriptionformat' => 1,
+            'retentionperiod' => 60
+        ]);
+    }
 
+    /**
+     * Test fetching of purposes as a user without privileges.
+     */
+    public function test_get_purposes_non_dpo_user() {
+        $pleb = $this->getDataGenerator()->create_user();
+        $this->setAdminUser();
+        api::create_purpose((object)[
+            'name' => 'bbb',
+            'description' => '<b>yeah</b>',
+            'descriptionformat' => 1,
+            'retentionperiod' => 60
+        ]);
+
+        $this->setUser($pleb);
+        $this->expectException(required_capability_exception::class);
+        api::get_purposes();
+    }
+
+    /**
+     * Test updating of purpose as a user without privileges.
+     */
+    public function test_update_purposes_non_dpo_user() {
+        $pleb = $this->getDataGenerator()->create_user();
         $this->setAdminUser();
         $purpose = api::create_purpose((object)[
             'name' => 'bbb',
@@ -536,30 +553,28 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
             'retentionperiod' => 60
         ]);
 
-        // Back to a regular user.
         $this->setUser($pleb);
+        $this->expectException(required_capability_exception::class);
+        $purpose->set('retentionperiod', 120);
+        api::update_purpose($purpose->to_record());
+    }
 
-        try {
-            api::get_purposes();
-            $this->fail('Users shouldn\'t be allowed to manage purposes by default');
-        } catch (\required_capability_exception $e) {
-            // All good.
-        }
+    /**
+     * Test purpose deletion as a user without privileges.
+     */
+    public function test_delete_purpose_non_dpo_user() {
+        $pleb = $this->getDataGenerator()->create_user();
+        $this->setAdminUser();
+        $purpose = api::create_purpose((object)[
+            'name' => 'bbb',
+            'description' => '<b>yeah</b>',
+            'descriptionformat' => 1,
+            'retentionperiod' => 60
+        ]);
 
-        try {
-            $purpose->set('retentionperiod', 120);
-            $purpose = api::update_purpose($purpose->to_record());
-            $this->fail('Users shouldn\'t be allowed to manage purposes by default');
-        } catch (\required_capability_exception $e) {
-            // All good.
-        }
-
-        try {
-            $purpose = api::delete_purpose($purpose->get('id'));
-            $this->fail('Users shouldn\'t be allowed to manage purposes by default');
-        } catch (\required_capability_exception $e) {
-            // All good.
-        }
+        $this->setUser($pleb);
+        $this->expectException(required_capability_exception::class);
+        api::delete_purpose($purpose->get('id'));
     }
 
     /**
@@ -602,25 +617,44 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
     }
 
     /**
-     * Test data categories as a user without privileges.
-     *
-     * @return null
+     * Test creation of data categories as a user without privileges.
      */
-    public function test_category_non_dop_user() {
-
+    public function test_create_category_non_dpo_user() {
         $pleb = $this->getDataGenerator()->create_user();
 
         $this->setUser($pleb);
-        try {
-            api::create_category((object)[
-                'name' => 'bbb',
-                'description' => '<b>yeah</b>',
-                'descriptionformat' => 1
-            ]);
-            $this->fail('Users shouldn\'t be allowed to manage categories by default');
-        } catch (\required_capability_exception $e) {
-            // All good.
-        }
+        $this->expectException(required_capability_exception::class);
+        api::create_category((object)[
+            'name' => 'bbb',
+            'description' => '<b>yeah</b>',
+            'descriptionformat' => 1
+        ]);
+    }
+
+    /**
+     * Test fetching of data categories as a user without privileges.
+     */
+    public function test_get_categories_non_dpo_user() {
+        $pleb = $this->getDataGenerator()->create_user();
+
+        $this->setAdminUser();
+        api::create_category((object)[
+            'name' => 'bbb',
+            'description' => '<b>yeah</b>',
+            'descriptionformat' => 1
+        ]);
+
+        // Back to a regular user.
+        $this->setUser($pleb);
+        $this->expectException(required_capability_exception::class);
+        api::get_categories();
+    }
+
+    /**
+     * Test updating of data category as a user without privileges.
+     */
+    public function test_update_category_non_dpo_user() {
+        $pleb = $this->getDataGenerator()->create_user();
 
         $this->setAdminUser();
         $category = api::create_category((object)[
@@ -631,28 +665,29 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
 
         // Back to a regular user.
         $this->setUser($pleb);
+        $this->expectException(required_capability_exception::class);
+        $category->set('name', 'yeah');
+        api::update_category($category->to_record());
+    }
 
-        try {
-            api::get_categories();
-            $this->fail('Users shouldn\'t be allowed to manage categories by default');
-        } catch (\required_capability_exception $e) {
-            // All good.
-        }
+    /**
+     * Test deletion of data category as a user without privileges.
+     */
+    public function test_delete_category_non_dpo_user() {
+        $pleb = $this->getDataGenerator()->create_user();
 
-        try {
-            $category->set('name', 'yeah');
-            $category = api::update_category($category->to_record());
-            $this->fail('Users shouldn\'t be allowed to manage categories by default');
-        } catch (\required_capability_exception $e) {
-            // All good.
-        }
+        $this->setAdminUser();
+        $category = api::create_category((object)[
+            'name' => 'bbb',
+            'description' => '<b>yeah</b>',
+            'descriptionformat' => 1
+        ]);
 
-        try {
-            $category = api::delete_category($category->get('id'));
-            $this->fail('Users shouldn\'t be allowed to manage categories by default');
-        } catch (\required_capability_exception $e) {
-            // All good.
-        }
+        // Back to a regular user.
+        $this->setUser($pleb);
+        $this->expectException(required_capability_exception::class);
+        api::delete_category($category->get('id'));
+        $this->fail('Users shouldn\'t be allowed to manage categories by default');
     }
 
     /**
