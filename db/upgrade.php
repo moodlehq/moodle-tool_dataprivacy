@@ -36,10 +36,10 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
 
     if ($oldversion < 2018020703) {
 
-        // Define table dataprivacy_purpose to be created.
-        $table = new xmldb_table('dataprivacy_purpose');
+        // Define table tool_dataprivacy_purpose to be created.
+        $table = new xmldb_table('tool_dataprivacy_purpose');
 
-        // Adding fields to table dataprivacy_purpose.
+        // Adding fields to table tool_dataprivacy_purpose.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('name', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, null, null);
         $table->add_field('description', XMLDB_TYPE_TEXT, null, null, null, null, null);
@@ -50,10 +50,10 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
         $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
 
-        // Adding keys to table dataprivacy_purpose.
+        // Adding keys to table tool_dataprivacy_purpose.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
 
-        // Conditionally launch create table for dataprivacy_purpose.
+        // Conditionally launch create table for tool_dataprivacy_purpose.
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         }
@@ -64,10 +64,10 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
 
     if ($oldversion < 2018020705) {
 
-        // Define table dataprivacy_category to be created.
-        $table = new xmldb_table('dataprivacy_category');
+        // Define table tool_dataprivacy_category to be created.
+        $table = new xmldb_table('tool_dataprivacy_category');
 
-        // Adding fields to table dataprivacy_category.
+        // Adding fields to table tool_dataprivacy_category.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('name', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, null, null);
         $table->add_field('description', XMLDB_TYPE_TEXT, null, null, null, null, null);
@@ -76,10 +76,10 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
         $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
 
-        // Adding keys to table dataprivacy_category.
+        // Adding keys to table tool_dataprivacy_category.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
 
-        // Conditionally launch create table for dataprivacy_category.
+        // Conditionally launch create table for tool_dataprivacy_category.
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         }
@@ -90,10 +90,10 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
 
     if ($oldversion < 2018021807) {
 
-        // Define table dataprivacy_context_instance to be created.
-        $table = new xmldb_table('dataprivacy_context_instance');
+        // Define table tool_dataprivacy_ctxinstance to be created.
+        $table = new xmldb_table('tool_dataprivacy_ctxinstance');
 
-        // Adding fields to table dataprivacy_context_instance.
+        // Adding fields to table tool_dataprivacy_ctxinstance.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('contextid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('purposeid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
@@ -102,13 +102,13 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
         $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
 
-        // Adding keys to table dataprivacy_context_instance.
+        // Adding keys to table tool_dataprivacy_ctxinstance.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
         $table->add_key('contextid', XMLDB_KEY_FOREIGN_UNIQUE, array('contextid'), 'context', array('id'));
-        $table->add_key('categoryid', XMLDB_KEY_FOREIGN, array('categoryid'), 'dataprivacy_category', array('id'));
-        $table->add_key('purposeid', XMLDB_KEY_FOREIGN, array('purposeid'), 'dataprivacy_purpose', array('id'));
+        $table->add_key('categoryid', XMLDB_KEY_FOREIGN, array('categoryid'), 'tool_dataprivacy_category', array('id'));
+        $table->add_key('purposeid', XMLDB_KEY_FOREIGN, array('purposeid'), 'tool_dataprivacy_purpose', array('id'));
 
-        // Conditionally launch create table for dataprivacy_context_instance.
+        // Conditionally launch create table for tool_dataprivacy_ctxinstance.
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         }
@@ -119,10 +119,10 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
 
     if ($oldversion < 2018021809) {
 
-        // Define table dataprivacy_contextlevel to be created.
-        $table = new xmldb_table('dataprivacy_contextlevel');
+        // Define table tool_dataprivacy_ctxlevel to be created.
+        $table = new xmldb_table('tool_dataprivacy_ctxlevel');
 
-        // Adding fields to table dataprivacy_contextlevel.
+        // Adding fields to table tool_dataprivacy_ctxlevel.
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('contextlevel', XMLDB_TYPE_INTEGER, '3', null, XMLDB_NOTNULL, null, null);
         $table->add_field('purposeid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
@@ -131,13 +131,13 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
         $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
         $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
 
-        // Adding keys to table dataprivacy_contextlevel.
+        // Adding keys to table tool_dataprivacy_ctxlevel.
         $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
         $table->add_key('contextlevel', XMLDB_KEY_UNIQUE, array('contextlevel'));
-        $table->add_key('categoryid', XMLDB_KEY_FOREIGN, array('categoryid'), 'dataprivacy_category', array('id'));
-        $table->add_key('purposeid', XMLDB_KEY_FOREIGN, array('purposeid'), 'dataprivacy_purpose', array('id'));
+        $table->add_key('categoryid', XMLDB_KEY_FOREIGN, array('categoryid'), 'tool_dataprivacy_category', array('id'));
+        $table->add_key('purposeid', XMLDB_KEY_FOREIGN, array('purposeid'), 'tool_dataprivacy_purpose', array('id'));
 
-        // Conditionally launch create table for dataprivacy_contextlevel.
+        // Conditionally launch create table for tool_dataprivacy_ctxlevel.
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
         }
@@ -148,8 +148,8 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
 
     if ($oldversion < 2018021813) {
 
-        // Changing type of field retentionperiod on table dataprivacy_purpose to char.
-        $table = new xmldb_table('dataprivacy_purpose');
+        // Changing type of field retentionperiod on table tool_dataprivacy_purpose to char.
+        $table = new xmldb_table('tool_dataprivacy_purpose');
         $field = new xmldb_field('retentionperiod', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
 
         // Launch change of type for field retentionperiod.
