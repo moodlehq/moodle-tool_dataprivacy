@@ -75,7 +75,8 @@ class my_data_requests_page implements renderable, templatable {
             $requestid = $request->get('id');
             $status = $request->get('status');
             $userid = $request->get('userid');
-            $requestexporter = new data_request_exporter($request, ['context' => context_user::instance($userid)]);
+            $usercontext = context_user::instance($userid);
+            $requestexporter = new data_request_exporter($request, ['context' => $usercontext]);
             $item = $requestexporter->export($output);
 
             $candownload = false;
@@ -102,7 +103,8 @@ class my_data_requests_page implements renderable, templatable {
                 $actions[] = new action_menu_link_secondary($cancelurl, null, $canceltext, $canceldata);
             }
             if ($candownload) {
-                $downloadurl = new moodle_url('#'); // TODO: Replace with a proper download URL.
+                $downloadurl = moodle_url::make_pluginfile_url($usercontext->id, 'tool_dataprivacy', 'export', $requestid, '/',
+                        'export.zip', true);
                 $downloadtext = get_string('download', 'tool_dataprivacy');
                 $actions[] = new action_menu_link_secondary($downloadurl, null, $downloadtext);
             }
