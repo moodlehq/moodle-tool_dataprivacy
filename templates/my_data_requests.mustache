@@ -75,7 +75,7 @@
     }
 }}
 
-<div data-region="datarequestss">
+<div data-region="datarequests">
     <div class="m-t-1 m-b-1">
         <a href="{{newdatarequesturl}}" class="btn btn-primary" data-action="new-request">
             {{#str}}newrequest, tool_dataprivacy{{/str}}
@@ -92,7 +92,12 @@
         </thead>
         <tbody>
             {{#requests}}
-            <tr data-region="request-node" data-id="{{id}}">
+            <tr {{!
+              }} data-region="request-node"{{!
+              }} data-id="{{id}}"{{!
+              }} data-type="{{type}}"{{!
+              }} data-status="{{status}}"{{!
+              }}>
                 <td>{{typename}}</td>
                 <td>{{#userdate}} {{timecreated}}, {{#str}} strftimedate {{/str}} {{/userdate}}</td>
                 <td>
