@@ -37,7 +37,7 @@ class category extends \core\persistent {
     /**
      * Database table.
      */
-    const TABLE = 'dataprivacy_category';
+    const TABLE = 'tool_dataprivacy_category';
 
     /**
      * Return the definition of the properties of this model.

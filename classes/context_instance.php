@@ -35,7 +35,7 @@ class context_instance extends \core\persistent {
     /**
      * Database table.
      */
-    const TABLE = 'dataprivacy_context_instance';
+    const TABLE = 'tool_dataprivacy_ctxinstance';
 
     /**
      * Return the definition of the properties of this model.
