@@ -236,3 +236,29 @@ function tool_dataprivacy_get_defaults($contextlevel) {
 
     return [$purposeid, $categoryid];
 }
+
+/**
+ * Serves any files associated with the data privacy settings.
+ *
+ * @param stdClass $course Course object
+ * @param stdClass $cm Course module object
+ * @param context $context Context
+ * @param string $filearea File area for data privacy
+ * @param array $args Arguments
+ * @param bool $forcedownload If we are forcing the download
+ * @param array $options More options
+ * @return bool Returns false if we don't find a file.
+ */
+function tool_dataprivacy_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = array()) {
+    if ($context->contextlevel == CONTEXT_USER) {
+        $fs = get_file_storage();
+        $relativepath = implode('/', $args);
+        $fullpath = "/$context->id/tool_dataprivacy/$filearea/$relativepath";
+        if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
+            return false;
+        }
+        send_stored_file($file, 0, 0, $forcedownload, $options);
+    } else {
+        send_file_not_found();
+    }
+}
