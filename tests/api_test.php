@@ -713,15 +713,15 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
         $record2 = (object)['contextid' => $coursecontext2->id, 'purposeid' => $purposes[1]->get('id'), 'categoryid' => $categories[1]->get('id')];
         $contextinstance2 = api::set_context_instance($record2);
 
-        $this->assertCount(2, $DB->get_records('dataprivacy_context_instance'));
+        $this->assertCount(2, $DB->get_records('tool_dataprivacy_ctxinstance'));
 
         api::unset_context_instance($contextinstance1);
-        $this->assertCount(1, $DB->get_records('dataprivacy_context_instance'));
+        $this->assertCount(1, $DB->get_records('tool_dataprivacy_ctxinstance'));
 
         $update = (object)['id' => $contextinstance2->get('id'), 'contextid' => $coursecontext2->id,
             'purposeid' => $purposes[0]->get('id'), 'categoryid' => $categories[0]->get('id')];
         $contextinstance2 = api::set_context_instance($update);
-        $this->assertCount(1, $DB->get_records('dataprivacy_context_instance'));
+        $this->assertCount(1, $DB->get_records('tool_dataprivacy_ctxinstance'));
     }
 
 

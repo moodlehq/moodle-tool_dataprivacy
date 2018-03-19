@@ -35,7 +35,7 @@ class contextlevel extends \core\persistent {
     /**
      * Database table.
      */
-    const TABLE = 'dataprivacy_contextlevel';
+    const TABLE = 'tool_dataprivacy_ctxlevel';
 
     /**
      * Return the definition of the properties of this model.

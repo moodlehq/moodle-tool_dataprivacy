@@ -37,7 +37,7 @@ class purpose extends \core\persistent {
     /**
      * Database table.
      */
-    const TABLE = 'dataprivacy_purpose';
+    const TABLE = 'tool_dataprivacy_purpose';
 
     /**
      * Return the definition of the properties of this model.
