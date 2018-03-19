@@ -75,15 +75,46 @@ class process_data_request_task extends adhoc_task {
 
         // Get the user details now. We might not be able to retrieve it later if it's a deletion processing.
         $foruser = core_user::get_user($request->userid);
+        $usercontext = \context_user::instance($foruser->id);
 
         // Update the status of this request as pre-processing.
         mtrace('Processing request...');
         api::update_request_status($requestid, api::DATAREQUEST_STATUS_PROCESSING);
 
         if ($request->type == api::DATAREQUEST_TYPE_EXPORT) {
-            // TODO: Add code here to execute the user data export process.
+            // TODO: Update this code to retrieve the approved_contextlist properly.
+            $manager = new \core_privacy\manager();
+            $contextcollection = $manager->get_contexts_for_userid($foruser->id);
+            $approvedcollection = new \core_privacy\local\request\contextlist_collection($foruser->id);
+            foreach ($contextcollection as $contextlist) {
+                $approvedcollection->add_contextlist(new \core_privacy\local\request\approved_contextlist($foruser,
+                        $contextlist->get_component(), $contextlist->get_contextids()));
+            }
+            $exportedcontent = $manager->export_user_data($approvedcollection);
+            $fs = get_file_storage();
+            $filerecord = new \stdClass;
+            $filerecord->component = 'tool_dataprivacy';
+            $filerecord->contextid = $usercontext->id;
+            $filerecord->userid    = $foruser->id;
+            $filerecord->filearea  = 'export';
+            $filerecord->filename  = 'export.zip';
+            $filerecord->filepath  = '/';
+            $filerecord->itemid    = $requestid;
+            $filerecord->license   = $CFG->sitedefaultlicense;
+            $filerecord->author    = fullname($foruser);
+            // Save somewhere.
+            $thing = $fs->create_file_from_pathname($filerecord, $exportedcontent);
+
         } else if ($request->type == api::DATAREQUEST_TYPE_DELETE) {
-            // TODO: Add code here to execute the user data deletion process.
+            // TODO: Update this code to retrieve the approved_contextlist properly.
+            $manager = new \core_privacy\manager();
+            $contextcollection = $manager->get_contexts_for_userid($foruser->id);
+            $approvedcollection = new \core_privacy\local\request\contextlist_collection($foruser->id);
+            foreach ($contextcollection as $contextlist) {
+                $approvedcollection->add_contextlist(new \core_privacy\local\request\approved_contextlist($foruser,
+                        $contextlist->get_component(), $contextlist->get_contextids()));
+            }
+            $manager->delete_user_data($approvedcollection);
         }
 
         // When the preparation of the metadata finishes, update the request status to awaiting approval.
