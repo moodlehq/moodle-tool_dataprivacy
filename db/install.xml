@@ -26,7 +26,7 @@
         <KEY NAME="usermodified" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="dataprivacy_purpose" COMMENT="Data purposes">
+    <TABLE NAME="tool_dataprivacy_purpose" COMMENT="Data purposes">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
@@ -42,7 +42,7 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="dataprivacy_category" COMMENT="Data categories">
+    <TABLE NAME="tool_dataprivacy_category" COMMENT="Data categories">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
@@ -56,7 +56,7 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="dataprivacy_context_instance" COMMENT="Default comment for the table, please edit me">
+    <TABLE NAME="tool_dataprivacy_ctxinstance" COMMENT="Default comment for the table, please edit me">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="contextid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
@@ -69,11 +69,11 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="contextid" TYPE="foreign-unique" FIELDS="contextid" REFTABLE="context" REFFIELDS="id"/>
-        <KEY NAME="purposeid" TYPE="foreign" FIELDS="purposeid" REFTABLE="dataprivacy_purpose" REFFIELDS="id"/>
-        <KEY NAME="categoryid" TYPE="foreign" FIELDS="categoryid" REFTABLE="dataprivacy_category" REFFIELDS="id"/>
+        <KEY NAME="purposeid" TYPE="foreign" FIELDS="purposeid" REFTABLE="tool_dataprivacy_purpose" REFFIELDS="id"/>
+        <KEY NAME="categoryid" TYPE="foreign" FIELDS="categoryid" REFTABLE="tool_dataprivacy_category" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="dataprivacy_contextlevel" COMMENT="Default comment for the table, please edit me">
+    <TABLE NAME="tool_dataprivacy_ctxlevel" COMMENT="Default comment for the table, please edit me">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="contextlevel" TYPE="int" LENGTH="3" NOTNULL="true" SEQUENCE="false"/>
@@ -86,8 +86,8 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="contextlevel" TYPE="unique" FIELDS="contextlevel"/>
-        <KEY NAME="categoryid" TYPE="foreign" FIELDS="categoryid" REFTABLE="dataprivacy_category" REFFIELDS="id"/>
-        <KEY NAME="purposeid" TYPE="foreign" FIELDS="purposeid" REFTABLE="dataprivacy_purpose" REFFIELDS="id"/>
+        <KEY NAME="categoryid" TYPE="foreign" FIELDS="categoryid" REFTABLE="tool_dataprivacy_category" REFFIELDS="id"/>
+        <KEY NAME="purposeid" TYPE="foreign" FIELDS="purposeid" REFTABLE="tool_dataprivacy_purpose" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
   </TABLES>
