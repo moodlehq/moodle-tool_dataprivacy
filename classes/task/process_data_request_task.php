@@ -82,8 +82,36 @@ class process_data_request_task extends adhoc_task {
 
         if ($request->type == api::DATAREQUEST_TYPE_EXPORT) {
             // TODO: Add code here to execute the user data export process.
+            $manager = new \core_privacy\manager();
+            $contextcollection = $manager->get_contexts_for_userid($foruser->id);
+            $approvedcollection = new \core_privacy\local\request\contextlist_collection($foruser->id);
+            foreach ($contextcollection as $contextlist) {
+                $approvedcollection->add_contextlist(new \core_privacy\local\request\approved_contextlist($foruser, $contextlist->get_component(), $contextlist->get_contextids()));
+            }
+            $exportedcontent = $manager->export_user_data($approvedcollection);
+            $fs = get_file_storage();
+            $filerecord = new \stdClass;
+            $filerecord->component = 'tool_dataprivacy';
+            $filerecord->contextid = $usercontext->id;
+            $filerecord->userid    = $foruser->id;
+            $filerecord->filearea  = 'export';
+            $filerecord->filename  = 'export.zip';
+            $filerecord->filepath  = '/';
+            $filerecord->itemid    = $requestid;
+            $filerecord->license   = $CFG->sitedefaultlicense;
+            $filerecord->author    = fullname($foruser);
+            // Save somewhere.
+            $thing = $fs->create_file_from_pathname($filerecord, $exportedcontent);
+
         } else if ($request->type == api::DATAREQUEST_TYPE_DELETE) {
             // TODO: Add code here to execute the user data deletion process.
+            $manager = new \core_privacy\manager();
+            $contextcollection = $manager->get_contexts_for_userid($foruser->id);
+            $approvedcollection = new \core_privacy\local\request\contextlist_collection($foruser->id);
+            foreach ($contextcollection as $contextlist) {
+                $approvedcollection->add_contextlist(new \core_privacy\local\request\approved_contextlist($foruser, $contextlist->get_component(), $contextlist->get_contextids()));
+            }
+            $manager->delete_user_data($approvedcollection);
         }
 
         // When the preparation of the metadata finishes, update the request status to awaiting approval.
