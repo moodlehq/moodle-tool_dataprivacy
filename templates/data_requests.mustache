@@ -113,7 +113,12 @@
         </thead>
         <tbody>
             {{#requests}}
-            <tr data-region="request-node" data-id="{{id}}">
+            <tr {{!
+              }} data-region="request-node"{{!
+              }} data-id="{{id}}"{{!
+              }} data-type="{{type}}"{{!
+              }} data-status="{{status}}"{{!
+              }}>
                 <td>{{typenameshort}}</td>
                 <td><a href="{{foruser.profileurl}}" title="{{#str}}viewprofile{{/str}}">{{foruser.fullname}}</a></td>
                 <td>{{#userdate}} {{timecreated}}, {{#str}} strftimedate {{/str}} {{/userdate}}</td>
