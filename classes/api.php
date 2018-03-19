@@ -217,11 +217,11 @@ class api {
                 'userid' => $userid,
                 'requestedby' => $userid
             ];
-            $results = data_request::get_records_select($select, $params, 'status');
+            $results = data_request::get_records_select($select, $params, 'status DESC, timemodified DESC');
         } else {
             // If the current user is one of the site's Data Protection Officers, then fetch all data requests.
             if (self::is_site_dpo($USER->id)) {
-                $results = data_request::get_records(null, 'status');
+                $results = data_request::get_records(null, 'status DESC, timemodified DESC', '');
             }
         }
 
