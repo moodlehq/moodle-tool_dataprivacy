@@ -24,6 +24,7 @@ namespace tool_dataprivacy;
 defined('MOODLE_INTERNAL') || die();
 
 require_once("$CFG->libdir/externallib.php");
+require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/dataprivacy/lib.php');
 
 use coding_exception;
 use context_system;
@@ -719,31 +720,16 @@ class external extends external_api {
             'jsonformdata' => $jsonformdata
         ]);
 
+        // Extra permission checkings are delegated to api::set_contextlevel.
         self::validate_context(\context_system::instance());
 
         $serialiseddata = json_decode($params['jsonformdata']);
         $data = array();
         parse_str($serialiseddata, $data);
 
-        $persistent = \tool_dataprivacy\contextlevel::get_record_by_contextlevel($data['contextlevel'], false);
-        if (!$persistent) {
-            $persistent = new \tool_dataprivacy\contextlevel();
-        }
+        $contextlevel = $data['contextlevel'];
 
-        $purposeoptions = data_registry_page::purpose_options(
-            \tool_dataprivacy\api::get_purposes()
-        );
-        $categoryoptions = data_registry_page::category_options(
-            \tool_dataprivacy\api::get_categories()
-        );
-
-        $customdata = [
-            'contextlevel' => $data['contextlevel'],
-            'contextlevelname' => get_string('contextlevelname' . $data['contextlevel'], 'tool_dataprivacy'),
-            'persistent' => $persistent,
-            'purposes' => $purposeoptions,
-            'categories' => $categoryoptions,
-        ];
+        $customdata = tool_dataprivacy_get_contextlevel_form_customdata($contextlevel);
         $mform = new \tool_dataprivacy\form\contextlevel(null, $customdata, 'post', '', null, true, $data);
         if ($validateddata = $mform->get_data()) {
             $contextlevel = api::set_contextlevel($validateddata);
@@ -801,6 +787,7 @@ class external extends external_api {
             'jsonformdata' => $jsonformdata
         ]);
 
+        // Extra permission checkings are delegated to api::set_context_instance.
         self::validate_context(\context_system::instance());
 
         $serialiseddata = json_decode($params['jsonformdata']);
@@ -808,27 +795,7 @@ class external extends external_api {
         parse_str($serialiseddata, $data);
 
         $context = \context_helper::instance_by_id($data['contextid']);
-
-        $persistent = \tool_dataprivacy\context_instance::get_record_by_contextid($data['contextid'], false);
-        if (!$persistent) {
-            $persistent = new \tool_dataprivacy\context_instance();
-        }
-
-        $purposeoptions = data_registry_page::purpose_options(
-            \tool_dataprivacy\api::get_purposes()
-        );
-        $categoryoptions = data_registry_page::category_options(
-            \tool_dataprivacy\api::get_categories()
-        );
-
-        $customdata = [
-            'context' => $context,
-            'subjectscope' => \tool_dataprivacy\api::get_subject_scope($context),
-            'contextname' => $context->get_context_name(),
-            'persistent' => $persistent,
-            'purposes' => $purposeoptions,
-            'categories' => $categoryoptions,
-        ];
+        $customdata = tool_dataprivacy_get_context_form_customdata($context);
         $mform = new \tool_dataprivacy\form\context_instance(null, $customdata, 'post', '', null, true, $data);
         if ($validateddata = $mform->get_data()) {
             $context = api::set_context_instance($validateddata);

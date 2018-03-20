@@ -301,7 +301,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
              * @param {Integer} systemContextId
              * @param {Integer} initContextLevel
              * @param {Integer} initContextId
-             * @returns DataRegistry
+             * @return DataRegistry
              */
             init: function(systemContextId, initContextLevel, initContextId) {
                 return new DataRegistry(systemContextId, initContextLevel, initContextId);

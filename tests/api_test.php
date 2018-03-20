@@ -759,6 +759,156 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
         $this->assertCount(1, $DB->get_records('tool_dataprivacy_ctxinstance'));
     }
 
+    /**
+     * Test contextlevel.
+     *
+     * @return null
+     */
+    public function test_contextlevel() {
+        global $DB;
+
+        $this->setAdminUser();
+        list($purposes, $categories, $courses, $modules) = $this->add_purposes_and_categories();
+
+        $record = (object)[
+            'purposeid' => $purposes[0]->get('id'),
+            'categoryid' => $categories[0]->get('id'),
+            'contextlevel' => CONTEXT_SYSTEM,
+        ];
+        $contextlevel = api::set_contextlevel($record);
+        $this->assertInstanceOf('\tool_dataprivacy\contextlevel', $contextlevel);
+        $this->assertEquals($record->contextlevel, $contextlevel->get('contextlevel'));
+        $this->assertEquals($record->purposeid, $contextlevel->get('purposeid'));
+        $this->assertEquals($record->categoryid, $contextlevel->get('categoryid'));
+
+        // Now update it.
+        $record->purposeid = $purposes[1]->get('id');
+        $contextlevel = api::set_contextlevel($record);
+        $this->assertEquals($record->contextlevel, $contextlevel->get('contextlevel'));
+        $this->assertEquals($record->purposeid, $contextlevel->get('purposeid'));
+        $this->assertEquals(1, $DB->count_records('tool_dataprivacy_ctxlevel'));
+
+        $record->contextlevel = CONTEXT_USER;
+        $contextlevel = api::set_contextlevel($record);
+        $this->assertEquals(2, $DB->count_records('tool_dataprivacy_ctxlevel'));
+    }
+
+    /**
+     * Test effective context levels purposes and categories.
+     *
+     * @return null
+     */
+    public function test_effective_contextlevel() {
+        $this->setAdminUser();
+
+        list($purposes, $categories, $courses, $modules) = $this->add_purposes_and_categories();
+
+        list($purposeid, $categoryid) = api::get_effective_contextlevel_purpose_and_category(CONTEXT_SYSTEM);
+        $this->assertEquals(false, $purposeid);
+        $this->assertEquals(false, $categoryid);
+
+        list($purposevar, $categoryvar) = tool_dataprivacy_var_names_from_context(
+            \context_helper::get_class_for_level(CONTEXT_SYSTEM)
+        );
+        set_config($purposevar, $purposes[0]->get('id'), 'tool_dataprivacy');
+
+        list($purposeid, $categoryid) = api::get_effective_contextlevel_purpose_and_category(CONTEXT_SYSTEM);
+        $this->assertEquals($purposes[0]->get('id'), $purposeid);
+        $this->assertEquals(false, $categoryid);
+
+        // Course inherits from system if not defined.
+        list($purposeid, $categoryid) = api::get_effective_contextlevel_purpose_and_category(CONTEXT_COURSE);
+        $this->assertEquals($purposes[0]->get('id'), $purposeid);
+        $this->assertEquals(false, $categoryid);
+
+        // Course defined values should have preference.
+        list($purposevar, $categoryvar) = tool_dataprivacy_var_names_from_context(
+            \context_helper::get_class_for_level(CONTEXT_COURSE)
+        );
+        set_config($purposevar, $purposes[1]->get('id'), 'tool_dataprivacy');
+        set_config($categoryvar, $categories[0]->get('id'), 'tool_dataprivacy');
+
+        list($purposeid, $categoryid) = api::get_effective_contextlevel_purpose_and_category(CONTEXT_COURSE);
+        $this->assertEquals($purposes[1]->get('id'), $purposeid);
+        $this->assertEquals($categories[0]->get('id'), $categoryid);
+
+        // Context level defaults are also allowed to be set to 'inherit'.
+        set_config($purposevar, \tool_dataprivacy\context_instance::INHERIT, 'tool_dataprivacy');
+
+        list($purposeid, $categoryid) = api::get_effective_contextlevel_purpose_and_category(CONTEXT_COURSE);
+        $this->assertEquals($purposes[0]->get('id'), $purposeid);
+        $this->assertEquals($categories[0]->get('id'), $categoryid);
+
+        list($purposeid, $categoryid) = api::get_effective_contextlevel_purpose_and_category(CONTEXT_MODULE);
+        $this->assertEquals($purposes[0]->get('id'), $purposeid);
+        $this->assertEquals($categories[0]->get('id'), $categoryid);
+    }
+
+    /**
+     * Test effective context purposes and categories.
+     *
+     * @return null
+     */
+    public function test_effective_context() {
+        $this->setAdminUser();
+
+        list($purposes, $categories, $courses, $modules) = $this->add_purposes_and_categories();
+
+        // Define system defaults (all context levels below will inherit).
+        list($purposevar, $categoryvar) = tool_dataprivacy_var_names_from_context(
+            \context_helper::get_class_for_level(CONTEXT_SYSTEM)
+        );
+        set_config($purposevar, $purposes[0]->get('id'), 'tool_dataprivacy');
+        set_config($categoryvar, $categories[0]->get('id'), 'tool_dataprivacy');
+
+        // Define course defaults.
+        list($purposevar, $categoryvar) = tool_dataprivacy_var_names_from_context(
+            \context_helper::get_class_for_level(CONTEXT_COURSE)
+        );
+        set_config($purposevar, $purposes[1]->get('id'), 'tool_dataprivacy');
+        set_config($categoryvar, $categories[1]->get('id'), 'tool_dataprivacy');
+
+        $course0context = \context_course::instance($courses[0]->id);
+        $course1context = \context_course::instance($courses[1]->id);
+        $mod0context = \context_module::instance($modules[0]->cmid);
+        $mod1context = \context_module::instance($modules[1]->cmid);
+
+        // Set course instance values.
+        $record = (object)[
+            'contextid' => $course0context->id,
+            'purposeid' => $purposes[1]->get('id'),
+            'categoryid' => $categories[2]->get('id'),
+        ];
+        api::set_context_instance($record);
+        $category = api::get_effective_category($course0context);
+        $this->assertEquals($record->categoryid, $category->get('id'));
+
+        // Module instances get the context level default if nothing specified.
+        $category = api::get_effective_category($mod0context);
+        $this->assertEquals($categories[1]->get('id'), $category->get('id'));
+
+        // Module instances get the parent context category if they inherit.
+        $record->contextid = $mod0context->id;
+        $record->categoryid = \tool_dataprivacy\context_instance::INHERIT;
+        api::set_context_instance($record);
+        $category = api::get_effective_category($mod0context);
+        $this->assertEquals($categories[2]->get('id'), $category->get('id'));
+
+        // The $forcedvalue param allows us to override the actual value (method php-docs for more info).
+        $category = api::get_effective_category($mod0context, $categories[1]->get('id'));
+        $this->assertEquals($categories[1]->get('id'), $category->get('id'));
+        $category = api::get_effective_category($mod0context, $categories[0]->get('id'));
+        $this->assertEquals($categories[0]->get('id'), $category->get('id'));
+
+        // Module instances get the parent context category if they inherit; in
+        // this case the parent context category is not set so it should use the
+        // context level default (see 'Define course defaults' above).
+        $record->contextid = $mod1context->id;
+        $record->categoryid = \tool_dataprivacy\context_instance::INHERIT;
+        api::set_context_instance($record);
+        $category = api::get_effective_category($mod1context);
+        $this->assertEquals($categories[1]->get('id'), $category->get('id'));
+    }
 
     /**
      * Creates test purposes and categories.
@@ -772,6 +922,7 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
 
         $cat1 = api::create_category((object)['name' => 'a']);
         $cat2 = api::create_category((object)['name' => 'b']);
+        $cat3 = api::create_category((object)['name' => 'c']);
 
         $course1 = $this->getDataGenerator()->create_course();
         $course2 = $this->getDataGenerator()->create_course();
@@ -781,7 +932,7 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
 
         return [
             [$purpose1, $purpose2],
-            [$cat1, $cat2],
+            [$cat1, $cat2, $cat3],
             [$course1, $course2],
             [$module1, $module2]
         ];

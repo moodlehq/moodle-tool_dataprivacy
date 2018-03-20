@@ -25,6 +25,8 @@
 namespace tool_dataprivacy\form;
 defined('MOODLE_INTERNAL') || die();
 
+use \tool_dataprivacy\output\data_registry_page;
+
 require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/dataprivacy/lib.php');
 
@@ -56,20 +58,18 @@ class defaults extends \moodleform {
 
             list($purposevar, $categoryvar) = tool_dataprivacy_var_names_from_context($classname);
 
-            $categoryoptions = $this->_customdata['categories'];
-            $purposeoptions = $this->_customdata['purposes'];
-
+            $includeinherit = true;
             if ($level == CONTEXT_SYSTEM) {
-                unset($categoryoptions[0]);
-                unset($purposeoptions[0]);
+                $includeinherit = false;
             }
 
-            $mform->addElement('select', $categoryvar, get_string('category', 'tool_dataprivacy'),
-                $categoryoptions);
+            $categoryoptions = data_registry_page::category_options($this->_customdata['categories'], false, $includeinherit);
+            $purposeoptions = data_registry_page::category_options($this->_customdata['purposes'], false, $includeinherit);
+
+            $mform->addElement('select', $categoryvar, get_string('category', 'tool_dataprivacy'), $categoryoptions);
             $mform->setType($categoryvar, PARAM_INT);
 
-            $mform->addElement('select', $purposevar, get_string('purpose', 'tool_dataprivacy'),
-                $purposeoptions);
+            $mform->addElement('select', $purposevar, get_string('purpose', 'tool_dataprivacy'), $purposeoptions);
             $mform->setType($purposevar, PARAM_INT);
         }
 
