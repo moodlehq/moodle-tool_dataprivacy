@@ -100,7 +100,7 @@ class data_registry_page implements renderable, templatable {
         $data->actions = $actionmenu->export_for_template($output);
 
         list($purposeid, $categoryid) = tool_dataprivacy_get_defaults(CONTEXT_SYSTEM);
-        if (!$purposeid || !$categoryid) {
+        if ($purposeid === false || $categoryid === false) {
             $data->nosystemdefaults = (object)[
                 'message' => get_string('nosystemdefaults', 'tool_dataprivacy'),
                 'announce' => 1
@@ -417,10 +417,12 @@ class data_registry_page implements renderable, templatable {
      * From a list of purpose persistents to a list of id => name purposes.
      *
      * @param \tool_dataprivacy\purpose $purposes
+     * @param bool $includenotset
+     * @param bool $includeinherit
      * @return string[]
      */
-    public static function purpose_options($purposes) {
-        $options = [0 => get_string('notset', 'tool_dataprivacy')];
+    public static function purpose_options($purposes, $includenotset = true, $includeinherit = true) {
+        $options = self::base_options($includenotset, $includeinherit);
         foreach ($purposes as $purpose) {
             $options[$purpose->get('id')] = $purpose->get('name');
         }
@@ -432,12 +434,36 @@ class data_registry_page implements renderable, templatable {
      * From a list of category persistents to a list of id => name categories.
      *
      * @param \tool_dataprivacy\category $categories
+     * @param bool $includenotset
+     * @param bool $includeinherit
      * @return string[]
      */
-    public static function category_options($categories) {
-        $options = [0 => get_string('notset', 'tool_dataprivacy')];
+    public static function category_options($categories, $includenotset = true, $includeinherit = true) {
+        $options = self::base_options($includenotset, $includeinherit);
         foreach ($categories as $category) {
             $options[$category->get('id')] = $category->get('name');
+        }
+
+        return $options;
+    }
+
+    /**
+     * Base not set and inherit options.
+     *
+     * @param bool $includenotset
+     * @param bool $includeinherit
+     * @return array
+     */
+    private static function base_options($includenotset = true, $includeinherit = true) {
+
+        $options = [];
+
+        if ($includenotset) {
+            $options[\tool_dataprivacy\context_instance::NOTSET] = get_string('notset', 'tool_dataprivacy');
+        }
+
+        if ($includeinherit) {
+            $options[\tool_dataprivacy\context_instance::INHERIT] = get_string('inherit', 'tool_dataprivacy');
         }
 
         return $options;

@@ -38,6 +38,16 @@ class context_instance extends \core\persistent {
     const TABLE = 'tool_dataprivacy_ctxinstance';
 
     /**
+     * Not set value.
+     */
+    const NOTSET = 0;
+
+    /**
+     * Inherit value.
+     */
+    const INHERIT = -1;
+
+    /**
      * Return the definition of the properties of this model.
      *
      * @return array
