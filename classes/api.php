@@ -36,6 +36,11 @@ use required_capability_exception;
 use stdClass;
 use tool_dataprivacy\task\initiate_data_request_task;
 use tool_dataprivacy\task\process_data_request_task;
+use tool_dataprivacy\purpose;
+use tool_dataprivacy\category;
+use tool_dataprivacy\contextlevel;
+use tool_dataprivacy\context_instance;
+use tool_dataprivacy\data_registry;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -626,165 +631,110 @@ class api {
     }
 
     /**
-     * Returns the roles assigned to the provided level.
-     *
-     * Important to note that it returns course-level assigned roles
-     * if the provided context level is below course.
-     *
-     * @param \context $context
-     * @return array
-     */
-    public static function get_subject_scope(\context $context) {
-
-        if ($contextcourse = $context->get_course_context(false)) {
-            // Below course level we only look at course-assigned roles.
-            $roles = get_user_roles($contextcourse, 0, false);
-        } else {
-            $roles = get_user_roles($context, 0, false);
-        }
-
-        return array_map(function($role) {
-            if ($role->name) {
-                return $role->name;
-            } else {
-                return $role->shortname;
-            }
-        }, $roles);
-    }
-
-    /**
      * Returns the effective category given a context instance.
      *
      * @param \context $context
-     * @param int $forcedvalue Use this value as if this was this context instance value.
+     * @param int $forcedvalue Use this categoryid value as if this was this context instance category.
      * @return purpose|false
      */
     public static function get_effective_category(\context $context, $forcedvalue=false) {
-        return self::get_effective_context_value($context, 'category', $forcedvalue);
+
+        self::check_can_manage_data_registry($context->id);
+
+        if (!data_registry::defaults_set()) {
+            return false;
+        }
+
+        return data_registry::get_effective_context_value($context, 'category', $forcedvalue);
     }
 
     /**
      * Returns the effective purpose given a context instance.
      *
      * @param \context $context
-     * @param int $forcedvalue Use this value as if this was this context instance value.
+     * @param int $forcedvalue Use this purposeid value as if this was this context instance purpose.
      * @return category|false
      */
     public static function get_effective_purpose(\context $context, $forcedvalue=false) {
-        return self::get_effective_context_value($context, 'purpose', $forcedvalue);
-    }
 
-    /**
-     * Returns the effective value given a context instance
-     *
-     * @param \context $context
-     * @param string $element 'category' or 'purpose'
-     * @param int $forcedvalue Use this value as if this was this context instance value.
-     * @return persistent|false It return a 'purpose' instance or a 'category' instance, depending on $element
-     */
-    protected static function get_effective_context_value(\context $context, $element, $forcedvalue=false) {
+        self::check_can_manage_data_registry($context->id);
 
-        if ($element !== 'purpose' && $element !== 'category') {
-            throw new \coding_exception('Only \'purpose\' and \'category\' are supported.');
-        }
-        $fieldname = $element . 'id';
-
-        if (!$forcedvalue) {
-            $instance = context_instance::get_record_by_contextid($context->id, false);
-
-            if (!$instance) {
-                // If the instance does not have a value defaults to not set, so we grab the context level default as its value.
-                list($purposeid, $categoryid) = self::get_effective_contextlevel_purpose_and_category($context->contextlevel);
-                $classname = '\tool_dataprivacy\\' . $element;
-                return new $classname($$fieldname);
-            }
-            $instancevalue = $instance->get($fieldname);
-        } else {
-            $instancevalue = $forcedvalue;
-        }
-
-        // Not set -> Use the default context level value.
-        if ($instancevalue == context_instance::NOTSET) {
-            list($purposeid, $categoryid) = self::get_effective_contextlevel_purpose_and_category($context->contextlevel);
-            $classname = '\tool_dataprivacy\\' . $element;
-            return new $classname($$fieldname);
-        }
-
-        // Specific value for this context instance.
-        if ($instancevalue != context_instance::INHERIT) {
-            $classname = '\tool_dataprivacy\\' . $element;
-            return new $classname($instancevalue);
-        }
-
-        // This context is using inherited so let's return the parent effective value.
-        $parentcontext = $context->get_parent_context();
-        if (!$parentcontext) {
+        if (!data_registry::defaults_set()) {
             return false;
         }
 
-        // The forced value should not be transmitted to parent contexts.
-        return self::get_effective_context_value($parentcontext, $element);
+        return data_registry::get_effective_context_value($context, 'purpose', $forcedvalue);
     }
 
     /**
-     * Returns the effective purpose and category.
+     * Return the course-dependant expired courses.
      *
-     * @param int $contextlevel
-     * @param int $forcedpurposevalue Use this value as if this was this context level purpose.
-     * @param int $forcedcategoryvalue Use this value as if this was this context level category.
-     * @return int[]
+     * @return \recordset_walk Recordset iterator (it returns \context|false[] in practice).
      */
-    public static function get_effective_contextlevel_purpose_and_category($contextlevel, $forcedpurposevalue = false, $forcedcategoryvalue = false) {
+    public static function get_expired_course_context_instances() {
+        global $DB;
 
-        $inheritance = [
-            CONTEXT_USER => [CONTEXT_SYSTEM],
-            CONTEXT_COURSECAT => [CONTEXT_SYSTEM],
-            CONTEXT_COURSE => [CONTEXT_COURSECAT, CONTEXT_SYSTEM],
-            CONTEXT_MODULE => [CONTEXT_COURSE, CONTEXT_COURSECAT, CONTEXT_SYSTEM],
-            CONTEXT_BLOCK => [CONTEXT_COURSE, CONTEXT_COURSECAT, CONTEXT_SYSTEM],
-        ];
+        self::check_can_manage_data_registry(\context_system::instance()->id);
 
-        list($purposeid, $categoryid) = tool_dataprivacy_get_defaults($contextlevel);
-
-        // Honour forced values.
-        if ($forcedpurposevalue) {
-            $purposeid = $forcedpurposevalue;
-        }
-        if ($forcedcategoryvalue) {
-            $categoryid = $forcedcategoryvalue;
+        if (!data_registry::defaults_set()) {
+            return [];
         }
 
-        // Not set == INHERIT for defaults.
-        if ($purposeid == context_instance::INHERIT || $purposeid == context_instance::NOTSET) {
-            $purposeid = false;
-        }
-        if ($categoryid == context_instance::INHERIT || $categoryid == context_instance::NOTSET) {
-            $categoryid = false;
-        }
+        // Including context info + course end date + purposeid (this last one only if defined).
+        $fields = 'ctx.id AS id, ctxcourse.enddate AS enddate, dpctx.id AS purposeid, ' .
+            \context_helper::get_preload_record_columns_sql('ctx');
 
-        if ($contextlevel != CONTEXT_SYSTEM && ($purposeid === false || $categoryid === false)) {
-            foreach ($inheritance[$contextlevel] as $parent) {
+        // We want all contexts at course-dependant levels.
+        $parentpath = $DB->sql_concat('ctxcourse.path', "'/%'");
 
-                list($parentpurposeid, $parentcategoryid) = tool_dataprivacy_get_defaults($parent);
-                // Not set == INHERIT for defaults.
-                if ($parentpurposeid == context_instance::INHERIT || $parentpurposeid == context_instance::NOTSET) {
-                    $parentpurposeid = false;
-                }
-                if ($parentcategoryid == context_instance::INHERIT || $parentcategoryid == context_instance::NOTSET) {
-                    $parentcategoryid = false;
-                }
+        // This SQL query returns all course-dependant contexts (including the course context)
+        // which course end date already passed.
+        //
+        // We are sorting by path and level as the effective retention period calculations may need to
+        // get context parents and we want those parents to be read from
+        // \context::$cache_contextsbyid not from the database. CONTEXT_CACHE_MAX_SIZE is 2500 but this SQL can
+        // potentially return more than 2500 records. It is not likely that we will find a significant amount
+        // of courses with more than 2500 activities so this should be fine.
+        $sql = "SELECT $fields FROM {context} ctx
+                  JOIN (
+                    SELECT c.enddate AS enddate, subctx.path FROM {context} subctx
+                      JOIN {course} c ON subctx.contextlevel = ? AND subctx.instanceid = c.id
+                      WHERE c.enddate < ? and c.enddate > 0
+                  ) ctxcourse ON ctx.path LIKE {$parentpath} OR ctx.path = ctxcourse.path
+                  LEFT JOIN {tool_dataprivacy_ctxinstance} dpctx ON dpctx.contextid = ctx.id
+                ORDER BY ctx.path, ctx.contextlevel ASC";
+        $params = [CONTEXT_COURSE, time()];
 
-                if ($purposeid === false && $parentpurposeid) {
-                    $purposeid = $parentpurposeid;
-                }
+        $recordset = $DB->get_recordset_sql($sql, $params);
 
-                if ($categoryid === false && $parentcategoryid) {
-                    $categoryid = $parentcategoryid;
-                }
+        // The recordset iterator callback discards contexts that are not yet ready to be deleted.
+        $callback = function($record) {
+
+            \context_helper::preload_from_record($record);
+            $context = \context::instance_by_id($record->id);
+
+            // We pass the value we just got from SQL so get_effective_purpose don't need to query
+            // the db again to retrieve it. If there is no tool_dataprovider_ctxinstance record
+            // $record->purposeid will be null which is ok as it would force get_effective_purpose
+            // to return the default purpose for the context context level (no db queries involved).
+            $purposevalue = $record->purposeid !== null ? $record->purposeid : context_instance::NOTSET;
+
+            // It should be cheap as system purposes and context instance will be retrieved from a cache most of the time.
+            $purpose = self::get_effective_purpose($context, $purposevalue);
+
+            $dt = new \DateTime();
+            $dt->setTimestamp($record->enddate);
+            $di = new \DateInterval($purpose->get('retentionperiod'));
+            $dt->add($di);
+
+            if (time() < $dt->getTimestamp()) {
+                // Discard this element if we have not reached the retention period yet.
+                return false;
             }
-        }
 
-        // They may still be false, but we return anyway.
-        return [$purposeid, $categoryid];
+            return $context;
+        };
+
+        return new \core\dml\recordset_walk($recordset, $callback);
     }
 }

@@ -729,7 +729,7 @@ class external extends external_api {
 
         $contextlevel = $data['contextlevel'];
 
-        $customdata = tool_dataprivacy_get_contextlevel_form_customdata($contextlevel);
+        $customdata = \tool_dataprivacy\form\contextlevel::get_customdata($contextlevel);
         $mform = new \tool_dataprivacy\form\contextlevel(null, $customdata, 'post', '', null, true, $data);
         if ($validateddata = $mform->get_data()) {
             $contextlevel = api::set_contextlevel($validateddata);
@@ -795,7 +795,7 @@ class external extends external_api {
         parse_str($serialiseddata, $data);
 
         $context = \context_helper::instance_by_id($data['contextid']);
-        $customdata = tool_dataprivacy_get_context_form_customdata($context);
+        $customdata = \tool_dataprivacy\form\context_instance::get_customdata($context);
         $mform = new \tool_dataprivacy\form\context_instance(null, $customdata, 'post', '', null, true, $data);
         if ($validateddata = $mform->get_data()) {
             $context = api::set_context_instance($validateddata);
