@@ -25,6 +25,7 @@
 use core\invalid_persistent_exception;
 use core\task\manager;
 use tool_dataprivacy\api;
+use tool_dataprivacy\data_registry;
 use tool_dataprivacy\data_request;
 use tool_dataprivacy\task\initiate_data_request_task;
 use tool_dataprivacy\task\process_data_request_task;
@@ -803,43 +804,43 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
 
         list($purposes, $categories, $courses, $modules) = $this->add_purposes_and_categories();
 
-        list($purposeid, $categoryid) = api::get_effective_contextlevel_purpose_and_category(CONTEXT_SYSTEM);
+        list($purposeid, $categoryid) = data_registry::get_effective_contextlevel_purpose_and_category(CONTEXT_SYSTEM);
         $this->assertEquals(false, $purposeid);
         $this->assertEquals(false, $categoryid);
 
-        list($purposevar, $categoryvar) = tool_dataprivacy_var_names_from_context(
+        list($purposevar, $categoryvar) = \tool_dataprivacy\data_registry::var_names_from_context(
             \context_helper::get_class_for_level(CONTEXT_SYSTEM)
         );
         set_config($purposevar, $purposes[0]->get('id'), 'tool_dataprivacy');
 
-        list($purposeid, $categoryid) = api::get_effective_contextlevel_purpose_and_category(CONTEXT_SYSTEM);
+        list($purposeid, $categoryid) = data_registry::get_effective_contextlevel_purpose_and_category(CONTEXT_SYSTEM);
         $this->assertEquals($purposes[0]->get('id'), $purposeid);
         $this->assertEquals(false, $categoryid);
 
         // Course inherits from system if not defined.
-        list($purposeid, $categoryid) = api::get_effective_contextlevel_purpose_and_category(CONTEXT_COURSE);
+        list($purposeid, $categoryid) = data_registry::get_effective_contextlevel_purpose_and_category(CONTEXT_COURSE);
         $this->assertEquals($purposes[0]->get('id'), $purposeid);
         $this->assertEquals(false, $categoryid);
 
         // Course defined values should have preference.
-        list($purposevar, $categoryvar) = tool_dataprivacy_var_names_from_context(
+        list($purposevar, $categoryvar) = \tool_dataprivacy\data_registry::var_names_from_context(
             \context_helper::get_class_for_level(CONTEXT_COURSE)
         );
         set_config($purposevar, $purposes[1]->get('id'), 'tool_dataprivacy');
         set_config($categoryvar, $categories[0]->get('id'), 'tool_dataprivacy');
 
-        list($purposeid, $categoryid) = api::get_effective_contextlevel_purpose_and_category(CONTEXT_COURSE);
+        list($purposeid, $categoryid) = data_registry::get_effective_contextlevel_purpose_and_category(CONTEXT_COURSE);
         $this->assertEquals($purposes[1]->get('id'), $purposeid);
         $this->assertEquals($categories[0]->get('id'), $categoryid);
 
         // Context level defaults are also allowed to be set to 'inherit'.
         set_config($purposevar, \tool_dataprivacy\context_instance::INHERIT, 'tool_dataprivacy');
 
-        list($purposeid, $categoryid) = api::get_effective_contextlevel_purpose_and_category(CONTEXT_COURSE);
+        list($purposeid, $categoryid) = data_registry::get_effective_contextlevel_purpose_and_category(CONTEXT_COURSE);
         $this->assertEquals($purposes[0]->get('id'), $purposeid);
         $this->assertEquals($categories[0]->get('id'), $categoryid);
 
-        list($purposeid, $categoryid) = api::get_effective_contextlevel_purpose_and_category(CONTEXT_MODULE);
+        list($purposeid, $categoryid) = data_registry::get_effective_contextlevel_purpose_and_category(CONTEXT_MODULE);
         $this->assertEquals($purposes[0]->get('id'), $purposeid);
         $this->assertEquals($categories[0]->get('id'), $categoryid);
     }
@@ -855,14 +856,14 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
         list($purposes, $categories, $courses, $modules) = $this->add_purposes_and_categories();
 
         // Define system defaults (all context levels below will inherit).
-        list($purposevar, $categoryvar) = tool_dataprivacy_var_names_from_context(
+        list($purposevar, $categoryvar) = \tool_dataprivacy\data_registry::var_names_from_context(
             \context_helper::get_class_for_level(CONTEXT_SYSTEM)
         );
         set_config($purposevar, $purposes[0]->get('id'), 'tool_dataprivacy');
         set_config($categoryvar, $categories[0]->get('id'), 'tool_dataprivacy');
 
         // Define course defaults.
-        list($purposevar, $categoryvar) = tool_dataprivacy_var_names_from_context(
+        list($purposevar, $categoryvar) = \tool_dataprivacy\data_registry::var_names_from_context(
             \context_helper::get_class_for_level(CONTEXT_COURSE)
         );
         set_config($purposevar, $purposes[1]->get('id'), 'tool_dataprivacy');

@@ -80,7 +80,7 @@ class category extends \core\persistent {
         $levels = \context_helper::get_all_levels();
         foreach ($levels as $level => $classname) {
 
-            list($unused, $categoryvar) = tool_dataprivacy_var_names_from_context($classname);
+            list($unused, $categoryvar) = \tool_dataprivacy\data_registry::var_names_from_context($classname);
             if (!empty($pluginconfig->{$categoryvar}) && $pluginconfig->{$categoryvar} == $this->get('id')) {
                 return true;
             }

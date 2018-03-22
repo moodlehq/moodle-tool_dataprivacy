@@ -41,7 +41,7 @@ $form = new \tool_dataprivacy\form\defaults($PAGE->url->out(false), $customdata)
 
 $toform = new stdClass();
 foreach ($levels as $level => $classname) {
-    list($purposevar, $categoryvar) = tool_dataprivacy_var_names_from_context($classname);
+    list($purposevar, $categoryvar) = \tool_dataprivacy\data_registry::var_names_from_context($classname);
     $toform->{$purposevar} = get_config('tool_dataprivacy', $purposevar);
     $toform->{$categoryvar} = get_config('tool_dataprivacy', $categoryvar);
 }
@@ -54,7 +54,7 @@ if ($form->is_cancelled()) {
 
     foreach ($levels as $level => $classname) {
 
-        list($purposevar, $categoryvar) = tool_dataprivacy_var_names_from_context($classname);
+        list($purposevar, $categoryvar) = \tool_dataprivacy\data_registry::var_names_from_context($classname);
 
         if (isset($data->{$purposevar})) {
             set_config($purposevar, $data->{$purposevar}, 'tool_dataprivacy');
