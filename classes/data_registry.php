@@ -46,6 +46,17 @@ require_once($CFG->libdir . '/coursecatlib.php');
 class data_registry {
 
     /**
+     * @var array Inheritance between context levels.
+     */
+    private static $contextlevelinheritance = [
+        CONTEXT_USER => [CONTEXT_SYSTEM],
+        CONTEXT_COURSECAT => [CONTEXT_SYSTEM],
+        CONTEXT_COURSE => [CONTEXT_COURSECAT, CONTEXT_SYSTEM],
+        CONTEXT_MODULE => [CONTEXT_COURSE, CONTEXT_COURSECAT, CONTEXT_SYSTEM],
+        CONTEXT_BLOCK => [CONTEXT_COURSE, CONTEXT_COURSECAT, CONTEXT_SYSTEM],
+    ];
+
+    /**
      * Returns purpose and category var names from a context class name
      *
      * @access private
@@ -167,7 +178,7 @@ class data_registry {
     public static function get_effective_context_value(\context $context, $element, $forcedvalue=false) {
 
         if ($element !== 'purpose' && $element !== 'category') {
-            throw new \coding_exception('Only \'purpose\' and \'category\' are supported.');
+            throw new coding_exception('Only \'purpose\' and \'category\' are supported.');
         }
         $fieldname = $element . 'id';
 
@@ -176,26 +187,31 @@ class data_registry {
 
             if (!$instance) {
                 // If the instance does not have a value defaults to not set, so we grab the context level default as its value.
-                list($purposeid, $categoryid) = self::get_effective_contextlevel_purpose_and_category($context->contextlevel);
-                $classname = '\tool_dataprivacy\\' . $element;
-                return new $classname($$fieldname);
+                $instancevalue = context_instance::NOTSET;
+            } else {
+                $instancevalue = $instance->get($fieldname);
             }
-            $instancevalue = $instance->get($fieldname);
         } else {
             $instancevalue = $forcedvalue;
         }
 
-        // Not set -> Use the default context level value.
+        // Not set.
         if ($instancevalue == context_instance::NOTSET) {
-            list($purposeid, $categoryid) = self::get_effective_contextlevel_purpose_and_category($context->contextlevel);
-            $classname = '\tool_dataprivacy\\' . $element;
-            return new $classname($$fieldname);
+
+            // The effective value varies depending on the context level.
+            if ($context->contextlevel == CONTEXT_USER) {
+                // Use the context level value as we don't allow people to set specific instances values.
+                return self::get_effective_contextlevel_value($context->contextlevel, $element);
+            } else {
+                // Use the default context level value.
+                list($purposeid, $categoryid) = self::get_effective_default_contextlevel_purpose_and_category($context->contextlevel);
+                return self::get_element_instance($element, $$fieldname);
+            }
         }
 
         // Specific value for this context instance.
         if ($instancevalue != context_instance::INHERIT) {
-            $classname = '\tool_dataprivacy\\' . $element;
-            return new $classname($instancevalue);
+            return self::get_element_instance($element, $instancevalue);
         }
 
         // This context is using inherited so let's return the parent effective value.
@@ -209,23 +225,67 @@ class data_registry {
     }
 
     /**
-     * Returns the effective purpose and category.
+     * Returns the effective value for a context level.
      *
-     * @access private
+     * Note that this is different from the effective default context level
+     * (see get_effective_default_contextlevel_purpose_and_category) as this is returning
+     * the value set in the data registry, not in the defaults page.
+     *
+     * @param int $contextlevel
+     * @param string $element 'category' or 'purpose'
+     * @param int $forcedvalue Use this value as if this was this context level purpose.
+     * @return \tool_dataprivacy\purpose|false
+     */
+    public static function get_effective_contextlevel_value($contextlevel, $element, $forcedvalue = false) {
+
+        if ($element !== 'purpose' && $element !== 'category') {
+            throw new coding_exception('Only \'purpose\' and \'category\' are supported.');
+        }
+        $fieldname = $element . 'id';
+
+        if ($forcedvalue === false) {
+            $instance = contextlevel::get_record_by_contextlevel($contextlevel, false);
+            if (!$instance) {
+                // If the context level does not have a value defaults to not set, so we grab the context level default as its value.
+                $instancevalue = context_instance::NOTSET;
+            } else {
+                $instancevalue = $instance->get($fieldname);
+            }
+        } else {
+            $instancevalue = $forcedvalue;
+        }
+
+        // Not set -> Use the default context level value.
+        if ($instancevalue == context_instance::NOTSET) {
+            list($purposeid, $categoryid) = self::get_effective_default_contextlevel_purpose_and_category($contextlevel);
+            return self::get_element_instance($element, $$fieldname);
+        }
+
+        // Specific value for this context instance.
+        if ($instancevalue != context_instance::INHERIT) {
+            return self::get_element_instance($element, $instancevalue);
+        }
+
+        if ($contextlevel == CONTEXT_SYSTEM) {
+            throw new coding_exception('Something went wrong, system defaults should be set and we should already have a value.');
+        }
+
+        // If we reach this point is that we are inheriting so get the parent context level and repeat.
+        $parentcontextlevel = reset(self::$contextlevelinheritance[$contextlevel]);
+
+        // Forced value are intentionally not passed as the force value should only affect the immediate context level.
+        return self::get_effective_contextlevel_value($parentcontextlevel, $element);
+    }
+
+    /**
+     * Returns the effective default purpose and category for a context level.
+     *
      * @param int $contextlevel
      * @param int $forcedpurposevalue Use this value as if this was this context level purpose.
      * @param int $forcedcategoryvalue Use this value as if this was this context level category.
      * @return int[]
      */
-    public static function get_effective_contextlevel_purpose_and_category($contextlevel, $forcedpurposevalue = false, $forcedcategoryvalue = false) {
-
-        $inheritance = [
-            CONTEXT_USER => [CONTEXT_SYSTEM],
-            CONTEXT_COURSECAT => [CONTEXT_SYSTEM],
-            CONTEXT_COURSE => [CONTEXT_COURSECAT, CONTEXT_SYSTEM],
-            CONTEXT_MODULE => [CONTEXT_COURSE, CONTEXT_COURSECAT, CONTEXT_SYSTEM],
-            CONTEXT_BLOCK => [CONTEXT_COURSE, CONTEXT_COURSECAT, CONTEXT_SYSTEM],
-        ];
+    public static function get_effective_default_contextlevel_purpose_and_category($contextlevel, $forcedpurposevalue = false, $forcedcategoryvalue = false) {
 
         list($purposeid, $categoryid) = self::get_defaults($contextlevel);
 
@@ -246,9 +306,9 @@ class data_registry {
         }
 
         if ($contextlevel != CONTEXT_SYSTEM && ($purposeid === false || $categoryid === false)) {
-            foreach ($inheritance[$contextlevel] as $parent) {
+            foreach (self::$contextlevelinheritance[$contextlevel] as $parent) {
 
-                list($parentpurposeid, $parentcategoryid) = data_registry::get_defaults($parent);
+                list($parentpurposeid, $parentcategoryid) = self::get_defaults($parent);
                 // Not set == INHERIT for defaults.
                 if ($parentpurposeid == context_instance::INHERIT || $parentpurposeid == context_instance::NOTSET) {
                     $parentpurposeid = false;
@@ -269,5 +329,23 @@ class data_registry {
 
         // They may still be false, but we return anyway.
         return [$purposeid, $categoryid];
+    }
+
+    /**
+     * Returns an instance of the provided element.
+     *
+     * @throws \coding_exception
+     * @param string $element The element name 'purpose' or 'category'
+     * @param int $id The element id
+     * @return \core\persistent
+     */
+    private static function get_element_instance($element, $id) {
+
+        if ($element !== 'purpose' && $element !== 'category') {
+            throw new coding_exception('No other elements than purpose and category are allowed');
+        }
+
+        $classname = '\tool_dataprivacy\\' . $element;
+        return new $classname($id);
     }
 }

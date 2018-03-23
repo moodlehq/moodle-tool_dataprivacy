@@ -132,7 +132,7 @@ class context_instance extends \core\form\persistent {
      * @param \context $context
      * @return array
      */
-    public static function get_customdata(\context $context) {
+    public static function get_context_instance_customdata(\context $context) {
 
         $persistent = \tool_dataprivacy\context_instance::get_record_by_contextid($context->id, false);
         if (!$persistent) {
@@ -156,7 +156,7 @@ class context_instance extends \core\form\persistent {
             'categories' => $categoryoptions,
         ];
 
-        $effectivepurpose = api::get_effective_purpose($context);
+        $effectivepurpose = api::get_effective_context_purpose($context);
         if ($effectivepurpose) {
 
             $customdata['currentretentionperiod'] = self::get_retention_display_text($effectivepurpose, $context->contextlevel, $context);
@@ -164,7 +164,7 @@ class context_instance extends \core\form\persistent {
             $customdata['purposeretentionperiods'] = [];
             foreach ($purposeoptions as $optionvalue => $unused) {
                 // Get the effective purpose if $optionvalue would be the selected value.
-                $purpose = api::get_effective_purpose($context, $optionvalue);
+                $purpose = api::get_effective_context_purpose($context, $optionvalue);
 
                 $retentionperiod = self::get_retention_display_text(
                     $purpose,
@@ -194,7 +194,6 @@ class context_instance extends \core\form\persistent {
         $exporter = new \tool_dataprivacy\external\purpose_exporter($effectivepurpose, ['context' => $context]);
         $exportedpurpose = $exporter->export($renderer);
 
-
         switch ($retentioncontextlevel) {
             case CONTEXT_COURSE:
             case CONTEXT_MODULE:
@@ -207,7 +206,7 @@ class context_instance extends \core\form\persistent {
                     $exportedpurpose->formattedretentionperiod);
                 break;
             default:
-                $str = $formattedtime;
+                $str = $exportedpurpose->formattedretentionperiod;
         }
 
         return $str;

@@ -42,11 +42,6 @@ require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/dataprivacy/lib.php');
 class expired_retention_period extends scheduled_task {
 
     /**
-     * Number of deleted contexts per task run.
-     */
-    const DELETE_LIMIT = 200;
-
-    /**
      * Returns the task name.
      *
      * @return string
@@ -60,30 +55,9 @@ class expired_retention_period extends scheduled_task {
      *
      */
     public function execute() {
-
-        $contexts = api::get_expired_course_context_instances();
-
-        $privacymanager = new \core_privacy\manager();
-
-        $numprocessed = 0;
-        foreach ($contexts as $context) {
-            if (!$context) {
-                // The recordset_walk callback returns false for not expired contexts.
-                continue;
-            }
-
-            mtrace('Deleting context ' . $context->id . ' - ' .
-                shorten_text($context->get_context_name(true, true)));
-
-            $privacymanager->delete_data_for_all_users_in_context($context);
-
-            $numprocessed += 1;
-
-            if ($numprocessed == self::DELETE_LIMIT) {
-                // Close the recordset.
-                $contexts->close();
-                break;
-            }
-        }
+        $manager = new \tool_dataprivacy\expired_course_related_contexts();
+        $manager->delete();
+        $manager = new \tool_dataprivacy\expired_user_contexts();
+        $manager->delete();
     }
 }
