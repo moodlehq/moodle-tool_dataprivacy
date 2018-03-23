@@ -66,5 +66,67 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2017051503, 'tool', 'dataprivacy');
     }
 
+    if ($oldversion < 2017051504) {
+
+        // Define table tool_dataprivacy_contextlist to be created.
+        $table = new xmldb_table('tool_dataprivacy_contextlist');
+
+        // Adding fields to table tool_dataprivacy_contextlist.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('component', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        // Adding keys to table tool_dataprivacy_contextlist.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        // Conditionally launch create table for tool_dataprivacy_contextlist.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Define table tool_dataprivacy_ctxlst_ctx to be created.
+        $table = new xmldb_table('tool_dataprivacy_ctxlst_ctx');
+
+        // Adding fields to table tool_dataprivacy_ctxlst_ctx.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('contextid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('contextlistid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('status', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        // Adding keys to table tool_dataprivacy_ctxlst_ctx.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->add_key('contextlistid', XMLDB_KEY_FOREIGN, array('contextlistid'), 'tool_dataprivacy_contextlist', array('id'));
+
+        // Conditionally launch create table for tool_dataprivacy_ctxlst_ctx.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Define table tool_dataprivacy_rqst_ctxlst to be created.
+        $table = new xmldb_table('tool_dataprivacy_rqst_ctxlst');
+
+        // Adding fields to table tool_dataprivacy_rqst_ctxlst.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('requestid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('contextlistid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table tool_dataprivacy_rqst_ctxlst.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->add_key('requestid', XMLDB_KEY_FOREIGN, array('requestid'), 'tool_dataprivacy_request', array('id'));
+        $table->add_key('contextlistid', XMLDB_KEY_FOREIGN, array('contextlistid'), 'tool_dataprivacy_contextlist', array('id'));
+        $table->add_key('request_contextlist', XMLDB_KEY_UNIQUE, array('requestid', 'contextlistid'));
+
+        // Conditionally launch create table for tool_dataprivacy_rqst_ctxlst.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Dataprivacy savepoint reached.
+        upgrade_plugin_savepoint(true, 2017051504, 'tool', 'dataprivacy');
+    }
+
     return true;
 }
