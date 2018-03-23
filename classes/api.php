@@ -609,6 +609,7 @@ class api {
     /**
      * Sets the context level purpose and category.
      *
+     * @throws \coding_exception
      * @param \stdClass $record
      * @return contextlevel
      */
@@ -617,6 +618,11 @@ class api {
 
         // Only manager at system level can set this.
         self::check_can_manage_data_registry();
+
+        if ($record->contextlevel != CONTEXT_SYSTEM && $record->contextlevel != CONTEXT_USER) {
+            throw new \coding_exception('Only context system and context user can set a contextlevel ' .
+                'purpose and retention');
+        }
 
         if ($contextlevel = contextlevel::get_record_by_contextlevel($record->contextlevel, false)) {
             // Update.
@@ -635,12 +641,10 @@ class api {
      *
      * @param \context $context
      * @param int $forcedvalue Use this categoryid value as if this was this context instance category.
-     * @return purpose|false
+     * @return category|false
      */
-    public static function get_effective_category(\context $context, $forcedvalue=false) {
-
+    public static function get_effective_context_category(\context $context, $forcedvalue=false) {
         self::check_can_manage_data_registry($context->id);
-
         if (!data_registry::defaults_set()) {
             return false;
         }
@@ -653,12 +657,10 @@ class api {
      *
      * @param \context $context
      * @param int $forcedvalue Use this purposeid value as if this was this context instance purpose.
-     * @return category|false
+     * @return purpose|false
      */
-    public static function get_effective_purpose(\context $context, $forcedvalue=false) {
-
+    public static function get_effective_context_purpose(\context $context, $forcedvalue=false) {
         self::check_can_manage_data_registry($context->id);
-
         if (!data_registry::defaults_set()) {
             return false;
         }
@@ -667,74 +669,34 @@ class api {
     }
 
     /**
-     * Return the course-dependant expired courses.
+     * Returns the effective category given a context level.
      *
-     * @return \recordset_walk Recordset iterator (it returns \context|false[] in practice).
+     * @param int $contextlevel
+     * @param int $forcedvalue Use this categoryid value as if this was this context level category.
+     * @return category|false
      */
-    public static function get_expired_course_context_instances() {
-        global $DB;
-
+    public static function get_effective_contextlevel_category($contextlevel, $forcedvalue=false) {
         self::check_can_manage_data_registry(\context_system::instance()->id);
-
         if (!data_registry::defaults_set()) {
-            return [];
+            return false;
         }
 
-        // Including context info + course end date + purposeid (this last one only if defined).
-        $fields = 'ctx.id AS id, ctxcourse.enddate AS enddate, dpctx.id AS purposeid, ' .
-            \context_helper::get_preload_record_columns_sql('ctx');
+        return data_registry::get_effective_contextlevel_value($context, 'category', $forcedvalue);
+    }
 
-        // We want all contexts at course-dependant levels.
-        $parentpath = $DB->sql_concat('ctxcourse.path', "'/%'");
+    /**
+     * Returns the effective purpose given a context level.
+     *
+     * @param int $contextlevel
+     * @param int $forcedvalue Use this purposeid value as if this was this context level purpose.
+     * @return purpose|false
+     */
+    public static function get_effective_contextlevel_purpose($contextlevel, $forcedvalue=false) {
+        self::check_can_manage_data_registry(\context_system::instance()->id);
+        if (!data_registry::defaults_set()) {
+            return false;
+        }
 
-        // This SQL query returns all course-dependant contexts (including the course context)
-        // which course end date already passed.
-        //
-        // We are sorting by path and level as the effective retention period calculations may need to
-        // get context parents and we want those parents to be read from
-        // \context::$cache_contextsbyid not from the database. CONTEXT_CACHE_MAX_SIZE is 2500 but this SQL can
-        // potentially return more than 2500 records. It is not likely that we will find a significant amount
-        // of courses with more than 2500 activities so this should be fine.
-        $sql = "SELECT $fields FROM {context} ctx
-                  JOIN (
-                    SELECT c.enddate AS enddate, subctx.path FROM {context} subctx
-                      JOIN {course} c ON subctx.contextlevel = ? AND subctx.instanceid = c.id
-                      WHERE c.enddate < ? and c.enddate > 0
-                  ) ctxcourse ON ctx.path LIKE {$parentpath} OR ctx.path = ctxcourse.path
-                  LEFT JOIN {tool_dataprivacy_ctxinstance} dpctx ON dpctx.contextid = ctx.id
-                ORDER BY ctx.path, ctx.contextlevel ASC";
-        $params = [CONTEXT_COURSE, time()];
-
-        $recordset = $DB->get_recordset_sql($sql, $params);
-
-        // The recordset iterator callback discards contexts that are not yet ready to be deleted.
-        $callback = function($record) {
-
-            \context_helper::preload_from_record($record);
-            $context = \context::instance_by_id($record->id);
-
-            // We pass the value we just got from SQL so get_effective_purpose don't need to query
-            // the db again to retrieve it. If there is no tool_dataprovider_ctxinstance record
-            // $record->purposeid will be null which is ok as it would force get_effective_purpose
-            // to return the default purpose for the context context level (no db queries involved).
-            $purposevalue = $record->purposeid !== null ? $record->purposeid : context_instance::NOTSET;
-
-            // It should be cheap as system purposes and context instance will be retrieved from a cache most of the time.
-            $purpose = self::get_effective_purpose($context, $purposevalue);
-
-            $dt = new \DateTime();
-            $dt->setTimestamp($record->enddate);
-            $di = new \DateInterval($purpose->get('retentionperiod'));
-            $dt->add($di);
-
-            if (time() < $dt->getTimestamp()) {
-                // Discard this element if we have not reached the retention period yet.
-                return false;
-            }
-
-            return $context;
-        };
-
-        return new \core\dml\recordset_walk($recordset, $callback);
+        return data_registry::get_effective_contextlevel_value($contextlevel, 'purpose', $forcedvalue);
     }
 }

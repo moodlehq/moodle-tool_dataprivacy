@@ -65,7 +65,7 @@ class contextlevel extends context_instance {
      * @param int $contextlevel
      * @return array
      */
-    public static function get_customdata($contextlevel) {
+    public static function get_contextlevel_customdata($contextlevel) {
 
         $persistent = \tool_dataprivacy\contextlevel::get_record_by_contextlevel($contextlevel, false);
         if (!$persistent) {
@@ -73,12 +73,15 @@ class contextlevel extends context_instance {
             $persistent->set('contextlevel', $contextlevel);
         }
 
+        $includeinherit = true;
+        if ($contextlevel == CONTEXT_SYSTEM) {
+            // Nothing to inherit from Site level.
+            $includeinherit = false;
+        }
         $purposeoptions = \tool_dataprivacy\output\data_registry_page::purpose_options(
-            api::get_purposes()
-        );
+            api::get_purposes(), true, $includeinherit);
         $categoryoptions = \tool_dataprivacy\output\data_registry_page::category_options(
-            api::get_categories()
-        );
+            api::get_categories(), true, $includeinherit);
 
         $customdata = [
             'contextlevel' => $contextlevel,
@@ -88,10 +91,8 @@ class contextlevel extends context_instance {
             'categories' => $categoryoptions,
         ];
 
-        list($purposeid, $unused) = data_registry::get_effective_contextlevel_purpose_and_category($contextlevel);
-        if ($purposeid) {
-
-            $effectivepurpose = new \tool_dataprivacy\purpose($purposeid);
+        $effectivepurpose = api::get_effective_contextlevel_purpose($contextlevel);
+        if ($effectivepurpose) {
 
             $customdata['currentretentionperiod'] = self::get_retention_display_text($effectivepurpose, $contextlevel,
                 \context_system::instance());
@@ -100,7 +101,7 @@ class contextlevel extends context_instance {
             foreach ($purposeoptions as $optionvalue => $unused) {
 
                 // Get the effective purpose if $optionvalue would be the selected value.
-                list($purposeid, $unused) = data_registry::get_effective_contextlevel_purpose_and_category($contextlevel,
+                list($purposeid, $unused) = data_registry::get_effective_default_contextlevel_purpose_and_category($contextlevel,
                     $optionvalue);
                 $purpose = new \tool_dataprivacy\purpose($purposeid);
 
