@@ -24,15 +24,12 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$ADMIN->add('root', new admin_category('dataprivacysettings', get_string('pluginname', 'tool_dataprivacy')));
-
 if ($hassiteconfig) {
-    $settings = new admin_settingpage('tool_dataprivacy', get_string('dataprivacysettings', 'tool_dataprivacy'));
-    $ADMIN->add('dataprivacysettings', $settings);
+    $privacysettings = $ADMIN->locate('privacysettings');
 
     if ($ADMIN->fulltree) {
         // Contact data protection officer.
-        $settings->add(new admin_setting_configcheckbox('tool_dataprivacy/contactdataprotectionofficer',
+        $privacysettings->add(new admin_setting_configcheckbox('tool_dataprivacy/contactdataprotectionofficer',
                 new lang_string('contactdataprotectionofficer', 'tool_dataprivacy'),
                 new lang_string('contactdataprotectionofficer_desc', 'tool_dataprivacy'), 1)
         );
@@ -51,7 +48,7 @@ if ($hassiteconfig) {
             }
         }
         if (!empty($roles)) {
-            $settings->add(new admin_setting_configmultiselect('tool_dataprivacy/dporoles',
+            $privacysettings->add(new admin_setting_configmultiselect('tool_dataprivacy/dporoles',
                     new lang_string('dporolemapping', 'tool_dataprivacy'),
                     new lang_string('dporolemapping_desc', 'tool_dataprivacy'), null, $roles)
             );
@@ -60,11 +57,11 @@ if ($hassiteconfig) {
 }
 
 // Link that leads to the data requests management page.
-$ADMIN->add('dataprivacysettings', new admin_externalpage('datarequests', get_string('datarequests', 'tool_dataprivacy'),
+$ADMIN->add('privacy', new admin_externalpage('datarequests', get_string('datarequests', 'tool_dataprivacy'),
     new moodle_url('/admin/tool/dataprivacy/datarequests.php'), 'tool/dataprivacy:managedatarequests')
 );
 
 // Link that leads to the data registry management page.
-$ADMIN->add('dataprivacysettings', new admin_externalpage('dataregistry', get_string('dataregistry', 'tool_dataprivacy'),
+$ADMIN->add('privacy', new admin_externalpage('dataregistry', get_string('dataregistry', 'tool_dataprivacy'),
     new moodle_url('/admin/tool/dataprivacy/dataregistry.php'), 'tool/dataprivacy:managedataregistry')
 );

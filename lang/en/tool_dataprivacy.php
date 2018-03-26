@@ -56,7 +56,6 @@ $string['createpurpose'] = 'Create data purpose';
 $string['dataprivacy:makedatarequestsforchildren'] = 'Make data requests for children';
 $string['dataprivacy:managedatarequests'] = 'Manage data requests';
 $string['dataprivacy:managedataregistry'] = 'Manage data registry';
-$string['dataprivacysettings'] = 'Data privacy settings';
 $string['dataregistry'] = 'Data registry';
 $string['dataregistrysetup'] = 'Settings';
 $string['datarequestemailsubject'] = 'Data request: {$a}';
