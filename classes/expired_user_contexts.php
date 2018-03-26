@@ -88,6 +88,10 @@ class expired_user_contexts extends \tool_dataprivacy\expired_contexts {
             return false;
         }
 
+        if (is_siteadmin($context->instanceid)) {
+            return false;
+        }
+
         $courses = enrol_get_users_courses($context->instanceid, false, ['enddate']);
 
         foreach ($courses as $course) {
@@ -96,7 +100,7 @@ class expired_user_contexts extends \tool_dataprivacy\expired_contexts {
                 return false;
             }
 
-            if ($course->enddate > time()) {
+            if ($course->enddate >= time()) {
                 // Future or ongoing course.
                 return false;
             }

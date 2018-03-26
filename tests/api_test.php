@@ -856,21 +856,6 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
 
         list($purposes, $categories, $courses, $modules) = $this->add_purposes_and_categories();
 
-        // Set purpose 0 as the default at system level.
-        list($purposevar, $categoryvar) = data_registry::var_names_from_context(
-            \context_helper::get_class_for_level(CONTEXT_SYSTEM)
-        );
-        set_config($purposevar, $purposes[0]->get('id'), 'tool_dataprivacy');
-        set_config($categoryvar, $categories[0]->get('id'), 'tool_dataprivacy');
-
-        // Use the default if nothing set.
-        $purpose = api::get_effective_contextlevel_purpose(CONTEXT_SYSTEM);
-        $this->assertEquals($purposes[0]->get('id'), $purpose->get('id'));
-
-        // Use the user context default if nothing set (it will be inherited from the system default).
-        $purpose = api::get_effective_contextlevel_purpose(CONTEXT_USER);
-        $this->assertEquals($purposes[0]->get('id'), $purpose->get('id'));
-
         // Set the system context level to purpose 1.
         $record = (object)[
             'contextlevel' => CONTEXT_SYSTEM,
@@ -882,10 +867,14 @@ class tool_dataprivacy_api_testcase extends advanced_testcase {
         $purpose = api::get_effective_contextlevel_purpose(CONTEXT_SYSTEM);
         $this->assertEquals($purposes[1]->get('id'), $purpose->get('id'));
 
+        // 'not set' will get the default value for the context level. For context level defaults
+        // both 'not set' and 'inherit' result in inherit, so the parent context (system) default
+        // will be retrieved.
         $purpose = api::get_effective_contextlevel_purpose(CONTEXT_USER);
-        $this->assertEquals($purposes[0]->get('id'), $purpose->get('id'));
+        $this->assertEquals($purposes[1]->get('id'), $purpose->get('id'));
 
-        // TODO To change once system and user default & context level are merged.
+        // The behaviour forcing an inherit from context system should result in the same effective
+        // purpose.
         $record->purposeid = context_instance::INHERIT;
         $record->contextlevel = CONTEXT_USER;
         api::set_contextlevel($record);

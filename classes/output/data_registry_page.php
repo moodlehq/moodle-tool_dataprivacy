@@ -119,6 +119,8 @@ class data_registry_page implements renderable, templatable {
      */
     private function get_default_tree_structure() {
 
+        $frontpage = \context_course::instance(SITEID);
+
         $categorybranches = $this->get_all_category_branches();
 
         $elements = [
@@ -133,11 +135,21 @@ class data_registry_page implements renderable, templatable {
                     'branches' => $categorybranches,
                     'expandelement' => 'category',
                 ], [
-                    'text' => get_string('contextlevelname' . CONTEXT_MODULE, 'tool_dataprivacy'),
-                    'contextlevel' => CONTEXT_MODULE,
-                ], [
-                    'text' => get_string('contextlevelname' . CONTEXT_BLOCK, 'tool_dataprivacy'),
-                    'contextlevel' => CONTEXT_BLOCK,
+                    'text' => get_string('frontpagecourse', 'tool_dataprivacy'),
+                    'contextid' => $frontpage->id,
+                    'branches' => [
+                        [
+                            'text' => get_string('activitiesandresources', 'tool_dataprivacy'),
+                            'expandcontextid' => $frontpage->id,
+                            'expandelement' => 'module',
+                            'expanded' => 0,
+                        ], [
+                            'text' => get_string('blocks'),
+                            'expandcontextid' => $frontpage->id,
+                            'expandelement' => 'block',
+                            'expanded' => 0,
+                        ],
+                    ]
                 ]
             ]
         ];
