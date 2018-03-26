@@ -31,6 +31,9 @@ $title = get_string('setdefaults', 'tool_dataprivacy');
 \tool_dataprivacy\page_helper::setup($url, $title);
 
 $levels = \context_helper::get_all_levels();
+// They are set through the context level site and user.
+unset($levels[CONTEXT_SYSTEM]);
+unset($levels[CONTEXT_USER]);
 
 $customdata = [
     'levels' => $levels,
