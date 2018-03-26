@@ -78,10 +78,15 @@ class contextlevel extends context_instance {
             // Nothing to inherit from Site level.
             $includeinherit = false;
         }
+        $includenotset = true;
+        if ($contextlevel == CONTEXT_SYSTEM || $contextlevel == CONTEXT_USER) {
+            // No 'not set' value for system and user because we do not have defaults for them.
+            $includenotset = false;
+        }
         $purposeoptions = \tool_dataprivacy\output\data_registry_page::purpose_options(
-            api::get_purposes(), true, $includeinherit);
+            api::get_purposes(), $includenotset, $includeinherit);
         $categoryoptions = \tool_dataprivacy\output\data_registry_page::category_options(
-            api::get_categories(), true, $includeinherit);
+            api::get_categories(), $includenotset, $includeinherit);
 
         $customdata = [
             'contextlevel' => $contextlevel,

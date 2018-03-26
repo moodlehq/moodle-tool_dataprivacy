@@ -630,6 +630,12 @@ class api {
         }
         $contextlevel->save();
 
+        // We sync with their defaults as we removed these options from the defaults page.
+        $classname = \context_helper::get_class_for_level($record->contextlevel);
+        list($purposevar, $categoryvar) = \tool_dataprivacy\data_registry::var_names_from_context($classname);
+        set_config($purposevar, $record->purposeid, 'tool_dataprivacy');
+        set_config($categoryvar, $record->categoryid, 'tool_dataprivacy');
+
         return $contextlevel;
     }
 

@@ -243,6 +243,11 @@ class data_registry {
         }
         $fieldname = $element . 'id';
 
+        if ($contextlevel != CONTEXT_SYSTEM && $contextlevel != CONTEXT_USER) {
+            throw new \coding_exception('Only context_system and context_user values can be retrieved, no other context levels ' . 
+                'have a purpose or a category.');
+        }
+
         if ($forcedvalue === false) {
             $instance = contextlevel::get_record_by_contextlevel($contextlevel, false);
             if (!$instance) {
