@@ -82,6 +82,8 @@ class process_data_request_task extends adhoc_task {
         api::update_request_status($requestid, api::DATAREQUEST_STATUS_PROCESSING);
 
         if ($request->type == api::DATAREQUEST_TYPE_EXPORT) {
+            // Run as the user performing the export.
+            cron_setup_user($foruser);
             // TODO: Update this code to retrieve the approved_contextlist properly.
             $manager = new \core_privacy\manager();
             $contextcollection = $manager->get_contexts_for_userid($foruser->id);
@@ -163,6 +165,7 @@ class process_data_request_task extends adhoc_task {
                 $emailonly = true;
                 break;
             default:
+                cron_setup_user();
                 throw new moodle_exception('errorinvalidrequesttype', 'tool_dataprivacy');
         }
 
@@ -202,5 +205,7 @@ class process_data_request_task extends adhoc_task {
             }
             mtrace('Message sent to requester: ' . $messagetextdata['username']);
         }
+
+        cron_setup_user();
     }
 }
