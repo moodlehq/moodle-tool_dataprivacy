@@ -27,9 +27,9 @@ require_once('lib.php');
 require_once('classes/api.php');
 require_once('createdatarequest_form.php');
 
-$manage = optional_param('manage', false, PARAM_BOOL);
+$manage = optional_param('manage', 0, PARAM_INT);
 
-$url = new moodle_url('/admin/tool/dataprivacy/createdatarequest.php');
+$url = new moodle_url('/admin/tool/dataprivacy/createdatarequest.php', ['manage' => $manage]);
 
 $PAGE->set_url($url);
 
@@ -38,22 +38,26 @@ if (isguestuser()) {
     print_error('noguest');
 }
 
-$usercontext = context_user::instance($USER->id);
-$PAGE->set_context($usercontext);
-
-// Return URL.
+// Return URL and context.
 if ($manage) {
+    // For the case where DPO creates data requests on behalf of another user.
     $returnurl = new moodle_url($CFG->wwwroot . '/admin/tool/dataprivacy/datarequests.php');
+    $context = context_system::instance();
+    // Make sure the user has the proper capability.
+    require_capability('tool/dataprivacy:managedatarequests', $context);
 } else {
+    // For the case where a user makes request for themselves (or for their children if they are the parent).
     $returnurl = new moodle_url($CFG->wwwroot . '/admin/tool/dataprivacy/mydatarequests.php');
+    $context = context_user::instance($USER->id);
 }
+$PAGE->set_context($context);
 
 // If contactdataprotectionofficer is disabled, send the user back to the profile page, or the privacy policy page.
 if (!\tool_dataprivacy\api::can_contact_dpo()) {
     redirect($returnurl, get_string('contactdpoviaprivacypolicy', 'tool_dataprivacy'), \core\output\notification::NOTIFY_ERROR);
 }
 
-$mform = new tool_dataprivacy_data_request_form();
+$mform = new tool_dataprivacy_data_request_form($url->out(false));
 
 // Data request cancelled.
 if ($mform->is_cancelled()) {
