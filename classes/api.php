@@ -335,6 +335,9 @@ class api {
         // Fire an ad hoc task to initiate the data request process.
         $task = new process_data_request_task();
         $task->set_custom_data(['requestid' => $requestid]);
+        if ($request->get('type') == api::DATAREQUEST_TYPE_EXPORT) {
+            $task->set_userid($request->get('userid'));
+        }
         manager::queue_adhoc_task($task, true);
 
         return $result;
