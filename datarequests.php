@@ -47,7 +47,7 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading($title);
 
 $requests = tool_dataprivacy\api::get_data_requests();
-$requestlist = new tool_dataprivacy\output\data_requests_page($requests, false);
+$requestlist = new tool_dataprivacy\output\data_requests_page($requests);
 $requestlistoutput = $PAGE->get_renderer('tool_dataprivacy');
 echo $requestlistoutput->render($requestlist);
 
