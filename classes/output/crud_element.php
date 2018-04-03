@@ -42,16 +42,16 @@ abstract class crud_element {
     /**
      * Returns the top navigation buttons.
      *
-     * @param \renderer_base $output
-     * @return \single_button[]
+     * @return \action_link[]
      */
-    protected final function get_navigation(renderer_base $output) {
-        $back = new \single_button(
+    protected final function get_navigation() {
+        $back = new \action_link(
             new \moodle_url('/admin/tool/dataprivacy/dataregistry.php'),
             get_string('back'),
-            'get'
+            null,
+            ['class' => 'btn btn-default']
         );
-        return [$output->render($back)];
+        return [$back];
     }
 
     /**

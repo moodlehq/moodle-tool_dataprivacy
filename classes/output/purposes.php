@@ -67,7 +67,11 @@ class purposes extends crud_element implements renderable, templatable {
         $data = new stdClass();
 
         // Navigation links.
-        $data->navigation = $this->get_navigation($output);
+        $data->navigation = [];
+        $navigationlinks = $this->get_navigation();
+        foreach ($navigationlinks as $navlink) {
+            $data->navigation[] = $navlink->export_for_template($output);
+        }
 
         $data->purposes = [];
         foreach ($this->purposes as $purpose) {
