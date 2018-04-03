@@ -76,11 +76,11 @@ class data_registry_page implements renderable, templatable {
         $PAGE->requires->js_call_amd('tool_dataprivacy/data_registry', 'init', $params);
 
         $data = new stdClass();
-
-        $defaultsbutton = new \single_button(
+        $defaultsbutton = new \action_link(
             new \moodle_url('/admin/tool/dataprivacy/defaults.php'),
             get_string('setdefaults', 'tool_dataprivacy'),
-            'get'
+            null,
+            ['class' => 'btn btn-default']
         );
         $data->defaultsbutton = $defaultsbutton->export_for_template($output);
 
