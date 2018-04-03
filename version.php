@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version   = 2018031902;
+$plugin->version   = 2018031904;
 $plugin->requires  = 2018031600.00;        // Moodle 3.5dev (Build 2018031600) and upwards.
 $plugin->component = 'tool_dataprivacy';
 $plugin->release   = '35.0.0dev';
