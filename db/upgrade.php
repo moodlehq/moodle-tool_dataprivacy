@@ -30,10 +30,40 @@ defined('MOODLE_INTERNAL') || die();
  * @return bool result
  */
 function xmldb_tool_dataprivacy_upgrade($oldversion) {
+    global $CFG, $DB;
+
+    $dbman = $DB->get_manager();
+
     if ($oldversion < 2017111300) {
         // Nothing to do here. Moodle Plugins site's just complaining about missing upgrade.php.
         // Savepoint reached.
         upgrade_plugin_savepoint(true, 2017111300, 'error', 'dataprivacy');
+    }
+
+    if ($oldversion < 2017111303) {
+
+        // Define table tool_dataprivacy_ctxexpired to be created.
+        $table = new xmldb_table('tool_dataprivacy_ctxexpired');
+
+        // Adding fields to table tool_dataprivacy_ctxexpired.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('contextid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('status', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('usermodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table tool_dataprivacy_ctxexpired.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $table->add_key('contextid', XMLDB_KEY_FOREIGN_UNIQUE, array('contextid'), 'context', array('id'));
+
+        // Conditionally launch create table for tool_dataprivacy_ctxexpired.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Dataprivacy savepoint reached.
+        upgrade_plugin_savepoint(true, 2017111303, 'tool', 'dataprivacy');
     }
 
     return true;

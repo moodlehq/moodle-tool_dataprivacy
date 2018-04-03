@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Scheduled task to flag contexts as expired.
+ * Scheduled task to delete expired context instances once they are approved for deletion.
  *
  * @package    tool_dataprivacy
  * @copyright  2018 David Monllao
@@ -33,13 +33,13 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/dataprivacy/lib.php');
 
 /**
- * Scheduled task to flag contexts as expired.
+ * Scheduled task to delete expired context instances once they are approved for deletion.
  *
  * @package     tool_dataprivacy
  * @copyright   2018 David Monllao
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class expired_retention_period extends scheduled_task {
+class delete_expired_contexts extends scheduled_task {
 
     /**
      * Returns the task name.
@@ -47,16 +47,17 @@ class expired_retention_period extends scheduled_task {
      * @return string
      */
     public function get_name() {
-        return get_string('expiredretentionperiodtask', 'tool_dataprivacy');
+        return get_string('deleteexpiredcontextstask', 'tool_dataprivacy');
     }
 
     /**
-     * Run the task to flag context instances as expired.
+     * Run the task to delete context instances based on their retention periods.
+     *
      */
     public function execute() {
         $manager = new \tool_dataprivacy\expired_course_related_contexts();
-        $manager->flag_expired();
+        $manager->delete();
         $manager = new \tool_dataprivacy\expired_user_contexts();
-        $manager->flag_expired();
+        $manager->delete();
     }
 }

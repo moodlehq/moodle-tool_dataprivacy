@@ -41,6 +41,7 @@ use tool_dataprivacy\category;
 use tool_dataprivacy\contextlevel;
 use tool_dataprivacy\context_instance;
 use tool_dataprivacy\data_registry;
+use tool_dataprivacy\expired_context;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -704,5 +705,51 @@ class api {
         }
 
         return data_registry::get_effective_contextlevel_value($contextlevel, 'purpose', $forcedvalue);
+    }
+
+    /**
+     * Creates an expired context record for the provided context id.
+     *
+     * @param int $contextid
+     * @return \tool_dataprivacy\expired_context
+     */
+    public static function create_expired_context($contextid) {
+        self::check_can_manage_data_registry();
+
+        $record = (object)[
+            'contextid' => $contextid,
+            'status' => expired_context::STATUS_EXPIRED,
+        ];
+        $expiredctx = new expired_context(0, $record);
+        $expiredctx->save();
+
+        return $expiredctx;
+    }
+
+    /**
+     * Deletes an expired context record.
+     *
+     * @param int $id The tool_dataprivacy_ctxexpire id.
+     * @return bool True on success.
+     */
+    public static function delete_expired_context($id) {
+        self::check_can_manage_data_registry();
+
+        $expiredcontext = new expired_context($id);
+        return $expiredcontext->delete();
+    }
+
+    /**
+     * Updates the status of an expired context.
+     *
+     * @param \tool_dataprivacy\expired_context $expiredctx
+     * @param int $status
+     * @return null
+     */
+    public static function set_expired_context_status(expired_context $expiredctx, $status) {
+        self::check_can_manage_data_registry();
+
+        $expiredctx->set('status', $status);
+        $expiredctx->save();
     }
 }

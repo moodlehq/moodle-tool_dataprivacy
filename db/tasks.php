@@ -34,5 +34,13 @@ $tasks = array(
         'day' => '*',
         'dayofweek' => '*',
         'month' => '*'
+    ), array(
+        'classname' => 'tool_dataprivacy\task\delete_expired_contexts',
+        'blocking' => 0,
+        'minute' => '0',
+        'hour' => 'R',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*'
     ),
 );
