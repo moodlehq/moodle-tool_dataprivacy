@@ -65,6 +65,7 @@ $string['daterequesteddetail'] = 'Date requested:';
 $string['defaultsinfo'] = 'Default categories and purposes are applied to all newly created instances.';
 $string['deletecategory'] = 'Delete "{$a}" category';
 $string['deletecategorytext'] = 'Are you sure you want to delete "{$a}" category?';
+$string['deleteexpiredcontextstask'] = 'Delete expired contexts';
 $string['deletepurpose'] = 'Delete "{$a}" purpose';
 $string['deletepurposetext'] = 'Are you sure you want to delete "{$a}" purpose?';
 $string['defaultssaved'] = 'Defaults saved';

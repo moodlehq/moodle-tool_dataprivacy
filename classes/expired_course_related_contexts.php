@@ -33,18 +33,18 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2018 David Monllao
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class expired_course_related_contexts extends \tool_dataprivacy\expired_contexts {
+class expired_course_related_contexts extends \tool_dataprivacy\expired_contexts_manager {
 
     /**
      * Returns a recordset with user context instances that are possibly expired (to be confirmed by get_recordset_callback).
      *
-     * @return \moodle_recordset
+     * @return \stdClass[]
      */
-    protected function get_contexts_recordset() {
+    protected function get_expired_contexts() {
         global $DB;
 
         // Including context info + course end date + purposeid (this last one only if defined).
-        $fields = 'ctx.id AS id, ctxcourse.enddate AS comparisontime, dpctx.purposeid AS purposeid, ' .
+        $fields = 'ctx.id AS id, ctxcourse.enddate AS courseenddate, dpctx.purposeid AS purposeid, ' .
             \context_helper::get_preload_record_columns_sql('ctx');
 
         // We want all contexts at course-dependant levels.
@@ -65,16 +65,45 @@ class expired_course_related_contexts extends \tool_dataprivacy\expired_contexts
                       WHERE c.enddate < ? AND c.enddate > 0
                   ) ctxcourse ON ctx.path LIKE {$parentpath} OR ctx.path = ctxcourse.path
                   LEFT JOIN {tool_dataprivacy_ctxinstance} dpctx ON dpctx.contextid = ctx.id
+                  LEFT JOIN {tool_dataprivacy_ctxexpired} expiredctx ON ctx.id = expiredctx.contextid
+                 WHERE expiredctx.id IS NULL
                 ORDER BY ctx.path, ctx.contextlevel ASC";
-        return $DB->get_recordset_sql($sql, [CONTEXT_COURSE, time()]);
-    }
+        $possiblyexpired = $DB->get_recordset_sql($sql, [CONTEXT_COURSE, time()]);
 
-    /**
-     * Returns the callback to execute for each get_contexts_recordset returned record.
-     *
-     * @return \callable
-     */
-    protected function recordset_callback() {
-        return [$this, 'check_retention_periods'];
+        $expiredcontexts = [];
+        foreach ($possiblyexpired as $record) {
+
+            \context_helper::preload_from_record($record);
+
+            // No strict checking as the context may already be deleted (e.g. we just deleted a course,
+            // module contexts below it will not exist).
+            $context = \context::instance_by_id($record->id, false);
+            if (!$context) {
+                continue;
+            }
+
+            // We pass the value we just got from SQL so get_effective_context_purpose don't need to query
+            // the db again to retrieve it. If there is no tool_dataprovider_ctxinstance record
+            // $record->purposeid will be null which is ok as it would force get_effective_context_purpose
+            // to return the default purpose for the context context level (no db queries involved).
+            $purposevalue = $record->purposeid !== null ? $record->purposeid : context_instance::NOTSET;
+
+            // It should be cheap as system purposes and context instance will be retrieved from a cache most of the time.
+            $purpose = api::get_effective_context_purpose($context, $purposevalue);
+
+            $dt = new \DateTime();
+            $dt->setTimestamp($record->courseenddate);
+            $di = new \DateInterval($purpose->get('retentionperiod'));
+            $dt->add($di);
+
+            if (time() < $dt->getTimestamp()) {
+                // Discard this element if we have not reached the retention period yet.
+                continue;
+            }
+
+            $expiredcontexts[$context->id] = $context;
+        }
+
+        return $expiredcontexts;
     }
 }

@@ -34,78 +34,65 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2018 David Monllao
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class expired_user_contexts extends \tool_dataprivacy\expired_contexts {
+class expired_user_contexts extends \tool_dataprivacy\expired_contexts_manager {
 
     /**
-     * Returns a recordset with user context instances that are possibly expired (to be confirmed by get_recordset_callback).
+     * Returns the user context instances that are expired.
      *
-     * @return \moodle_recordset
+     * @return \stdClass[]
      */
-    protected function get_contexts_recordset() {
+    protected function get_expired_contexts() {
         global $DB;
 
-        // Including context info + last login timestamp + purposeid (this last one only if defined).
-        $fields = 'ctx.id AS id, u.lastlogin AS comparisontime, dpctx.purposeid AS purposeid, ' .
-            \context_helper::get_preload_record_columns_sql('ctx');
+        // Including context info + last login timestamp.
+        $fields = 'ctx.id AS id, ' . \context_helper::get_preload_record_columns_sql('ctx');
 
         $purpose = api::get_effective_contextlevel_purpose(CONTEXT_USER);
 
         // Calculate what is considered expired according to the context level effective purpose (= now + retention period).
-        $expired = new \DateTime();
+        $expiredtime = new \DateTime();
         $retention = new \DateInterval($purpose->get('retentionperiod'));
-        $expired->sub($retention);
+        $expiredtime->sub($retention);
 
         $sql = "SELECT $fields FROM {context} ctx
                   JOIN {user} u ON ctx.contextlevel = ? AND ctx.instanceid = u.id
-                  LEFT JOIN {tool_dataprivacy_ctxinstance} dpctx ON dpctx.contextid = ctx.id
-                 WHERE u.lastaccess <= ? AND u.lastaccess > 0
+                  LEFT JOIN {tool_dataprivacy_ctxexpired} expiredctx ON ctx.id = expiredctx.contextid
+                 WHERE u.lastaccess <= ? AND u.lastaccess > 0 AND expiredctx.id IS NULL
                 ORDER BY ctx.path, ctx.contextlevel ASC";
-        return $DB->get_recordset_sql($sql, [CONTEXT_USER, $expired->getTimestamp()]);
-    }
+        $possiblyexpired = $DB->get_recordset_sql($sql, [CONTEXT_USER, $expiredtime->getTimestamp()]);
 
-    /**
-     * Returns the callback to execute for each get_contexts_recordset returned record.
-     *
-     * @return \callable
-     */
-    protected function recordset_callback() {
-        return [$this, 'check_user_courses'];
-    }
+        $expiredcontexts = [];
+        foreach ($possiblyexpired as $record) {
 
-    /**
-     * Discard any user with ongoing courses or with courses without end date.
-     *
-     * @return \context|false
-     */
-    public function check_user_courses($record) {
+            \context_helper::preload_from_record($record);
 
-        \context_helper::preload_from_record($record);
-
-        // No strict checking as the context may already be deleted (e.g. we just deleted a course,
-        // module contexts below it will not exist).
-        $context = \context::instance_by_id($record->id, false);
-        if (!$context) {
-            return false;
-        }
-
-        if (is_siteadmin($context->instanceid)) {
-            return false;
-        }
-
-        $courses = enrol_get_users_courses($context->instanceid, false, ['enddate']);
-
-        foreach ($courses as $course) {
-            if (!$course->enddate) {
-                // We can not know it what is going on here, so we prefer to be conservative.
-                return false;
+            // No strict checking as the context may already be deleted (e.g. we just deleted a course,
+            // module contexts below it will not exist).
+            $context = \context::instance_by_id($record->id, false);
+            if (!$context) {
+                continue;
             }
 
-            if ($course->enddate >= time()) {
-                // Future or ongoing course.
-                return false;
+            if (is_siteadmin($context->instanceid)) {
+                continue;
             }
+
+            $courses = enrol_get_users_courses($context->instanceid, false, ['enddate']);
+            foreach ($courses as $course) {
+                if (!$course->enddate) {
+                    // We can not know it what is going on here, so we prefer to be conservative.
+                    continue;
+                }
+
+                if ($course->enddate >= time()) {
+                    // Future or ongoing course.
+                    continue;
+                }
+            }
+
+            $expiredcontexts[$context->id] = $context;
         }
 
-        return $context;
+        return $expiredcontexts;
     }
 }
