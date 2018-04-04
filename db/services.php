@@ -153,5 +153,14 @@ $functions = [
         'ajax'          => true,
         'loginrequired' => true,
     ],
-
+    'tool_dataprivacy_confirm_contexts_for_deletion' => [
+        'classname'     => 'tool_dataprivacy\external',
+        'methodname'    => 'confirm_contexts_for_deletion',
+        'classpath'     => '',
+        'description'   => 'Mark the selected expired contexts as confirmed for deletion',
+        'type'          => 'write',
+        'capabilities'  => '',
+        'ajax'          => true,
+        'loginrequired' => true,
+    ],
 ];
