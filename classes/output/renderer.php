@@ -114,4 +114,16 @@ class renderer extends plugin_renderer_base {
         $data = $page->export_for_template($this);
         return parent::render_from_template('tool_dataprivacy/categories', $data);
     }
+
+    /**
+     * Render the review page for the deletion of expired contexts.
+     *
+     * @param data_deletion_page $page
+     * @return string html for the page
+     * @throws moodle_exception
+     */
+    public function render_data_deletion_page(data_deletion_page $page) {
+        $data = $page->export_for_template($this);
+        return parent::render_from_template('tool_dataprivacy/data_deletion', $data);
+    }
 }

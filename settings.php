@@ -65,3 +65,8 @@ $ADMIN->add('privacy', new admin_externalpage('datarequests', get_string('datare
 $ADMIN->add('privacy', new admin_externalpage('dataregistry', get_string('dataregistry', 'tool_dataprivacy'),
     new moodle_url('/admin/tool/dataprivacy/dataregistry.php'), 'tool/dataprivacy:managedataregistry')
 );
+
+// Link that leads to the review page of expired contexts that are up for deletion.
+$ADMIN->add('privacy', new admin_externalpage('datadeletion', get_string('datadeletion', 'tool_dataprivacy'),
+        new moodle_url('/admin/tool/dataprivacy/datadeletion.php'), 'tool/dataprivacy:managedataregistry')
+);

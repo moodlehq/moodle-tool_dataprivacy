@@ -27,6 +27,7 @@ require_once("$CFG->libdir/externallib.php");
 require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/dataprivacy/lib.php');
 
 use coding_exception;
+use context_helper;
 use context_system;
 use context_user;
 use core\invalid_persistent_exception;
@@ -43,8 +44,8 @@ use invalid_parameter_exception;
 use moodle_exception;
 use required_capability_exception;
 use restricted_context_exception;
-use tool_dataprivacy\external\data_request_exporter;
 use tool_dataprivacy\external\category_exporter;
+use tool_dataprivacy\external\data_request_exporter;
 use tool_dataprivacy\external\purpose_exporter;
 use tool_dataprivacy\output\data_registry_page;
 
@@ -794,7 +795,7 @@ class external extends external_api {
         $data = array();
         parse_str($serialiseddata, $data);
 
-        $context = \context_helper::instance_by_id($data['contextid']);
+        $context = context_helper::instance_by_id($data['contextid']);
         $customdata = \tool_dataprivacy\form\context_instance::get_context_instance_customdata($context);
         $mform = new \tool_dataprivacy\form\context_instance(null, $customdata, 'post', '', null, true, $data);
         if ($validateddata = $mform->get_data()) {
@@ -853,7 +854,7 @@ class external extends external_api {
             'element' => $element,
         ]);
 
-        $context = \context_helper::instance_by_id($params['contextid']);
+        $context = context_helper::instance_by_id($params['contextid']);
 
         self::validate_context($context);
         api::check_can_manage_data_registry($context->id);
@@ -886,6 +887,112 @@ class external extends external_api {
     public static function tree_extra_branches_returns() {
         return new external_single_structure([
             'branches' => new external_multiple_structure(self::get_tree_node_structure(true)),
+            'warnings' => new external_warnings()
+        ]);
+    }
+
+    /**
+     * Parameters for confirm_contexts_for_deletion().
+     *
+     * @return external_function_parameters
+     */
+    public static function confirm_contexts_for_deletion_parameters() {
+        return new external_function_parameters([
+            'ids' => new external_multiple_structure(
+                new external_value(PARAM_INT, 'Expired context record ID', VALUE_REQUIRED),
+                'Array of expired context record IDs', VALUE_DEFAULT, []
+            ),
+        ]);
+    }
+
+    /**
+     * Confirm a given array of expired context record IDs
+     *
+     * @param int[] $ids Array of record IDs from the expired contexts table.
+     * @return array
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws invalid_parameter_exception
+     * @throws restricted_context_exception
+     */
+    public static function confirm_contexts_for_deletion($ids) {
+        $warnings = [];
+        $params = external_api::validate_parameters(self::confirm_contexts_for_deletion_parameters(), [
+            'ids' => $ids
+        ]);
+        $ids = $params['ids'];
+
+        // Validate context.
+        $context = context_system::instance();
+        self::validate_context($context);
+
+        $result = true;
+        if (!empty($ids)) {
+            $expiredcontextstoapprove = [];
+            // Loop through the deletion of expired contexts and their children if necessary.
+            foreach ($ids as $id) {
+                $expiredcontext = new expired_context($id);
+                $targetcontext = context_helper::instance_by_id($expiredcontext->get('contextid'));
+
+                // Fetch this context's child contexts. Make sure that all of the child contexts are flagged for deletion.
+                $childcontexts = $targetcontext->get_child_contexts();
+                foreach ($childcontexts as $child) {
+                    if ($expiredchildcontext = expired_context::get_record(['contextid' => $child->id])) {
+                        // Add this child context to the list for approval.
+                        $expiredcontextstoapprove[] = $expiredchildcontext;
+                    } else {
+                        // This context has not yet been flagged for deletion.
+                        $result = false;
+                        $message = get_string('errorcontexthasunexpiredchildren', 'tool_dataprivacy',
+                            $targetcontext->get_context_name(false));
+                        $warnings[] = [
+                            'item' => 'tool_dataprivacy_ctxexpired',
+                            'warningcode' => 'errorcontexthasunexpiredchildren',
+                            'message' => $message
+                        ];
+                        // Exit the process.
+                        break 2;
+                    }
+                }
+
+                $expiredcontextstoapprove[] = $expiredcontext;
+            }
+
+            // Proceed with the approval if everything's in order.
+            if ($result) {
+                // Mark expired contexts as approved for deletion.
+                foreach ($expiredcontextstoapprove as $expired) {
+                    // Only mark expired contexts that are pending approval.
+                    if ($expired->get('status') == expired_context::STATUS_EXPIRED) {
+                        api::set_expired_context_status($expired, expired_context::STATUS_APPROVED);
+                    }
+                }
+            }
+
+        } else {
+            // We don't have anything to process.
+            $result = false;
+            $warnings[] = [
+                'item' => 'tool_dataprivacy_ctxexpired',
+                'warningcode' => 'errornoexpiredcontexts',
+                'message' => get_string('errornoexpiredcontexts', 'tool_dataprivacy')
+            ];
+        }
+
+        return [
+            'result' => $result,
+            'warnings' => $warnings
+        ];
+    }
+
+    /**
+     * Returns for confirm_contexts_for_deletion().
+     *
+     * @return external_single_structure
+     */
+    public static function confirm_contexts_for_deletion_returns() {
+        return new external_single_structure([
+            'result' => new external_value(PARAM_BOOL, 'Whether the record was properly marked for deletion or not'),
             'warnings' => new external_warnings()
         ]);
     }
