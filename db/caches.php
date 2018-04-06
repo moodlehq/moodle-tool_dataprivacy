@@ -15,17 +15,29 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Data privacy plugin version information
+ * tool_dataprivacy cache definitions.
  *
  * @package    tool_dataprivacy
- * @copyright  2018 onwards Jun Pataleta
+ * @category   cache
+ * @copyright  2018 David Monllao
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
+defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2017111303;
-$plugin->requires  = 2017111302.00;        // Moodle 3.4.2+ (Build: 20180319) and upwards.
-$plugin->component = 'tool_dataprivacy';
-$plugin->release   = '34.0.0';
-$plugin->maturity  = MATURITY_BETA;
+$definitions = array(
+    'purpose' => array(
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'staticacceleration' => true,
+        'staticaccelerationsize' => 30,
+    ),
+    'contextlevel' => array(
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'staticacceleration' => true,
+        'staticaccelerationsize' => 10,
+    ),
+);

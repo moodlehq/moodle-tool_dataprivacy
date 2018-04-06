@@ -36,6 +36,12 @@ use required_capability_exception;
 use stdClass;
 use tool_dataprivacy\task\initiate_data_request_task;
 use tool_dataprivacy\task\process_data_request_task;
+use tool_dataprivacy\purpose;
+use tool_dataprivacy\category;
+use tool_dataprivacy\contextlevel;
+use tool_dataprivacy\context_instance;
+use tool_dataprivacy\data_registry;
+use tool_dataprivacy\expired_context;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -566,7 +572,7 @@ class api {
      * Sets the context instance purpose and category.
      *
      * @param \stdClass $record
-     * @return \tool_datapriacy\context_instance
+     * @return \tool_dataprivacy\context_instance
      */
     public static function set_context_instance($record) {
         self::check_can_manage_data_registry($record->contextid);
@@ -604,6 +610,7 @@ class api {
     /**
      * Sets the context level purpose and category.
      *
+     * @throws \coding_exception
      * @param \stdClass $record
      * @return contextlevel
      */
@@ -612,6 +619,11 @@ class api {
 
         // Only manager at system level can set this.
         self::check_can_manage_data_registry();
+
+        if ($record->contextlevel != CONTEXT_SYSTEM && $record->contextlevel != CONTEXT_USER) {
+            throw new \coding_exception('Only context system and context user can set a contextlevel ' .
+                'purpose and retention');
+        }
 
         if ($contextlevel = contextlevel::get_record_by_contextlevel($record->contextlevel, false)) {
             // Update.
@@ -622,169 +634,122 @@ class api {
         }
         $contextlevel->save();
 
+        // We sync with their defaults as we removed these options from the defaults page.
+        $classname = \context_helper::get_class_for_level($record->contextlevel);
+        list($purposevar, $categoryvar) = data_registry::var_names_from_context($classname);
+        set_config($purposevar, $record->purposeid, 'tool_dataprivacy');
+        set_config($categoryvar, $record->categoryid, 'tool_dataprivacy');
+
         return $contextlevel;
-    }
-
-    /**
-     * Returns the roles assigned to the provided level.
-     *
-     * Important to note that it returns course-level assigned roles
-     * if the provided context level is below course.
-     *
-     * @param \context $context
-     * @return array
-     */
-    public static function get_subject_scope(\context $context) {
-
-        if ($contextcourse = $context->get_course_context(false)) {
-            // Below course level we only look at course-assigned roles.
-            $roles = get_user_roles($contextcourse, 0, false);
-        } else {
-            $roles = get_user_roles($context, 0, false);
-        }
-
-        return array_map(function($role) {
-            if ($role->name) {
-                return $role->name;
-            } else {
-                return $role->shortname;
-            }
-        }, $roles);
     }
 
     /**
      * Returns the effective category given a context instance.
      *
      * @param \context $context
-     * @param int $forcedvalue Use this value as if this was this context instance value.
-     * @return purpose|false
+     * @param int $forcedvalue Use this categoryid value as if this was this context instance category.
+     * @return category|false
      */
-    public static function get_effective_category(\context $context, $forcedvalue=false) {
-        return self::get_effective_context_value($context, 'category', $forcedvalue);
+    public static function get_effective_context_category(\context $context, $forcedvalue=false) {
+        self::check_can_manage_data_registry($context->id);
+        if (!data_registry::defaults_set()) {
+            return false;
+        }
+
+        return data_registry::get_effective_context_value($context, 'category', $forcedvalue);
     }
 
     /**
      * Returns the effective purpose given a context instance.
      *
      * @param \context $context
-     * @param int $forcedvalue Use this value as if this was this context instance value.
-     * @return category|false
+     * @param int $forcedvalue Use this purposeid value as if this was this context instance purpose.
+     * @return purpose|false
      */
-    public static function get_effective_purpose(\context $context, $forcedvalue=false) {
-        return self::get_effective_context_value($context, 'purpose', $forcedvalue);
-    }
-
-    /**
-     * Returns the effective value given a context instance
-     *
-     * @param \context $context
-     * @param string $element 'category' or 'purpose'
-     * @param int $forcedvalue Use this value as if this was this context instance value.
-     * @return persistent|false It return a 'purpose' instance or a 'category' instance, depending on $element
-     */
-    protected static function get_effective_context_value(\context $context, $element, $forcedvalue=false) {
-
-        if ($element !== 'purpose' && $element !== 'category') {
-            throw new \coding_exception('Only \'purpose\' and \'category\' are supported.');
-        }
-        $fieldname = $element . 'id';
-
-        if (!$forcedvalue) {
-            $instance = context_instance::get_record_by_contextid($context->id, false);
-
-            if (!$instance) {
-                // If the instance does not have a value defaults to not set, so we grab the context level default as its value.
-                list($purposeid, $categoryid) = self::get_effective_contextlevel_purpose_and_category($context->contextlevel);
-                $classname = '\tool_dataprivacy\\' . $element;
-                return new $classname($$fieldname);
-            }
-            $instancevalue = $instance->get($fieldname);
-        } else {
-            $instancevalue = $forcedvalue;
-        }
-
-        // Not set -> Use the default context level value.
-        if ($instancevalue == context_instance::NOTSET) {
-            list($purposeid, $categoryid) = self::get_effective_contextlevel_purpose_and_category($context->contextlevel);
-            $classname = '\tool_dataprivacy\\' . $element;
-            return new $classname($$fieldname);
-        }
-
-        // Specific value for this context instance.
-        if ($instancevalue != context_instance::INHERIT) {
-            $classname = '\tool_dataprivacy\\' . $element;
-            return new $classname($instancevalue);
-        }
-
-        // This context is using inherited so let's return the parent effective value.
-        $parentcontext = $context->get_parent_context();
-        if (!$parentcontext) {
+    public static function get_effective_context_purpose(\context $context, $forcedvalue=false) {
+        self::check_can_manage_data_registry($context->id);
+        if (!data_registry::defaults_set()) {
             return false;
         }
 
-        // The forced value should not be transmitted to parent contexts.
-        return self::get_effective_context_value($parentcontext, $element);
+        return data_registry::get_effective_context_value($context, 'purpose', $forcedvalue);
     }
 
     /**
-     * Returns the effective purpose and category.
+     * Returns the effective category given a context level.
      *
      * @param int $contextlevel
-     * @param int $forcedpurposevalue Use this value as if this was this context level purpose.
-     * @param int $forcedcategoryvalue Use this value as if this was this context level category.
-     * @return int[]
+     * @param int $forcedvalue Use this categoryid value as if this was this context level category.
+     * @return category|false
      */
-    public static function get_effective_contextlevel_purpose_and_category($contextlevel, $forcedpurposevalue = false, $forcedcategoryvalue = false) {
+    public static function get_effective_contextlevel_category($contextlevel, $forcedvalue=false) {
+        self::check_can_manage_data_registry(\context_system::instance()->id);
+        if (!data_registry::defaults_set()) {
+            return false;
+        }
 
-        $inheritance = [
-            CONTEXT_USER => [CONTEXT_SYSTEM],
-            CONTEXT_COURSECAT => [CONTEXT_SYSTEM],
-            CONTEXT_COURSE => [CONTEXT_COURSECAT, CONTEXT_SYSTEM],
-            CONTEXT_MODULE => [CONTEXT_COURSE, CONTEXT_COURSECAT, CONTEXT_SYSTEM],
-            CONTEXT_BLOCK => [CONTEXT_COURSE, CONTEXT_COURSECAT, CONTEXT_SYSTEM],
+        return data_registry::get_effective_contextlevel_value($contextlevel, 'category', $forcedvalue);
+    }
+
+    /**
+     * Returns the effective purpose given a context level.
+     *
+     * @param int $contextlevel
+     * @param int $forcedvalue Use this purposeid value as if this was this context level purpose.
+     * @return purpose|false
+     */
+    public static function get_effective_contextlevel_purpose($contextlevel, $forcedvalue=false) {
+        self::check_can_manage_data_registry(\context_system::instance()->id);
+        if (!data_registry::defaults_set()) {
+            return false;
+        }
+
+        return data_registry::get_effective_contextlevel_value($contextlevel, 'purpose', $forcedvalue);
+    }
+
+    /**
+     * Creates an expired context record for the provided context id.
+     *
+     * @param int $contextid
+     * @return \tool_dataprivacy\expired_context
+     */
+    public static function create_expired_context($contextid) {
+        self::check_can_manage_data_registry();
+
+        $record = (object)[
+            'contextid' => $contextid,
+            'status' => expired_context::STATUS_EXPIRED,
         ];
+        $expiredctx = new expired_context(0, $record);
+        $expiredctx->save();
 
-        list($purposeid, $categoryid) = tool_dataprivacy_get_defaults($contextlevel);
+        return $expiredctx;
+    }
 
-        // Honour forced values.
-        if ($forcedpurposevalue) {
-            $purposeid = $forcedpurposevalue;
-        }
-        if ($forcedcategoryvalue) {
-            $categoryid = $forcedcategoryvalue;
-        }
+    /**
+     * Deletes an expired context record.
+     *
+     * @param int $id The tool_dataprivacy_ctxexpire id.
+     * @return bool True on success.
+     */
+    public static function delete_expired_context($id) {
+        self::check_can_manage_data_registry();
 
-        // Not set == INHERIT for defaults.
-        if ($purposeid == context_instance::INHERIT || $purposeid == context_instance::NOTSET) {
-            $purposeid = false;
-        }
-        if ($categoryid == context_instance::INHERIT || $categoryid == context_instance::NOTSET) {
-            $categoryid = false;
-        }
+        $expiredcontext = new expired_context($id);
+        return $expiredcontext->delete();
+    }
 
-        if ($contextlevel != CONTEXT_SYSTEM && ($purposeid === false || $categoryid === false)) {
-            foreach ($inheritance[$contextlevel] as $parent) {
+    /**
+     * Updates the status of an expired context.
+     *
+     * @param \tool_dataprivacy\expired_context $expiredctx
+     * @param int $status
+     * @return null
+     */
+    public static function set_expired_context_status(expired_context $expiredctx, $status) {
+        self::check_can_manage_data_registry();
 
-                list($parentpurposeid, $parentcategoryid) = tool_dataprivacy_get_defaults($parent);
-                // Not set == INHERIT for defaults.
-                if ($parentpurposeid == context_instance::INHERIT || $parentpurposeid == context_instance::NOTSET) {
-                    $parentpurposeid = false;
-                }
-                if ($parentcategoryid == context_instance::INHERIT || $parentcategoryid == context_instance::NOTSET) {
-                    $parentcategoryid = false;
-                }
-
-                if ($purposeid === false && $parentpurposeid) {
-                    $purposeid = $parentpurposeid;
-                }
-
-                if ($categoryid === false && $parentcategoryid) {
-                    $categoryid = $parentcategoryid;
-                }
-            }
-        }
-
-        // They may still be false, but we return anyway.
-        return [$purposeid, $categoryid];
+        $expiredctx->set('status', $status);
+        $expiredctx->save();
     }
 }
