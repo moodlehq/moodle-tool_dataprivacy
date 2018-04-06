@@ -25,7 +25,8 @@
 namespace tool_dataprivacy\form;
 defined('MOODLE_INTERNAL') || die();
 
-use core\form\persistent;
+use tool_dataprivacy\api;
+use tool_dataprivacy\data_registry;
 
 /**
  * Context instance data form.
@@ -34,7 +35,7 @@ use core\form\persistent;
  * @copyright 2018 David Monllao
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class context_instance extends persistent {
+class context_instance extends \core\form\persistent {
 
     /**
      * @var The persistent class.
@@ -124,4 +125,91 @@ class context_instance extends persistent {
         }
         return $OUTPUT->pix_icon('e/insert', $label);
     }
+
+    /**
+     * Returns the customdata array for the provided context instance.
+     *
+     * @param \context $context
+     * @return array
+     */
+    public static function get_context_instance_customdata(\context $context) {
+
+        $persistent = \tool_dataprivacy\context_instance::get_record_by_contextid($context->id, false);
+        if (!$persistent) {
+            $persistent = new \tool_dataprivacy\context_instance();
+            $persistent->set('contextid', $context->id);
+        }
+
+        $purposeoptions = \tool_dataprivacy\output\data_registry_page::purpose_options(
+            api::get_purposes()
+        );
+        $categoryoptions = \tool_dataprivacy\output\data_registry_page::category_options(
+            api::get_categories()
+        );
+
+        $customdata = [
+            'context' => $context,
+            'subjectscope' => data_registry::get_subject_scope($context),
+            'contextname' => $context->get_context_name(),
+            'persistent' => $persistent,
+            'purposes' => $purposeoptions,
+            'categories' => $categoryoptions,
+        ];
+
+        $effectivepurpose = api::get_effective_context_purpose($context);
+        if ($effectivepurpose) {
+
+            $customdata['currentretentionperiod'] = self::get_retention_display_text($effectivepurpose, $context->contextlevel, $context);
+
+            $customdata['purposeretentionperiods'] = [];
+            foreach ($purposeoptions as $optionvalue => $unused) {
+                // Get the effective purpose if $optionvalue would be the selected value.
+                $purpose = api::get_effective_context_purpose($context, $optionvalue);
+
+                $retentionperiod = self::get_retention_display_text(
+                    $purpose,
+                    $context->contextlevel,
+                    $context
+                );
+                $customdata['purposeretentionperiods'][$optionvalue] = $retentionperiod;
+            }
+        }
+
+        return $customdata;
+    }
+
+    /**
+     * Returns the purpose display text.
+     *
+     * @param \tool_dataprivacy\purpose $effectivepurpose
+     * @param int $retentioncontextlevel
+     * @param \context $context The context, just for displaying (filters) purposes.
+     * @return string
+     */
+    protected static function get_retention_display_text(\tool_dataprivacy\purpose $effectivepurpose, $retentioncontextlevel, \context $context) {
+        global $PAGE;
+
+        $renderer = $PAGE->get_renderer('tool_dataprivacy');
+
+        $exporter = new \tool_dataprivacy\external\purpose_exporter($effectivepurpose, ['context' => $context]);
+        $exportedpurpose = $exporter->export($renderer);
+
+        switch ($retentioncontextlevel) {
+            case CONTEXT_COURSE:
+            case CONTEXT_MODULE:
+            case CONTEXT_BLOCK:
+                $str = get_string('effectiveretentionperiodcourse', 'tool_dataprivacy',
+                    $exportedpurpose->formattedretentionperiod);
+                break;
+            case CONTEXT_USER:
+                $str = get_string('effectiveretentionperioduser', 'tool_dataprivacy',
+                    $exportedpurpose->formattedretentionperiod);
+                break;
+            default:
+                $str = $exportedpurpose->formattedretentionperiod;
+        }
+
+        return $str;
+    }
+
 }
