@@ -23,6 +23,9 @@
  */
 
 namespace tool_dataprivacy;
+use context_system;
+use moodle_url;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -35,20 +38,26 @@ defined('MOODLE_INTERNAL') || die();
 class page_helper {
 
     /**
-     * Sets up $PAGE.
+     * Sets up $PAGE for data privacy admin pages.
      *
-     * @param \moodle_url $url
-     * @param string $title
-     * @return null
+     * @param moodle_url $url The page URL.
+     * @param string $title The page's title.
+     * @param string $attachtoparentnode The parent navigation node where this page can be accessed from.
+     * @param string $requiredcapability The required capability to view this page.
      */
-    public static function setup(\moodle_url $url, $title) {
+    public static function setup(moodle_url $url, $title, $attachtoparentnode = '',
+                                 $requiredcapability = 'tool/dataprivacy:managedataregistry') {
         global $PAGE;
 
-        $context = \context_system::instance();
+        $context = context_system::instance();
 
         require_login();
+        if (isguestuser()) {
+            print_error('noguest');
+        }
+
         // TODO Check that data privacy is enabled.
-        require_capability('tool/dataprivacy:managedataregistry', $context);
+        require_capability($requiredcapability, $context);
 
         $PAGE->navigation->override_active_url($url);
 
@@ -58,17 +67,15 @@ class page_helper {
         $PAGE->set_title($title);
         $PAGE->set_heading($title);
 
-        $dataregistry = new \moodle_url('/admin/tool/dataprivacy/dataregistry.php');
-
-        // No need to update data registry navbar as it is already part of the site navigation.
-        if (!$url->compare($dataregistry)) {
+        // If necessary, override the settings navigation to add this page into the breadcrumb navigation.
+        if ($attachtoparentnode) {
             if ($siteadmin = $PAGE->settingsnav->find('root', \navigation_node::TYPE_SITE_ADMIN)) {
                 $PAGE->navbar->add($siteadmin->get_content(), $siteadmin->action());
             }
-            if ($dataprivacy = $PAGE->settingsnav->find('dataprivacysettings', \navigation_node::TYPE_SETTING)) {
+            if ($dataprivacy = $PAGE->settingsnav->find('privacy', \navigation_node::TYPE_SETTING)) {
                 $PAGE->navbar->add($dataprivacy->get_content(), $dataprivacy->action());
             }
-            if ($dataregistry = $PAGE->settingsnav->find('dataregistry', \navigation_node::TYPE_SETTING)) {
+            if ($dataregistry = $PAGE->settingsnav->find($attachtoparentnode, \navigation_node::TYPE_SETTING)) {
                 $PAGE->navbar->add($dataregistry->get_content(), $dataregistry->action());
             }
 
