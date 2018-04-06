@@ -31,24 +31,20 @@ $title = get_string('setdefaults', 'tool_dataprivacy');
 \tool_dataprivacy\page_helper::setup($url, $title);
 
 $levels = \context_helper::get_all_levels();
-
-$purposeoptions = \tool_dataprivacy\output\data_registry_page::purpose_options(
-    \tool_dataprivacy\api::get_purposes()
-);
-$categoryoptions = \tool_dataprivacy\output\data_registry_page::category_options(
-    \tool_dataprivacy\api::get_categories()
-);
+// They are set through the context level site and user.
+unset($levels[CONTEXT_SYSTEM]);
+unset($levels[CONTEXT_USER]);
 
 $customdata = [
     'levels' => $levels,
-    'purposes' => $purposeoptions,
-    'categories' => $categoryoptions,
+    'purposes' => \tool_dataprivacy\api::get_purposes(),
+    'categories' => \tool_dataprivacy\api::get_categories(),
 ];
 $form = new \tool_dataprivacy\form\defaults($PAGE->url->out(false), $customdata);
 
 $toform = new stdClass();
 foreach ($levels as $level => $classname) {
-    list($purposevar, $categoryvar) = tool_dataprivacy_var_names_from_context($classname);
+    list($purposevar, $categoryvar) = \tool_dataprivacy\data_registry::var_names_from_context($classname);
     $toform->{$purposevar} = get_config('tool_dataprivacy', $purposevar);
     $toform->{$categoryvar} = get_config('tool_dataprivacy', $categoryvar);
 }
@@ -61,7 +57,7 @@ if ($form->is_cancelled()) {
 
     foreach ($levels as $level => $classname) {
 
-        list($purposevar, $categoryvar) = tool_dataprivacy_var_names_from_context($classname);
+        list($purposevar, $categoryvar) = \tool_dataprivacy\data_registry::var_names_from_context($classname);
 
         if (isset($data->{$purposevar})) {
             set_config($purposevar, $data->{$purposevar}, 'tool_dataprivacy');

@@ -136,32 +136,16 @@ function tool_dataprivacy_output_fragment_addcategory_form($args) {
  * @return string The rendered mform fragment.
  */
 function tool_dataprivacy_output_fragment_context_form($args) {
+    global $PAGE;
 
     $contextid = $args[0];
 
     $context = \context_helper::instance_by_id($contextid);
+    $customdata = \tool_dataprivacy\form\context_instance::get_context_instance_customdata($context);
 
-    $persistent = \tool_dataprivacy\context_instance::get_record_by_contextid($contextid, false);
-    if (!$persistent) {
-        $persistent = new \tool_dataprivacy\context_instance();
-        $persistent->set('contextid', $contextid);
+    if (!empty($customdata['purposeretentionperiods'])) {
+        $PAGE->requires->js_call_amd('tool_dataprivacy/effective_retention_period', 'init', [$customdata['purposeretentionperiods']]);
     }
-
-    $purposeoptions = \tool_dataprivacy\output\data_registry_page::purpose_options(
-        \tool_dataprivacy\api::get_purposes()
-    );
-    $categoryoptions = \tool_dataprivacy\output\data_registry_page::category_options(
-        \tool_dataprivacy\api::get_categories()
-    );
-
-    $customdata = [
-        'context' => $context,
-        'subjectscope' => \tool_dataprivacy\api::get_subject_scope($context),
-        'contextname' => $context->get_context_name(),
-        'persistent' => $persistent,
-        'purposes' => $purposeoptions,
-        'categories' => $categoryoptions,
-    ];
     $mform = new \tool_dataprivacy\form\context_instance(null, $customdata);
     return $mform->render();
 }
@@ -173,68 +157,17 @@ function tool_dataprivacy_output_fragment_context_form($args) {
  * @return string The rendered mform fragment.
  */
 function tool_dataprivacy_output_fragment_contextlevel_form($args) {
+    global $PAGE;
 
     $contextlevel = $args[0];
+    $customdata = \tool_dataprivacy\form\contextlevel::get_contextlevel_customdata($contextlevel);
 
-    $persistent = \tool_dataprivacy\contextlevel::get_record_by_contextlevel($contextlevel, false);
-    if (!$persistent) {
-        $persistent = new \tool_dataprivacy\contextlevel();
-        $persistent->set('contextlevel', $contextlevel);
+    if (!empty($customdata['purposeretentionperiods'])) {
+        $PAGE->requires->js_call_amd('tool_dataprivacy/effective_retention_period', 'init', [$customdata['purposeretentionperiods']]);
     }
 
-    $purposeoptions = \tool_dataprivacy\output\data_registry_page::purpose_options(
-        \tool_dataprivacy\api::get_purposes()
-    );
-    $categoryoptions = \tool_dataprivacy\output\data_registry_page::category_options(
-        \tool_dataprivacy\api::get_categories()
-    );
-
-    $customdata = [
-        'contextlevel' => $contextlevel,
-        'contextlevelname' => get_string('contextlevelname' . $contextlevel, 'tool_dataprivacy'),
-        'persistent' => $persistent,
-        'purposes' => $purposeoptions,
-        'categories' => $categoryoptions,
-    ];
     $mform = new \tool_dataprivacy\form\contextlevel(null, $customdata);
     return $mform->render();
-}
-
-/**
- * Returns purpose and category var names from a context class name
- *
- * @param string $classname
- * @return string[]
- */
-function tool_dataprivacy_var_names_from_context($classname) {
-    return [
-        $classname . '_purpose',
-        $classname . '_category',
-    ];
-}
-
-/**
- * Returns the default purpose id and category id for the provided context level.
- *
- * The caller code is responsible of checking that $contextlevel is an integer.
- *
- * @param int $contextlevel
- * @return int[]
- */
-function tool_dataprivacy_get_defaults($contextlevel) {
-
-    $classname = \context_helper::get_class_for_level($contextlevel);
-    $purposeid = get_config('tool_dataprivacy', $classname . '_purpose');
-    $categoryid = get_config('tool_dataprivacy', $classname . '_category');
-
-    if (empty($purposeid)) {
-        $purposeid = 0;
-    }
-    if (empty($categoryid)) {
-        $categoryid = 0;
-    }
-
-    return [$purposeid, $categoryid];
 }
 
 /**

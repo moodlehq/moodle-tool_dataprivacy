@@ -22,6 +22,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 namespace tool_dataprivacy;
+
+use stdClass;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/dataprivacy/lib.php');
@@ -38,6 +41,36 @@ class purpose extends \core\persistent {
      * Database table.
      */
     const TABLE = 'tool_dataprivacy_purpose';
+
+    /**
+     * Extended constructor to fetch from the cache if available.
+     *
+     * @param int $id If set, this is the id of an existing record, used to load the data.
+     * @param stdClass $record If set will be passed to {@link self::from_record()}.
+     */
+    public function __construct($id = 0, stdClass $record = null) {
+        global $CFG;
+
+        if ($id) {
+            $cache = \cache::make('tool_dataprivacy', 'purpose');
+            if ($data = $cache->get($id)) {
+
+                // Replicate self::read.
+                $this->from_record($data);
+                $this->validated = true;
+
+                // Now replicate the parent constructor.
+                if (!empty($record)) {
+                    $this->from_record($record);
+                }
+                if ($CFG->debugdeveloper) {
+                    $this->verify_protected_methods();
+                }
+                return;
+            }
+        }
+        parent::__construct($id, $record);
+    }
 
     /**
      * Return the definition of the properties of this model.
@@ -75,6 +108,37 @@ class purpose extends \core\persistent {
     }
 
     /**
+     * Adds the new record to the cache.
+     *
+     * @return null
+     */
+    protected function after_create() {
+        $cache = \cache::make('tool_dataprivacy', 'purpose');
+        $cache->set($this->get('id'), $this->to_record());
+    }
+
+    /**
+     * Updates the cache record.
+     *
+     * @param  $result
+     * @return null
+     */
+    protected function after_update($result) {
+        $cache = \cache::make('tool_dataprivacy', 'purpose');
+        $cache->set($this->get('id'), $this->to_record());
+    }
+
+    /**
+     * Removes unnecessary stuff from db.
+     *
+     * @return null
+     */
+    protected function before_delete() {
+        $cache = \cache::make('tool_dataprivacy', 'purpose');
+        $cache->delete($this->get('id'));
+    }
+
+    /**
      * Is this purpose used?.
      *
      * @return null
@@ -90,7 +154,7 @@ class purpose extends \core\persistent {
         $levels = \context_helper::get_all_levels();
         foreach ($levels as $level => $classname) {
 
-            list($purposevar, $unused) = tool_dataprivacy_var_names_from_context($classname);
+            list($purposevar, $unused) = \tool_dataprivacy\data_registry::var_names_from_context($classname);
             if (!empty($pluginconfig->{$purposevar}) && $pluginconfig->{$purposevar} == $this->get('id')) {
                 return true;
             }

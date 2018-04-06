@@ -28,6 +28,7 @@ use renderable;
 use renderer_base;
 use stdClass;
 use templatable;
+use tool_dataprivacy\data_registry;
 
 require_once($CFG->libdir . '/coursecatlib.php');
 require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/dataprivacy/lib.php');
@@ -99,8 +100,7 @@ class data_registry_page implements renderable, templatable {
 
         $data->actions = $actionmenu->export_for_template($output);
 
-        list($purposeid, $categoryid) = tool_dataprivacy_get_defaults(CONTEXT_SYSTEM);
-        if (!$purposeid || !$categoryid) {
+        if (!data_registry::defaults_set()) {
             $data->nosystemdefaults = (object)[
                 'message' => get_string('nosystemdefaults', 'tool_dataprivacy'),
                 'announce' => 1
@@ -119,6 +119,8 @@ class data_registry_page implements renderable, templatable {
      */
     private function get_default_tree_structure() {
 
+        $frontpage = \context_course::instance(SITEID);
+
         $categorybranches = $this->get_all_category_branches();
 
         $elements = [
@@ -133,11 +135,21 @@ class data_registry_page implements renderable, templatable {
                     'branches' => $categorybranches,
                     'expandelement' => 'category',
                 ], [
-                    'text' => get_string('contextlevelname' . CONTEXT_MODULE, 'tool_dataprivacy'),
-                    'contextlevel' => CONTEXT_MODULE,
-                ], [
-                    'text' => get_string('contextlevelname' . CONTEXT_BLOCK, 'tool_dataprivacy'),
-                    'contextlevel' => CONTEXT_BLOCK,
+                    'text' => get_string('frontpagecourse', 'tool_dataprivacy'),
+                    'contextid' => $frontpage->id,
+                    'branches' => [
+                        [
+                            'text' => get_string('activitiesandresources', 'tool_dataprivacy'),
+                            'expandcontextid' => $frontpage->id,
+                            'expandelement' => 'module',
+                            'expanded' => 0,
+                        ], [
+                            'text' => get_string('blocks'),
+                            'expandcontextid' => $frontpage->id,
+                            'expandelement' => 'block',
+                            'expanded' => 0,
+                        ],
+                    ]
                 ]
             ]
         ];
@@ -153,7 +165,7 @@ class data_registry_page implements renderable, templatable {
      */
     private function get_all_category_branches() {
 
-        $categories = $this->get_site_categories();
+        $categories = data_registry::get_site_categories();
 
         $categoriesbranch = [];
         while (count($categories) > 0) {
@@ -417,10 +429,12 @@ class data_registry_page implements renderable, templatable {
      * From a list of purpose persistents to a list of id => name purposes.
      *
      * @param \tool_dataprivacy\purpose $purposes
+     * @param bool $includenotset
+     * @param bool $includeinherit
      * @return string[]
      */
-    public static function purpose_options($purposes) {
-        $options = [0 => get_string('notset', 'tool_dataprivacy')];
+    public static function purpose_options($purposes, $includenotset = true, $includeinherit = true) {
+        $options = self::base_options($includenotset, $includeinherit);
         foreach ($purposes as $purpose) {
             $options[$purpose->get('id')] = $purpose->get('name');
         }
@@ -432,10 +446,12 @@ class data_registry_page implements renderable, templatable {
      * From a list of category persistents to a list of id => name categories.
      *
      * @param \tool_dataprivacy\category $categories
+     * @param bool $includenotset
+     * @param bool $includeinherit
      * @return string[]
      */
-    public static function category_options($categories) {
-        $options = [0 => get_string('notset', 'tool_dataprivacy')];
+    public static function category_options($categories, $includenotset = true, $includeinherit = true) {
+        $options = self::base_options($includenotset, $includeinherit);
         foreach ($categories as $category) {
             $options[$category->get('id')] = $category->get('name');
         }
@@ -444,26 +460,24 @@ class data_registry_page implements renderable, templatable {
     }
 
     /**
-     * Returns all site categories that are visible to the current user.
+     * Base not set and inherit options.
      *
-     * @return \coursecat[]
+     * @param bool $includenotset
+     * @param bool $includeinherit
+     * @return array
      */
-    private static function get_site_categories() {
-        global $DB;
+    private static function base_options($includenotset = true, $includeinherit = true) {
 
-        if (method_exists('\coursecat', 'get_all')) {
-            $categories = \coursecat::get_all(['returnhidden' => true]);
-        } else {
-            // Fallback (to be removed once this gets integrated into master).
-            $ids = $DB->get_fieldset_select('course_categories', 'id', '');
-            $categories = \coursecat::get_many($ids);
+        $options = [];
+
+        if ($includenotset) {
+            $options[\tool_dataprivacy\context_instance::NOTSET] = get_string('notset', 'tool_dataprivacy');
         }
 
-        foreach ($categories as $key => $category) {
-            if (!$category->is_uservisible()) {
-                unset($categories[$key]);
-            }
+        if ($includeinherit) {
+            $options[\tool_dataprivacy\context_instance::INHERIT] = get_string('inherit', 'tool_dataprivacy');
         }
-        return $categories;
+
+        return $options;
     }
 }

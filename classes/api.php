@@ -36,6 +36,11 @@ use required_capability_exception;
 use stdClass;
 use tool_dataprivacy\task\initiate_data_request_task;
 use tool_dataprivacy\task\process_data_request_task;
+use tool_dataprivacy\purpose;
+use tool_dataprivacy\category;
+use tool_dataprivacy\contextlevel;
+use tool_dataprivacy\context_instance;
+use tool_dataprivacy\data_registry;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -453,7 +458,7 @@ class api {
     public static function create_purpose(stdClass $record) {
         self::check_can_manage_data_registry();
 
-        $purpose = new \tool_dataprivacy\purpose(0, $record);
+        $purpose = new purpose(0, $record);
         $purpose->create();
 
         return $purpose;
@@ -468,7 +473,7 @@ class api {
     public static function update_purpose(stdClass $record) {
         self::check_can_manage_data_registry();
 
-        $purpose = new \tool_dataprivacy\purpose($record->id);
+        $purpose = new purpose($record->id);
         $purpose->from_record($record);
 
         $result = $purpose->update();
@@ -485,7 +490,7 @@ class api {
     public static function delete_purpose($id) {
         self::check_can_manage_data_registry();
 
-        $purpose = new \tool_dataprivacy\purpose($id);
+        $purpose = new purpose($id);
         if ($purpose->is_used()) {
             throw new \moodle_exception('Purpose with id ' . $id . ' can not be deleted because it is used.');
         }
@@ -500,7 +505,7 @@ class api {
     public static function get_purposes() {
         self::check_can_manage_data_registry();
 
-        return \tool_dataprivacy\purpose::get_records([], 'name', 'ASC');
+        return purpose::get_records([], 'name', 'ASC');
     }
 
     /**
@@ -512,7 +517,7 @@ class api {
     public static function create_category(stdClass $record) {
         self::check_can_manage_data_registry();
 
-        $category = new \tool_dataprivacy\category(0, $record);
+        $category = new category(0, $record);
         $category->create();
 
         return $category;
@@ -527,7 +532,7 @@ class api {
     public static function update_category(stdClass $record) {
         self::check_can_manage_data_registry();
 
-        $category = new \tool_dataprivacy\category($record->id);
+        $category = new category($record->id);
         $category->from_record($record);
 
         $result = $category->update();
@@ -544,7 +549,7 @@ class api {
     public static function delete_category($id) {
         self::check_can_manage_data_registry();
 
-        $category = new \tool_dataprivacy\category($id);
+        $category = new category($id);
         if ($category->is_used()) {
             throw new \moodle_exception('Category with id ' . $id . ' can not be deleted because it is used.');
         }
@@ -559,7 +564,7 @@ class api {
     public static function get_categories() {
         self::check_can_manage_data_registry();
 
-        return \tool_dataprivacy\category::get_records([], 'name', 'ASC');
+        return category::get_records([], 'name', 'ASC');
     }
 
     /**
@@ -571,7 +576,7 @@ class api {
     public static function set_context_instance($record) {
         self::check_can_manage_data_registry($record->contextid);
 
-        if ($instance = \tool_dataprivacy\context_instance::get_record_by_contextid($record->contextid, false)) {
+        if ($instance = context_instance::get_record_by_contextid($record->contextid, false)) {
             // Update.
             $instance->from_record($record);
 
@@ -583,7 +588,7 @@ class api {
 
         } else {
             // Add.
-            $instance = new \tool_dataprivacy\context_instance(0, $record);
+            $instance = new context_instance(0, $record);
         }
         $instance->save();
 
@@ -596,7 +601,7 @@ class api {
      * @param \tool_dataprivacy\context_instance $instance
      * @return null
      */
-    public static function unset_context_instance(\tool_dataprivacy\context_instance $instance) {
+    public static function unset_context_instance(context_instance $instance) {
         self::check_can_manage_data_registry($instance->get('contextid'));
         $instance->delete();
     }
@@ -604,6 +609,7 @@ class api {
     /**
      * Sets the context level purpose and category.
      *
+     * @throws \coding_exception
      * @param \stdClass $record
      * @return contextlevel
      */
@@ -613,42 +619,90 @@ class api {
         // Only manager at system level can set this.
         self::check_can_manage_data_registry();
 
-        if ($contextlevel = \tool_dataprivacy\contextlevel::get_record_by_contextlevel($record->contextlevel, false)) {
+        if ($record->contextlevel != CONTEXT_SYSTEM && $record->contextlevel != CONTEXT_USER) {
+            throw new \coding_exception('Only context system and context user can set a contextlevel ' .
+                'purpose and retention');
+        }
+
+        if ($contextlevel = contextlevel::get_record_by_contextlevel($record->contextlevel, false)) {
             // Update.
             $contextlevel->from_record($record);
         } else {
             // Add.
-            $contextlevel = new \tool_dataprivacy\contextlevel(0, $record);
+            $contextlevel = new contextlevel(0, $record);
         }
         $contextlevel->save();
+
+        // We sync with their defaults as we removed these options from the defaults page.
+        $classname = \context_helper::get_class_for_level($record->contextlevel);
+        list($purposevar, $categoryvar) = \tool_dataprivacy\data_registry::var_names_from_context($classname);
+        set_config($purposevar, $record->purposeid, 'tool_dataprivacy');
+        set_config($categoryvar, $record->categoryid, 'tool_dataprivacy');
 
         return $contextlevel;
     }
 
     /**
-     * Returns the roles assigned to the provided level.
-     *
-     * Important to note that it returns course-level assigned roles
-     * if the provided context level is below course.
+     * Returns the effective category given a context instance.
      *
      * @param \context $context
-     * @return array
+     * @param int $forcedvalue Use this categoryid value as if this was this context instance category.
+     * @return category|false
      */
-    public static function get_subject_scope(\context $context) {
-
-        if ($contextcourse = $context->get_course_context(false)) {
-            // Below course level we only look at course-assigned roles.
-            $roles = get_user_roles($contextcourse, 0, false);
-        } else {
-            $roles = get_user_roles($context, 0, false);
+    public static function get_effective_context_category(\context $context, $forcedvalue=false) {
+        self::check_can_manage_data_registry($context->id);
+        if (!data_registry::defaults_set()) {
+            return false;
         }
 
-        return array_map(function($role) {
-            if ($role->name) {
-                return $role->name;
-            } else {
-                return $role->shortname;
-            }
-        }, $roles);
+        return data_registry::get_effective_context_value($context, 'category', $forcedvalue);
+    }
+
+    /**
+     * Returns the effective purpose given a context instance.
+     *
+     * @param \context $context
+     * @param int $forcedvalue Use this purposeid value as if this was this context instance purpose.
+     * @return purpose|false
+     */
+    public static function get_effective_context_purpose(\context $context, $forcedvalue=false) {
+        self::check_can_manage_data_registry($context->id);
+        if (!data_registry::defaults_set()) {
+            return false;
+        }
+
+        return data_registry::get_effective_context_value($context, 'purpose', $forcedvalue);
+    }
+
+    /**
+     * Returns the effective category given a context level.
+     *
+     * @param int $contextlevel
+     * @param int $forcedvalue Use this categoryid value as if this was this context level category.
+     * @return category|false
+     */
+    public static function get_effective_contextlevel_category($contextlevel, $forcedvalue=false) {
+        self::check_can_manage_data_registry(\context_system::instance()->id);
+        if (!data_registry::defaults_set()) {
+            return false;
+        }
+
+        return data_registry::get_effective_contextlevel_value($context, 'category', $forcedvalue);
+    }
+
+    /**
+     * Returns the effective purpose given a context level.
+     *
+     * @param int $contextlevel
+     * @param int $forcedvalue Use this purposeid value as if this was this context level purpose.
+     * @return purpose|false
+     */
+    public static function get_effective_contextlevel_purpose($contextlevel, $forcedvalue=false) {
+        self::check_can_manage_data_registry(\context_system::instance()->id);
+        if (!data_registry::defaults_set()) {
+            return false;
+        }
+
+        return data_registry::get_effective_contextlevel_value($contextlevel, 'purpose', $forcedvalue);
     }
 }

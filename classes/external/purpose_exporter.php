@@ -88,7 +88,7 @@ class purpose_exporter extends persistent_exporter {
             } else if ($interval->d) {
                 $formattedtime = get_string('numdays', 'moodle', $interval->format('%d'));
             } else {
-                $formattedtime = get_string('retentionperiodnotdefined', 'tool_dataprivacy');
+                $formattedtime = get_string('retentionperiodzero', 'tool_dataprivacy');
             }
         } else {
             $formattedtime = get_string('retentionperiodnotdefined', 'tool_dataprivacy');
