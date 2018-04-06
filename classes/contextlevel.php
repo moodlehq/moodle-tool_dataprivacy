@@ -69,6 +69,11 @@ class contextlevel extends \core\persistent {
     public static function get_record_by_contextlevel($contextlevel, $exception = true) {
         global $DB;
 
+        $cache = \cache::make('tool_dataprivacy', 'contextlevel');
+        if ($data = $cache->get($contextlevel)) {
+            return new static(0, $data);
+        }
+
         if (!$record = $DB->get_record(self::TABLE, array('contextlevel' => $contextlevel))) {
             if (!$exception) {
                 return false;
@@ -100,5 +105,36 @@ class contextlevel extends \core\persistent {
     public static function is_category_used($categoryid) {
         global $DB;
         return $DB->record_exists(self::TABLE, array('categoryid' => $categoryid));
+    }
+
+    /**
+     * Adds the new record to the cache.
+     *
+     * @return null
+     */
+    protected function after_create() {
+        $cache = \cache::make('tool_dataprivacy', 'contextlevel');
+        $cache->set($this->get('contextlevel'), $this->to_record());
+    }
+
+    /**
+     * Updates the cache record.
+     *
+     * @param  $result
+     * @return null
+     */
+    protected function after_update($result) {
+        $cache = \cache::make('tool_dataprivacy', 'contextlevel');
+        $cache->set($this->get('contextlevel'), $this->to_record());
+    }
+
+    /**
+     * Removes unnecessary stuff from db.
+     *
+     * @return null
+     */
+    protected function before_delete() {
+        $cache = \cache::make('tool_dataprivacy', 'contextlevel');
+        $cache->delete($this->get('contextlevel'));
     }
 }

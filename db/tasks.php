@@ -15,17 +15,32 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Data privacy plugin version information
+ * This file defines tasks performed by the tool.
  *
  * @package    tool_dataprivacy
- * @copyright  2018 onwards Jun Pataleta
+ * @copyright  2018 David Monllao {@link http://www.davidmonllao.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
+defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2018031904;
-$plugin->requires  = 2018031600.00;        // Moodle 3.5dev (Build 2018031600) and upwards.
-$plugin->component = 'tool_dataprivacy';
-$plugin->release   = '35.0.0dev';
-$plugin->maturity  = MATURITY_BETA;
+// List of tasks.
+$tasks = array(
+    array(
+        'classname' => 'tool_dataprivacy\task\expired_retention_period',
+        'blocking' => 0,
+        'minute' => '0',
+        'hour' => 'R',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*'
+    ), array(
+        'classname' => 'tool_dataprivacy\task\delete_expired_contexts',
+        'blocking' => 0,
+        'minute' => '0',
+        'hour' => 'R',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*'
+    ),
+);

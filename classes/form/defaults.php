@@ -56,7 +56,7 @@ class defaults extends \moodleform {
             $mform->addElement('header', $classname . '-header',
                 get_string('contextlevelname' . $level, 'tool_dataprivacy'));
 
-            list($purposevar, $categoryvar) = tool_dataprivacy_var_names_from_context($classname);
+            list($purposevar, $categoryvar) = \tool_dataprivacy\data_registry::var_names_from_context($classname);
 
             $includeinherit = true;
             if ($level == CONTEXT_SYSTEM) {
