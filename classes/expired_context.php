@@ -133,12 +133,12 @@ class expired_context extends \core\persistent {
      * @return int
      * @throws dml_exception
      */
-    public static function get_record_count_by_contextlevel($contextlevel, $status = false) {
+    public static function get_record_count_by_contextlevel($contextlevel = null, $status = false) {
         global $DB;
 
-        $sql = "SELECT COUNT(1) 
+        $sql = "SELECT COUNT(1)
                   FROM {" . self::TABLE . "} expiredctx
-                  JOIN {context} ctx 
+                  JOIN {context} ctx
                     ON ctx.id = expiredctx.contextid";
 
         $conditions = [];

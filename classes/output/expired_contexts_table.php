@@ -37,6 +37,7 @@ use table_sql;
 use tool_dataprivacy\api;
 use tool_dataprivacy\expired_context;
 use tool_dataprivacy\purpose;
+use tool_dataprivacy\external\purpose_exporter;
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -162,7 +163,7 @@ class expired_contexts_table extends table_sql {
      */
     public function col_category($data) {
         $context = context_helper::instance_by_id($data->contextid);
-        $category = api::get_effective_context_category($context, true);
+        $category = api::get_effective_context_category($context);
 
         return s($category->get('name'));
     }
@@ -188,22 +189,14 @@ class expired_contexts_table extends table_sql {
      * @throws Exception
      */
     public function col_retentionperiod($data) {
+        global $PAGE;
+
         $purpose = $this->purposes[$data->contextid];
 
-        $interval = new DateInterval($purpose->get('retentionperiod'));
+        $exporter = new purpose_exporter($purpose, ['context' => \context_system::instance()]);
+        $exportedpurpose = $exporter->export($PAGE->get_renderer('core'));
 
-        // It is one or another.
-        if ($interval->y) {
-            $formattedretentionperiod = get_string('numyears', 'moodle', $interval->format('%y'));
-        } else if ($interval->m) {
-            $formattedretentionperiod = get_string('nummonths', 'moodle', $interval->format('%m'));
-        } else if ($interval->d) {
-            $formattedretentionperiod = get_string('numdays', 'moodle', $interval->format('%d'));
-        } else {
-            $formattedretentionperiod = get_string('retentionperiodzero', 'tool_dataprivacy');
-        }
-
-        return $formattedretentionperiod;
+        return $exportedpurpose->formattedretentionperiod;
     }
 
     /**
@@ -254,7 +247,7 @@ class expired_contexts_table extends table_sql {
 
             $context = context_helper::instance_by_id($data->contextid);
 
-            $purpose = api::get_effective_context_purpose($context, true);
+            $purpose = api::get_effective_context_purpose($context);
             $this->purposes[$data->contextid] = $purpose;
             $this->rawdata[] = $data;
         }
