@@ -32,7 +32,7 @@ if ($id) {
 } else {
     $title = get_string('addcategory', 'tool_dataprivacy');
 }
-\tool_dataprivacy\page_helper::setup($url, $title);
+\tool_dataprivacy\page_helper::setup($url, $title, 'dataregistry');
 
 $category = new \tool_dataprivacy\category($id);
 $form = new \tool_dataprivacy\form\category($PAGE->url->out(false),

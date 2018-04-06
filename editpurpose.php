@@ -33,7 +33,7 @@ if ($id) {
     $title = get_string('addpurpose', 'tool_dataprivacy');
 }
 
-\tool_dataprivacy\page_helper::setup($url, $title);
+\tool_dataprivacy\page_helper::setup($url, $title, 'dataregistry');
 
 $purpose = new \tool_dataprivacy\purpose($id);
 $form = new \tool_dataprivacy\form\purpose($PAGE->url->out(false),

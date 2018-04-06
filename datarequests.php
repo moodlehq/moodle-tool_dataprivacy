@@ -27,22 +27,10 @@ require_once('lib.php');
 
 $url = new moodle_url('/admin/tool/dataprivacy/datarequests.php');
 
-$PAGE->set_url($url);
-
-require_login();
-if (isguestuser()) {
-    print_error('noguest');
-}
-
-$context = context_system::instance();
-
-require_capability('tool/dataprivacy:managedatarequests', $context);
-
-$PAGE->set_context($context);
-
 $title = get_string('datarequests', 'tool_dataprivacy');
-$PAGE->set_heading($title);
-$PAGE->set_title($title);
+
+\tool_dataprivacy\page_helper::setup($url, $title, '', 'tool/dataprivacy:managedatarequests');
+
 echo $OUTPUT->header();
 echo $OUTPUT->heading($title);
 

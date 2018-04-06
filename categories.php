@@ -27,7 +27,7 @@ require_once(__DIR__ . '/../../../config.php');
 $url = new moodle_url("/admin/tool/dataprivacy/categories.php");
 $title = get_string('editcategories', 'tool_dataprivacy');
 
-\tool_dataprivacy\page_helper::setup($url, $title);
+\tool_dataprivacy\page_helper::setup($url, $title, 'dataregistry');
 
 $output = $PAGE->get_renderer('tool_dataprivacy');
 echo $output->header();
