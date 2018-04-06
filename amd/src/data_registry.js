@@ -234,7 +234,7 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
                     },
                     fail: Notification.exception
                 }]);
-            });
+            }).fail(Notification.exception);
 
         };
 
@@ -303,10 +303,10 @@ define(['jquery', 'core/str', 'core/ajax', 'core/notification', 'core/templates'
             /**
              * Initialise the page.
              *
-             * @param {Integer} systemContextId
-             * @param {Integer} initContextLevel
-             * @param {Integer} initContextId
-             * @return DataRegistry
+             * @param {Number} systemContextId
+             * @param {Number} initContextLevel
+             * @param {Number} initContextId
+             * @return {DataRegistry}
              */
             init: function(systemContextId, initContextLevel, initContextId) {
                 return new DataRegistry(systemContextId, initContextLevel, initContextId);

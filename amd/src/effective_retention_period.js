@@ -32,7 +32,7 @@ define(['jquery'],
         /**
          * Constructor for the retention period display.
          *
-         * @param {Array} purposeRetentionPeriods Associative array of purposeids with their effective retention period at this context
+         * @param {Array} purposeRetentionPeriods Associative array of purposeids with effective retention period at this context
          */
         var EffectiveRetentionPeriod = function(purposeRetentionPeriods) {
             this.purposeRetentionPeriods = purposeRetentionPeriods;

@@ -569,7 +569,7 @@ class api {
      * Sets the context instance purpose and category.
      *
      * @param \stdClass $record
-     * @return \tool_datapriacy\context_instance
+     * @return \tool_dataprivacy\context_instance
      */
     public static function set_context_instance($record) {
         self::check_can_manage_data_registry($record->contextid);
@@ -633,7 +633,7 @@ class api {
 
         // We sync with their defaults as we removed these options from the defaults page.
         $classname = \context_helper::get_class_for_level($record->contextlevel);
-        list($purposevar, $categoryvar) = \tool_dataprivacy\data_registry::var_names_from_context($classname);
+        list($purposevar, $categoryvar) = data_registry::var_names_from_context($classname);
         set_config($purposevar, $record->purposeid, 'tool_dataprivacy');
         set_config($categoryvar, $record->categoryid, 'tool_dataprivacy');
 
@@ -685,7 +685,7 @@ class api {
             return false;
         }
 
-        return data_registry::get_effective_contextlevel_value($context, 'category', $forcedvalue);
+        return data_registry::get_effective_contextlevel_value($contextlevel, 'category', $forcedvalue);
     }
 
     /**
