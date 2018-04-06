@@ -51,18 +51,20 @@ abstract class expired_contexts_manager {
     /**
      * Flag expired contexts as expired.
      *
-     * @return null
+     * @return int The number of contexts flagged as expired.
      */
     public function flag_expired() {
 
         if (!$this->check_requirements()) {
-            return;
+            return 0;
         }
 
         $contexts = $this->get_expired_contexts();
         foreach ($contexts as $context) {
             api::create_expired_context($context->id);
         }
+
+        return count($contexts);
     }
 
     /**
@@ -72,13 +74,13 @@ abstract class expired_contexts_manager {
      */
     public function delete() {
 
+        $numprocessed = 0;
+
         if (!$this->check_requirements()) {
-            return [];
+            return $numprocessed;
         }
 
         $privacymanager = new \core_privacy\manager();
-
-        $numprocessed = 0;
 
         $levels = [CONTEXT_USER, CONTEXT_MODULE, CONTEXT_BLOCK, CONTEXT_COURSE];
         foreach ($levels as $level) {

@@ -52,12 +52,6 @@ class expired_course_related_contexts extends \tool_dataprivacy\expired_contexts
 
         // This SQL query returns all course-dependant contexts (including the course context)
         // which course end date already passed.
-        //
-        // We are sorting by path and level as the effective retention period calculations may need to
-        // get context parents and we want those parents to be read from
-        // \context::$cache_contextsbyid not from the database. CONTEXT_CACHE_MAX_SIZE is 2500 but this SQL can
-        // potentially return more than 2500 records. It is not likely that we will find a significant amount
-        // of courses with more than 2500 activities so this should be fine.
         $sql = "SELECT $fields
                   FROM {context} ctx
                   JOIN (
@@ -95,7 +89,7 @@ class expired_course_related_contexts extends \tool_dataprivacy\expired_contexts
             // to return the default purpose for the context context level (no db queries involved).
             $purposevalue = $record->purposeid !== null ? $record->purposeid : context_instance::NOTSET;
 
-            // It should be cheap as system purposes and context instance will be retrieved from a cache most of the time.
+            // It should be cheap as system purposes and context level purposes will be retrieved from a cache most of the time.
             $purpose = api::get_effective_context_purpose($context, $purposevalue);
 
             $dt = new \DateTime();
