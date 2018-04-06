@@ -28,7 +28,7 @@ require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/dataprivacy/lib.php');
 $url = new \moodle_url('/admin/tool/dataprivacy/defaults.php');
 $title = get_string('setdefaults', 'tool_dataprivacy');
 
-\tool_dataprivacy\page_helper::setup($url, $title);
+\tool_dataprivacy\page_helper::setup($url, $title, 'dataregistry');
 
 $levels = \context_helper::get_all_levels();
 
