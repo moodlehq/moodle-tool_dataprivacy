@@ -55,7 +55,7 @@ class process_data_request_task extends adhoc_task {
      * @throws moodle_exception
      */
     public function execute() {
-        global $CFG, $OUTPUT, $SITE;
+        global $CFG, $PAGE, $SITE;
 
         require_once($CFG->dirroot . '/admin/tool/dataprivacy/lib.php');
 
@@ -137,6 +137,7 @@ class process_data_request_task extends adhoc_task {
             'username' => fullname($foruser)
         ];
 
+        $output = $PAGE->get_renderer('tool_dataprivacy');
         $emailonly = false;
         switch ($request->type) {
             case api::DATAREQUEST_TYPE_EXPORT:
@@ -151,7 +152,7 @@ class process_data_request_task extends adhoc_task {
                 // Prepare download link.
                 $downloadurl = new moodle_url('#'); // TODO: Replace with the proper download URL.
                 $downloadlink = new action_link($downloadurl, get_string('download', 'tool_dataprivacy'));
-                $messagetextdata['downloadlink'] = $downloadlink->export_for_template($OUTPUT);
+                $messagetextdata['downloadlink'] = $downloadlink->export_for_template($output);
                 break;
             case api::DATAREQUEST_TYPE_DELETE:
                 $typetext = get_string('requesttypedelete', 'tool_dataprivacy');
@@ -172,7 +173,7 @@ class process_data_request_task extends adhoc_task {
         $message->userto = $foruser;
 
         // Render message email body.
-        $messagehtml = $OUTPUT->render_from_template('tool_dataprivacy/data_request_results_email', $messagetextdata);
+        $messagehtml = $output->render_from_template('tool_dataprivacy/data_request_results_email', $messagetextdata);
         $message->fullmessage = html_to_text($messagehtml);
         $message->fullmessagehtml = $messagehtml;
 
@@ -190,7 +191,7 @@ class process_data_request_task extends adhoc_task {
             $message->userto = $requestedby;
             $messagetextdata['username'] = fullname($requestedby);
             // Render message email body.
-            $messagehtml = $OUTPUT->render_from_template('tool_dataprivacy/data_request_results_email', $messagetextdata);
+            $messagehtml = $output->render_from_template('tool_dataprivacy/data_request_results_email', $messagetextdata);
             $message->fullmessage = html_to_text($messagehtml);
             $message->fullmessagehtml = $messagehtml;
 
