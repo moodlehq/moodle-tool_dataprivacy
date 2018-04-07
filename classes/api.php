@@ -389,7 +389,7 @@ class api {
      * @throws moodle_exception
      */
     public static function notify_dpo($dpo, data_request $request) {
-        global $OUTPUT, $SITE;
+        global $PAGE, $SITE;
 
         // Create message to send to the Data Protection Officer(s).
         $typetext = null;
@@ -438,10 +438,11 @@ class api {
             $messagetextdata['requestfor'] = fullname($requestingfor);
         }
 
+        $output = $PAGE->get_renderer('tool_dataprivacy');
         // Email the data request to the Data Protection Officer(s)/Admin(s).
         $messagetextdata['dponame'] = fullname($dpo);
         // Render message email body.
-        $messagehtml = $OUTPUT->render_from_template('tool_dataprivacy/data_request_email', $messagetextdata);
+        $messagehtml = $output->render_from_template('tool_dataprivacy/data_request_email', $messagetextdata);
         $message->userto = $dpo;
         $message->fullmessage = html_to_text($messagehtml);
         $message->fullmessagehtml = $messagehtml;
