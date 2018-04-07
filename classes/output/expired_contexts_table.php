@@ -27,7 +27,6 @@ require_once($CFG->libdir . '/tablelib.php');
 
 use coding_exception;
 use context_helper;
-use DateInterval;
 use dml_exception;
 use Exception;
 use html_writer;
@@ -36,8 +35,8 @@ use stdClass;
 use table_sql;
 use tool_dataprivacy\api;
 use tool_dataprivacy\expired_context;
-use tool_dataprivacy\purpose;
 use tool_dataprivacy\external\purpose_exporter;
+use tool_dataprivacy\purpose;
 
 defined('MOODLE_INTERNAL') || die;
 
@@ -256,6 +255,16 @@ class expired_contexts_table extends table_sql {
         if ($useinitialsbar) {
             $this->initialbars($total > $pagesize);
         }
+    }
+
+    /**
+     * Override default implementation to display a more meaningful information to the user.
+     */
+    public function print_nothing_to_display() {
+        global $OUTPUT;
+        echo $this->render_reset_button();
+        $this->print_initials_bar();
+        echo $OUTPUT->notification(get_string('noexpiredcontexts', 'tool_dataprivacy'), 'warning');
     }
 
     /**
