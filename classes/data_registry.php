@@ -244,7 +244,7 @@ class data_registry {
         $fieldname = $element . 'id';
 
         if ($contextlevel != CONTEXT_SYSTEM && $contextlevel != CONTEXT_USER) {
-            throw new \coding_exception('Only context_system and context_user values can be retrieved, no other context levels ' . 
+            throw new \coding_exception('Only context_system and context_user values can be retrieved, no other context levels ' .
                 'have a purpose or a category.');
         }
 

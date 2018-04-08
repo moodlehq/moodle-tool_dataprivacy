@@ -92,9 +92,9 @@ class expired_context extends \core\persistent {
                                                        $offset = 0, $limit = 0) {
         global $DB;
 
-        $sql = "SELECT expiredctx.* 
+        $sql = "SELECT expiredctx.*
                   FROM {" . self::TABLE . "} expiredctx
-                  JOIN {context} ctx 
+                  JOIN {context} ctx
                     ON ctx.id = expiredctx.contextid";
         $params = [];
         $conditions = [];
