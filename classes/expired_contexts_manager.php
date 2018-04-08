@@ -95,8 +95,10 @@ abstract class expired_contexts_manager {
                     continue;
                 }
 
-                mtrace('Deleting context ' . $context->id . ' - ' .
-                    shorten_text($context->get_context_name(true, true)));
+                if (!PHPUNIT_TEST && !BEHAT_TEST) {
+                    mtrace('Deleting context ' . $context->id . ' - ' .
+                        shorten_text($context->get_context_name(true, true)));
+                }
 
                 $privacymanager->delete_data_for_all_users_in_context($context);
 
