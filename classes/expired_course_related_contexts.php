@@ -52,25 +52,26 @@ class expired_course_related_contexts extends \tool_dataprivacy\expired_contexts
 
         // This SQL query returns all course-dependant contexts (including the course context)
         // which course end date already passed.
-        //
-        // We are sorting by path and level as the effective retention period calculations may need to
-        // get context parents and we want those parents to be read from
-        // \context::$cache_contextsbyid not from the database. CONTEXT_CACHE_MAX_SIZE is 2500 but this SQL can
-        // potentially return more than 2500 records. It is not likely that we will find a significant amount
-        // of courses with more than 2500 activities so this should be fine.
-        $sql = "SELECT $fields FROM {context} ctx
+        $sql = "SELECT $fields
+                  FROM {context} ctx
                   JOIN (
-                    SELECT c.enddate, subctx.path FROM {context} subctx
-                      JOIN {course} c ON subctx.contextlevel = ? AND subctx.instanceid = c.id
-                      WHERE c.enddate < ? AND c.enddate > 0
-                  ) ctxcourse ON ctx.path LIKE {$parentpath} OR ctx.path = ctxcourse.path
-                  LEFT JOIN {tool_dataprivacy_ctxinstance} dpctx ON dpctx.contextid = ctx.id
-                  LEFT JOIN {tool_dataprivacy_ctxexpired} expiredctx ON ctx.id = expiredctx.contextid
+                        SELECT c.enddate, subctx.path
+                          FROM {context} subctx
+                          JOIN {course} c
+                            ON subctx.contextlevel = ? AND subctx.instanceid = c.id
+                         WHERE c.enddate < ? AND c.enddate > 0
+                       ) ctxcourse
+                    ON ctx.path LIKE {$parentpath} OR ctx.path = ctxcourse.path
+             LEFT JOIN {tool_dataprivacy_ctxinstance} dpctx
+                    ON dpctx.contextid = ctx.id
+             LEFT JOIN {tool_dataprivacy_ctxexpired} expiredctx
+                    ON ctx.id = expiredctx.contextid
                  WHERE expiredctx.id IS NULL
-                ORDER BY ctx.path, ctx.contextlevel ASC";
+              ORDER BY ctx.contextlevel DESC, ctx.path";
         $possiblyexpired = $DB->get_recordset_sql($sql, [CONTEXT_COURSE, time()]);
 
         $expiredcontexts = [];
+        $excludedcontextids = [];
         foreach ($possiblyexpired as $record) {
 
             \context_helper::preload_from_record($record);
@@ -88,7 +89,7 @@ class expired_course_related_contexts extends \tool_dataprivacy\expired_contexts
             // to return the default purpose for the context context level (no db queries involved).
             $purposevalue = $record->purposeid !== null ? $record->purposeid : context_instance::NOTSET;
 
-            // It should be cheap as system purposes and context instance will be retrieved from a cache most of the time.
+            // It should be cheap as system purposes and context level purposes will be retrieved from a cache most of the time.
             $purpose = api::get_effective_context_purpose($context, $purposevalue);
 
             $dt = new \DateTime();
@@ -97,7 +98,23 @@ class expired_course_related_contexts extends \tool_dataprivacy\expired_contexts
             $dt->add($di);
 
             if (time() < $dt->getTimestamp()) {
-                // Discard this element if we have not reached the retention period yet.
+                // Exclude this context ID as it has not reached the retention period yet.
+                $excludedcontextids[] = $context->id;
+                continue;
+            }
+
+            // Check if this context has children that have not yet expired.
+            $hasunexpiredchildren = false;
+            $children = $context->get_child_contexts();
+            foreach ($children as $child) {
+                if (in_array($child->id, $excludedcontextids)) {
+                    $hasunexpiredchildren = true;
+                    break;
+                }
+            }
+            if ($hasunexpiredchildren) {
+                // Exclude this context ID as it has children that have not yet expired.
+                $excludedcontextids[] = $context->id;
                 continue;
             }
 

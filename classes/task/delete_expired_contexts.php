@@ -56,8 +56,14 @@ class delete_expired_contexts extends scheduled_task {
      */
     public function execute() {
         $manager = new \tool_dataprivacy\expired_course_related_contexts();
-        $manager->delete();
+        $deleted = $manager->delete();
+        if ($deleted > 0) {
+            mtrace($deleted . ' course-related contexts have been deleted');
+        }
         $manager = new \tool_dataprivacy\expired_user_contexts();
-        $manager->delete();
+        $deleted = $manager->delete();
+        if ($deleted > 0) {
+            mtrace($deleted . ' user contexts have been deleted');
+        }
     }
 }

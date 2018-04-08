@@ -22,9 +22,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 namespace tool_dataprivacy;
-defined('MOODLE_INTERNAL') || die();
+use dml_exception;
 
-use tool_dataprivacy\api;
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Class that represents an expired context.
@@ -66,8 +66,13 @@ class expired_context extends \core\persistent {
                 'description' => 'The context id.',
             ),
             'status' => array(
+                'choices' => [
+                    self::STATUS_EXPIRED,
+                    self::STATUS_APPROVED,
+                    self::STATUS_CLEANED,
+                ],
                 'type' => PARAM_INT,
-                'description' => 'The status.',
+                'description' => 'The deletion status of the context.',
             ),
         );
     }
@@ -75,26 +80,41 @@ class expired_context extends \core\persistent {
     /**
      * Returns expired_contexts instances that match the provided level and status.
      *
-     * @param int $contextlevel
-     * @param int $status
-     * @return tool_dataprivacy\expired_context[]
+     * @param int $contextlevel The context level filter criterion.
+     * @param bool $status The expired context record's status.
+     * @param string $sort The sort column. Must match the column name in {tool_dataprivacy_ctxexpired} table
+     * @param int $offset The query offset.
+     * @param int $limit The query limit.
+     * @return expired_context[]
+     * @throws dml_exception
      */
-    public static function get_records_by_contextlevel($contextlevel, $status = false) {
+    public static function get_records_by_contextlevel($contextlevel = null, $status = false, $sort = 'timecreated',
+                                                       $offset = 0, $limit = 0) {
         global $DB;
 
-        $sql = "SELECT expiredctx.* FROM {" . self::TABLE . "} expiredctx
-                  JOIN {context} ctx ON ctx.id = expiredctx.contextid
-                 WHERE ctx.contextlevel = ?";
-        $params = [intval($contextlevel)];
+        $sql = "SELECT expiredctx.* 
+                  FROM {" . self::TABLE . "} expiredctx
+                  JOIN {context} ctx 
+                    ON ctx.id = expiredctx.contextid";
+        $params = [];
+        $conditions = [];
 
-        if ($status !== false) {
-            $sql .= " AND expiredctx.status = ?";
-            $params[] = intval($status);
+        if (!empty($contextlevel)) {
+            $conditions[] = "ctx.contextlevel = :contextlevel";
+            $params['contextlevel'] = intval($contextlevel);
         }
 
-        $sql .= " ORDER BY expiredctx.timemodified";
+        if ($status !== false) {
+            $conditions[] = "expiredctx.status = :status";
+            $params['status'] = intval($status);
+        }
 
-        $records = $DB->get_records_sql($sql, $params);
+        if (!empty($conditions)) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+        $sql .= " ORDER BY expiredctx.{$sort}";
+
+        $records = $DB->get_records_sql($sql, $params, $offset, $limit);
 
         // We return class instances.
         $instances = array();
@@ -103,5 +123,40 @@ class expired_context extends \core\persistent {
         }
 
         return $instances;
+    }
+
+    /**
+     * Returns the number of expired_contexts instances that match the provided level and status.
+     *
+     * @param int $contextlevel
+     * @param bool $status
+     * @return int
+     * @throws dml_exception
+     */
+    public static function get_record_count_by_contextlevel($contextlevel = null, $status = false) {
+        global $DB;
+
+        $sql = "SELECT COUNT(1)
+                  FROM {" . self::TABLE . "} expiredctx
+                  JOIN {context} ctx
+                    ON ctx.id = expiredctx.contextid";
+
+        $conditions = [];
+        $params = [];
+
+        if (!empty($contextlevel)) {
+            $conditions[] = "ctx.contextlevel = :contextlevel";
+            $params['contextlevel'] = intval($contextlevel);
+        }
+
+        if ($status !== false) {
+            $sql .= " AND expiredctx.status = :status";
+            $params['status'] = intval($status);
+        }
+        if (!empty($conditions)) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        return $DB->count_records_sql($sql, $params);
     }
 }
