@@ -81,12 +81,12 @@ class expired_user_contexts extends \tool_dataprivacy\expired_contexts_manager {
             foreach ($courses as $course) {
                 if (!$course->enddate) {
                     // We can not know it what is going on here, so we prefer to be conservative.
-                    continue;
+                    continue 2;
                 }
 
                 if ($course->enddate >= time()) {
                     // Future or ongoing course.
-                    continue;
+                    continue 2;
                 }
             }
 
