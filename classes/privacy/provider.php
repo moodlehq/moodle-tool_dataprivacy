@@ -23,12 +23,20 @@
  */
 
 namespace tool_dataprivacy\privacy;
+defined('MOODLE_INTERNAL') || die();
 
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\context;
 use core_privacy\local\request\contextlist;
 
+/**
+ * Privacy class for requesting user data.
+ *
+ * @package    tool_dataprivacy
+ * @copyright  2018 Jake Dallimore <jrhdallimore@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class provider implements
         // This tool stores user data.
         \core_privacy\local\metadata\provider,
