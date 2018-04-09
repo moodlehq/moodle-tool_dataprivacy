@@ -33,7 +33,6 @@ use moodle_exception;
 use moodle_url;
 use tool_dataprivacy\api;
 use tool_dataprivacy\data_request;
-use tool_dataprivacy\data_request_context;
 
 defined('MOODLE_INTERNAL') || die();
 

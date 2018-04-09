@@ -105,7 +105,7 @@
       </KEYS>
     </TABLE>
     <TABLE NAME="tool_dataprivacy_contextlist" COMMENT="List of contexts for a component">
-      <FIELDS>q
+      <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="component" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Frankenstyle component name"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
