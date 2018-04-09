@@ -146,7 +146,8 @@ class process_data_request_task extends adhoc_task {
                 // Message to the recipient.
                 $messagetextdata['message'] = get_string('resultdownloadready', 'tool_dataprivacy', $SITE->fullname);
                 // Prepare download link.
-                $downloadurl = new moodle_url('#'); // TODO: Replace with the proper download URL.
+                $downloadurl = moodle_url::make_pluginfile_url($usercontext->id, 'tool_dataprivacy', 'export', $thing->get_itemid(),
+                    $thing->get_filepath(), $thing->get_filename(), true);
                 $downloadlink = new action_link($downloadurl, get_string('download', 'tool_dataprivacy'));
                 $messagetextdata['downloadlink'] = $downloadlink->export_for_template($output);
                 break;
