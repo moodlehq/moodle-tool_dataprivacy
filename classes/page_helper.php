@@ -42,7 +42,7 @@ class page_helper {
      * @return null
      */
     public static function setup(\moodle_url $url, $title) {
-        global $PAGE;
+        global $PAGE, $CFG;
 
         $context = \context_system::instance();
 
@@ -58,10 +58,11 @@ class page_helper {
         $PAGE->set_title($title);
         $PAGE->set_heading($title);
 
-        $dataregistry = new \moodle_url('/admin/tool/dataprivacy/dataregistry.php');
+        $dataregistry = new \moodle_url('/' . $CFG->admin . '/tool/dataprivacy/dataregistry.php');
+        $dataregistry2 = new \moodle_url('/' . $CFG->admin . '/tool/dataprivacy/dataregistry2.php');
 
         // No need to update data registry navbar as it is already part of the site navigation.
-        if (!$url->compare($dataregistry)) {
+        if (!$url->compare($dataregistry) && !$url->compare($dataregistry2)) {
             if ($siteadmin = $PAGE->settingsnav->find('root', \navigation_node::TYPE_SITE_ADMIN)) {
                 $PAGE->navbar->add($siteadmin->get_content(), $siteadmin->action());
             }
