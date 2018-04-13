@@ -205,5 +205,10 @@ class process_data_request_task extends adhoc_task {
         }
 
         cron_setup_user();
+
+        if ($request->type == api::DATAREQUEST_TYPE_DELETE) {
+            // Delete the user.
+            delete_user($foruser);
+        }
     }
 }
