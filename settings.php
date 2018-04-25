@@ -73,6 +73,6 @@ $ADMIN->add('privacy', new admin_externalpage('datadeletion', get_string('datade
 );
 
 // Link that leads to the other data registry management page.
-$ADMIN->add('privacy', new admin_externalpage('pluginregistry', get_string('pluginregistry', 'tool_dataprivacy'),
-    new moodle_url('/admin/tool/dataprivacy/pluginregistry.php'), 'tool/dataprivacy:managedataregistry')
-);
+//$ADMIN->add('privacy', new admin_externalpage('pluginregistry', get_string('pluginregistry', 'tool_dataprivacy'),
+    //new moodle_url('/admin/tool/dataprivacy/pluginregistry.php'), 'tool/dataprivacy:managedataregistry')
+//);
