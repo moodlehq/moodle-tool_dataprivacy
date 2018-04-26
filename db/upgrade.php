@@ -131,11 +131,22 @@ function xmldb_tool_dataprivacy_upgrade($oldversion) {
     if ($oldversion < 2017111305) {
         // Define field lawfulbases to be added to tool_dataprivacy_purpose.
         $table = new xmldb_table('tool_dataprivacy_purpose');
-        $field = new xmldb_field('lawfulbases', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, 'descriptionformat');
+
+        // It is a required field. We initially define and add it as null and later update it to XMLDB_NOTNULL.
+        $field = new xmldb_field('lawfulbases', XMLDB_TYPE_TEXT, null, null, null, null, null, 'descriptionformat');
 
         // Conditionally launch add field lawfulbases.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
+
+            // Set a kind-of-random value to lawfulbasis field.
+            $DB->set_field('tool_dataprivacy_purpose', 'lawfulbases', 'gdpr_art_6_1_a');
+
+            // We redefine it now as not null.
+            $field = new xmldb_field('lawfulbases', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, 'descriptionformat');
+
+            // Launch change of nullability for field lawfulbases.
+            $dbman->change_field_notnull($table, $field);
         }
 
         // Define field sensitivedatareasons to be added to tool_dataprivacy_purpose.
