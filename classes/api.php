@@ -769,6 +769,7 @@ class api {
      * @param int $status the status to set the contexts to.
      */
     public static function add_request_contexts_with_status(contextlist_collection $clcollection, int $requestid, int $status) {
+        $request = new data_request($requestid);
         foreach ($clcollection as $contextlist) {
             // Convert the \core_privacy\local\request\contextlist into a contextlist persistent and store it.
             $clp = \tool_dataprivacy\contextlist::from_contextlist($contextlist);
@@ -777,6 +778,12 @@ class api {
 
             // Store the associated contexts in the contextlist.
             foreach ($contextlist->get_contextids() as $contextid) {
+                if ($request->get('type') == static::DATAREQUEST_TYPE_DELETE) {
+                    $context = \context::instance_by_id($contextid);
+                    if (($purpose = static::get_effective_context_purpose($context)) && !empty($purpose->get('protected'))) {
+                        continue;
+                    }
+                }
                 $context = new contextlist_context();
                 $context->set('contextid', $contextid)
                     ->set('contextlistid', $contextlistid)
@@ -873,6 +880,7 @@ class api {
                 }
                 $contexts = [];
             }
+
             $contexts[] = $record->contextid;
             $lastcomponent = $record->component;
         }
