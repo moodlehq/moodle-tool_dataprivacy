@@ -47,7 +47,7 @@ define(['jquery', 'core/form-autocomplete', 'core/str', 'core/notification'], fu
             },
             {
                 key: 'nofiltersapplied',
-                component: 'moodle'
+                component: 'tool_dataprivacy'
             }
         ];
 
