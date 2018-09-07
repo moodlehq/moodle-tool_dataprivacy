@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<COMPATIBILITY_MATRIX>
+    <PLUGIN name="tool_dataprivacy">
+        <CUSTOM_CHECKS>
+            <CUSTOM_CHECK file="admin/tool/dataprivacy/lib.php" function="tool_dataprivacy_version_check" level="required">
+                <FEEDBACK>
+                    <ON_ERROR message="versioncheckerror" plugin="tool_dataprivacy" />
+                </FEEDBACK>
+            </CUSTOM_CHECK>
+        </CUSTOM_CHECKS>
+    </PLUGIN>
+</COMPATIBILITY_MATRIX>

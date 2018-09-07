@@ -25,6 +25,17 @@
 defined('MOODLE_INTERNAL') || die;
 
 if ($hassiteconfig) {
+    $versioncheckpage = new admin_settingpage(
+        'tool_dataprivacy_versioncheck',
+        new lang_string('versioncheck', 'tool_dataprivacy')
+    );
+    $versioncheckpage->add(new admin_setting_heading(
+        'tool_dataprivacy_versionwarning',
+        '',
+        $OUTPUT->notification(new lang_string('versioncheckwarning', 'tool_dataprivacy'), 'warning')
+    ));
+    $ADMIN->add('privacy', $versioncheckpage);
+    
     $privacysettings = $ADMIN->locate('privacysettings');
 
     if ($ADMIN->fulltree) {
