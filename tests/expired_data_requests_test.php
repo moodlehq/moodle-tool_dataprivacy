@@ -50,6 +50,8 @@ class tool_dataprivacy_expired_data_requests_testcase extends data_privacy_testc
      * Test finding and deleting expired data requests
      */
     public function test_data_request_expiry() {
+        $this->markTestSkipped('Core functions such as \core_privacy\local\request\writer::setup_real_writer_instance() and ' .
+            '\advanced_testcase::runAdhocTasks() have not yet been implemented in 3.4.4. Skipping this test...');
         global $DB;
         $this->resetAfterTest();
         \core_privacy\local\request\writer::setup_real_writer_instance();
@@ -121,6 +123,8 @@ class tool_dataprivacy_expired_data_requests_testcase extends data_privacy_testc
      * then tests is_expired() is returning the expected response.
      */
     public function test_is_expired() {
+        $this->markTestSkipped('Core functions such as \core_privacy\local\request\writer::setup_real_writer_instance() and ' .
+            '\advanced_testcase::runAdhocTasks() have not yet been implemented in 3.4.4. Skipping this test...');
         $this->resetAfterTest();
         \core_privacy\local\request\writer::setup_real_writer_instance();
 
